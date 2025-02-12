@@ -1,0 +1,21 @@
+*markdown-extras*
+==============================================================================
+CONTENTS                                                     *ReplicaContents*
+
+    1. Introduction ......... |ReplicaIntroduction|
+    2. Requirements ......... |ReplicaRequirements|
+    3. Usage ................ |ReplicaUsage|
+         3.1 Commands ....... |ReplicaCommands|
+         3.2 Mappings ....... |ReplicaMappings|
+    4. Configuration ........ |ReplicaConfiguration|
+    5. Add new languages .... |ReplicaAddLanguages|
+    6. Troubleshooting ...... |ReplicaTroubleshooting|
+    7. Contributing ......... |ReplicaContributing|
+    8. License .............. |ReplicaLicense|
+
+
+==============================================================================
+INTRODUCTION                                         *ReplicaIntroduction*
+
+Replica allows REPL programs such as Python or Julia, inside Vim in a seamless
+way.
