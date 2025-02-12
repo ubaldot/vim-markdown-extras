@@ -105,7 +105,7 @@ endif
 if exists('g:markdown_extras_config') != 0
     && has_key(g:markdown_extras_config, 'use_default_mappings')
       && g:markdown_extras_config['use_default_mappings']
-  
+
 
 # Bold, italic, strike-through, code
   if !hasmapto('<Plug>MarkdownItalic')
@@ -121,7 +121,7 @@ if exists('g:markdown_extras_config') != 0
     xnoremap <buffer> <silent> <leader>c <Plug>MarkdownCode
   endif
   if !hasmapto('<Plug>MarkdownToggleCheck')
-    xnoremap <buffer> <silent> <leader>x <Plug>MarkdownToggleCheck
+    nnoremap <buffer> <silent> <leader>x <Plug>MarkdownToggleCheck
   endif
   if !hasmapto('<Plug>MarkdownAddLink')
     nnoremap <buffer> <silent> <enter> <Plug>MarkdownAddLink
