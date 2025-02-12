@@ -1,2 +1,2 @@
 # vim-markdown-extras
-Editing markdown:s has never been so pleasant. 
+[WIP] Editing markdown:s has never been so pleasant.
