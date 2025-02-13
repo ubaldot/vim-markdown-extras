@@ -9,7 +9,7 @@ if exists('g:markdown_extras_config') != 0
 endif
 
 if use_nerd_fonts
-  syntax match todoCheckbox '\v\s*-|\s\[\s*\]'hs=e-4 conceal cchar=O
-  syntax match todoCheckbox '\v\s*-|\s\[x\]'hs=e-4 conceal cchar=X
+  syntax match todoCheckbox '\v\s*-\s\[\s*\]'hs=e-4 conceal cchar=☐
+  syntax match todoCheckbox '\v\s*-\s\[x\]'hs=e-4 conceal cchar=☑
   hi def link todoCheckbox Todo
 endif
