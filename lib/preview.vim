@@ -9,13 +9,13 @@ export def ShowLinkPreview()
 
   var current_word = expand('<cword>')
   if links.IsLink()
-    # TODO relying on the fact that there shall not be spaces in markdown
-    # links
-    # var link_id = utils.GetTextObject('f ')->matchstr('\w\+\]\[\zs\d\+\ze\]')
+    # Match from the cursor position to the end of line
     var curr_col = col('.')
-    var link_id = getline('.')->matchstr($'\%>{curr_col}c\w\+\]\s*\[\s*\zs\d\+\ze\]')
+    var link_id = getline('.')
+         ->matchstr($'\%>{curr_col}c\w\+\]\s*\[\s*\zs\d\+\ze\]')
     if !links.IsURL(links.links_dict[link_id])
-      echo "I will preview the file here."
+      PreviewPopup()
+      # echo "I will preview the file here."
     else
       echo links.links_dict[link_id]
     endif
@@ -24,7 +24,7 @@ enddef
 
 # Key filter function for the hover popup window.
 # Only keys to scroll the popup window are supported.
-def HoverWinFilterKey(hoverWin: number, key: string): bool
+def PreviewWinFilterKey(previewWin: number, key: string): bool
   var keyHandled = false
 
   if key == "\<C-E>"
@@ -38,14 +38,63 @@ def HoverWinFilterKey(hoverWin: number, key: string): bool
       || key == "\<C-Home>"
       || key == "\<C-End>"
     # scroll the hover popup window
-    win_execute(hoverWin, $'normal! {key}')
+    win_execute(previewWin, $'normal! {key}')
     keyHandled = true
   endif
 
   if key == "\<Esc>"
-    hoverWin->popup_close()
+    previewWin->popup_close()
     keyHandled = true
   endif
 
   return keyHandled
+enddef
+
+def GetFileContent(filename: string): list<string>
+    var file_content = []
+    if bufexists(filename)
+      file_content = getbufline(filename, 1, '$')
+    # TODO: check if you can remove the expand()
+    elseif filereadable($'{filename}')
+      # file_content = readfile($'{expand(filename)}')
+      file_content = readfile($'{filename}')
+    else
+      file_content = ["Can't preview the file!", "Does file exist?"]
+    endif
+    var title = [filename, '------------------------']
+    return extend(title, file_content)
+enddef
+
+export def PreviewPopup()
+  # Generate links_dict
+  links.GenerateLinksDict()
+
+  var previewText = []
+  var refFiletype = 'txt'
+  # TODO: only word are allowed as link aliases
+  var current_word = expand('<cword>')
+  if links.IsLink()
+    # Search from the current cursor position to the end of line
+    var curr_col = col('.')
+    var link_id = getline('.')
+      ->matchstr($'\%>{curr_col}c\w\+\]\s*\[\s*\zs\d\+\ze\]')
+    var link_name = links.links_dict[link_id]
+    if links.IsURL(link_name)
+      previewText = [link_name]
+      refFiletype = 'txt'
+    else
+      previewText = GetFileContent(link_name)
+      refFiletype = 'txt'
+    endif
+  endif
+
+  popup_clear()
+  var winid = previewText->popup_atcursor({moved: 'any',
+           close: 'click',
+           fixed: true,
+           maxwidth: 80,
+           border: [0, 1, 0, 1],
+           borderchars: [' '],
+           filter: PreviewWinFilterKey})
+  win_execute(winid, $'setlocal ft={refFiletype}')
 enddef

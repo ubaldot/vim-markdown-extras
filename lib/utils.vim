@@ -1,10 +1,10 @@
 vim9script
 
-def Echoerr(msg: string)
+export def Echoerr(msg: string)
   echohl ErrorMsg | echom $'[markdown_extras] {msg}' | echohl None
 enddef
 
-def Echowarn(msg: string)
+export def Echowarn(msg: string)
   echohl WarningMsg | echom $'[markdown_extras] {msg}' | echohl None
 enddef
 

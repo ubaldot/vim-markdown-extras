@@ -7,9 +7,6 @@ import autoload '../../lib/utils.vim'
 &l:tabstop = 2
 
 
-# TODO  move below
-nnoremap K <ScriptCmd>preview.ShowLinkPreview()<cr>
-
 if executable('prettier')
   if exists('g:markdown_extras_config') != 0
       && has_key(g:markdown_extras_config, 'formatprg')
@@ -85,32 +82,45 @@ endif
 # Redefinition of <cr>
 inoremap <buffer> <silent> <CR> <ScriptCmd>funcs.ContinueList()<CR>
 
-if empty(maparg("<Plug>MarkdownItalic"))
-  noremap <script> <buffer> <Plug>MarkdownItalic <esc><ScriptCmd>utils.VisualSurround('*', '*')<cr>
+if empty(maparg('<Plug>MarkdownItalic'))
+  noremap <script> <buffer> <Plug>MarkdownItalic
+        \ <esc><ScriptCmd>utils.VisualSurround('*', '*')<cr>
 endif
-if empty(maparg("<Plug>MarkdownBold"))
-  noremap <script> <buffer> <Plug>MarkdownBold <esc><ScriptCmd>utils.VisualSurround('**', '**')<cr>
+if empty(maparg('<Plug>MarkdownBold'))
+  noremap <script> <buffer> <Plug>MarkdownBold
+        \ <esc><ScriptCmd>utils.VisualSurround('**', '**')<cr>
 endif
-if empty(maparg("<Plug>MarkdownStrikethrough"))
-  noremap <script> <buffer> <Plug>MarkdownStrikethrough <esc><ScriptCmd>utils.VisualSurround('~~', '~~')<cr>
+if empty(maparg('<Plug>MarkdownStrikethrough'))
+  noremap <script> <buffer> <Plug>MarkdownStrikethrough
+        \ <esc><ScriptCmd>utils.VisualSurround('~~', '~~')<cr>
 endif
-if empty(maparg("<Plug>MarkdownCode"))
-  noremap <script> <buffer> <Plug>MarkdownCode <esc><ScriptCmd>utils.VisualSurround('`', '`')<cr>
+if empty(maparg('<Plug>MarkdownCode'))
+  noremap <script> <buffer> <Plug>MarkdownCode
+        \ <esc><ScriptCmd>utils.VisualSurround('`', '`')<cr>
 endif
-if empty(maparg("<Plug>MarkdownToggleCheck"))
-  noremap <script> <buffer> <Plug>MarkdownToggleCheck <ScriptCmd>funcs.ToggleMark()<cr>
+if empty(maparg('<Plug>MarkdownToggleCheck'))
+  noremap <script> <buffer> <Plug>MarkdownToggleCheck
+        \ <ScriptCmd>funcs.ToggleMark()<cr>
 endif
-if empty(maparg("<Plug>MarkdownAddLink"))
-  noremap <script> <buffer> <Plug>MarkdownAddLink <ScriptCmd>links.HandleLink()<cr>
+if empty(maparg('<Plug>MarkdownAddLink'))
+  noremap <script> <buffer> <Plug>MarkdownAddLink
+        \ <ScriptCmd>links.HandleLink()<cr>
 endif
-if empty(maparg("<Plug>MarkdownRemoveLink"))
-  noremap <script> <buffer> <Plug>MarkdownRemoveLink <ScriptCmd>links.RemoveLink()<cr>
+if empty(maparg('<Plug>MarkdownRemoveLink'))
+  noremap <script> <buffer> <Plug>MarkdownRemoveLink
+        \ <ScriptCmd>links.RemoveLink()<cr>
 endif
-if empty(maparg("<Plug>MarkdownToggleCodeBock"))
-  noremap <script> <buffer> <Plug>MarkdownToggleCodeBlock <ScriptCmd>funcs.ToggleBlock('```')<cr>
+if empty(maparg('<Plug>MarkdownToggleCodeBock'))
+  noremap <script> <buffer> <Plug>MarkdownToggleCodeBlock
+        \  <ScriptCmd>funcs.ToggleBlock('```')<cr>
 endif
-if empty(maparg("<Plug>MarkdownToggleCodeBockVisual"))
-  noremap <script> <buffer> <Plug>MarkdownToggleCodeBlockVisual <esc><ScriptCmd>funcs.ToggleBlock('```', line("'<") - 1, line("'>") + 1)<cr>
+if empty(maparg('<Plug>MarkdownToggleCodeBockVisual'))
+  noremap <script> <buffer> <Plug>MarkdownToggleCodeBlockVisual
+  \ <esc><ScriptCmd>funcs.ToggleBlock('```', line("'<") - 1, line("'>") + 1)<cr>
+endif
+if empty(maparg('<Plug>MarkdownReferencePreview'))
+  noremap <script> <buffer> <Plug>MarkdownReferencePreview
+        \ <ScriptCmd>preview.PreviewPopup()<cr>
 endif
 
 
@@ -149,5 +159,8 @@ if exists('g:markdown_extras_config') != 0
   endif
   if !hasmapto('<Plug>MarkdownToggleCodeBlockVisual')
     xnoremap <buffer> <silent> <leader>cc <Plug>MarkdownToggleCodeBlockVisual
+  endif
+  if !hasmapto('<Plug>MarkdownReferencePreview')
+    nnoremap <buffer> <silent> K '<Plug>MarkdownReferencePreview'
   endif
 endif

@@ -70,7 +70,8 @@ enddef
 # ----------------------------
 # Set-unset code-blocks
 # ----------------------------
-def SetBlockStartEndLines(start_line: number = -1, end_line: number = -1): list<number>
+def SetBlockStartEndLines(start_line: number = -1,
+      \ end_line: number = -1): list<number>
   # Check if the passed lines are valid, or ask for user input
   # If any of the lines has a negative number, it returns an empty list
 
@@ -99,7 +100,8 @@ def SetBlockStartEndLines(start_line: number = -1, end_line: number = -1): list<
 enddef
 
 
-def SetBlock(tag: string, start_line: number = -1, end_line: number = -1, fence: string = '')
+def SetBlock(tag: string, start_line: number = -1,
+      \  end_line: number = -1, fence: string = '')
   # This is redundant, the check already happens in ToggleCodeBlock
   if IsInsideBlock(tag) || getline(line('.')) =~ $'^{tag}'
     return
@@ -201,7 +203,8 @@ def IsInsideBlock(tag: string): bool
   return is_inside_block
 enddef
 
-export def ToggleBlock(tag: string, line_start: number = -1, line_end: number = -1, fence: string = '')
+export def ToggleBlock(tag: string, line_start: number = -1,
+      \  line_end: number = -1, fence: string = '')
   # Set or unset
   if getline(line('.')) =~ $'^{tag}'
     return

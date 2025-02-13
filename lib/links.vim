@@ -166,3 +166,33 @@ export def HandleLink()
     endif
   endif
 enddef
+
+def OpenLinkPopup(links_list: list<string>, popup_id: number, choice: number)
+    var link = links_list[choice - 1]
+    if filereadable(link)
+      exe $'edit {link}'
+    elseif exists(':Open') != 0
+      exe $'Open {link}'
+    elseif IsURL(link)
+      # TODO: I have :Open everywhere but on macos
+      silent exe $'!{g:start_cmd} -a safari.app "{link}"'
+    else
+      echoerr $"File {link} does not exists!"
+    endif
+enddef
+
+# TODO: we need a mapping for this
+export def g:ReferencesPopup()
+  # Build a list such that each item correspond to a link.
+  # This to establish an order and a mapping between menu choice->list
+  # element
+  var items = values(links_dict)
+  var links_list = []
+  for val in items
+    links_list->add(val)
+  endfor
+  var choice = items->popup_menu({
+    title: ' References ',
+    borderchars: ['─', '│', '─', '│', '╭', '╮', '╯', '╰'],
+    callback: (popup_id, choice) => OpenLinkPopup(links_list, popup_id, choice) })
+enddef
