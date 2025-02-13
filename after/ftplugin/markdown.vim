@@ -100,6 +100,12 @@ endif
 if empty(maparg("<Plug>MarkdownRemoveLink"))
   noremap <script> <buffer> <Plug>MarkdownRemoveLink <ScriptCmd>funcs.MDRemoveLink()<cr>
 endif
+if empty(maparg("<Plug>MarkdownToggleCodeBock"))
+  noremap <script> <buffer> <Plug>MarkdownToggleCodeBlock <ScriptCmd>funcs.ToggleBlock('```')<cr>
+endif
+if empty(maparg("<Plug>MarkdownToggleCodeBockVisual"))
+  noremap <script> <buffer> <Plug>MarkdownToggleCodeBlockVisual <esc><ScriptCmd>funcs.ToggleBlock('```', line("'<") - 1, line("'>") + 1)<cr>
+endif
 
 
 # use_default_mappings
@@ -121,13 +127,21 @@ if exists('g:markdown_extras_config') != 0
   if !hasmapto('<Plug>MarkdownCode')
     xnoremap <buffer> <silent> <leader>c <Plug>MarkdownCode
   endif
+# Toggle checkboxes
   if !hasmapto('<Plug>MarkdownToggleCheck')
     nnoremap <buffer> <silent> <leader>x <Plug>MarkdownToggleCheck
   endif
+# Handle links
   if !hasmapto('<Plug>MarkdownAddLink')
     nnoremap <buffer> <silent> <enter> <Plug>MarkdownAddLink
   endif
   if !hasmapto('<Plug>MarkdownRemoveLink')
     nnoremap <buffer> <silent> <backspace> <Plug>MarkdownRemoveLink
+  endif
+  if !hasmapto('<Plug>MarkdownToggleCodeBlock')
+    nnoremap <buffer> <silent> <leader>cc <Plug>MarkdownToggleCodeBlock
+  endif
+  if !hasmapto('<Plug>MarkdownToggleCodeBlockVisual')
+    xnoremap <buffer> <silent> <leader>cc <Plug>MarkdownToggleCodeBlockVisual
   endif
 endif
