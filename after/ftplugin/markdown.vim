@@ -1,8 +1,14 @@
 vim9script
 
 import autoload "../../lib/funcs.vim"
+import autoload "../../lib/preview.vim"
+import autoload "../../lib/links.vim"
+import autoload '../../lib/utils.vim'
 &l:tabstop = 2
 
+
+# TODO  move below
+nnoremap K <ScriptCmd>preview.ShowLinkPreview()<cr>
 
 if executable('prettier')
   if exists('g:markdown_extras_config') != 0
@@ -19,11 +25,11 @@ if executable('prettier')
         && g:markdown_extras_config['format_on_save']
     augroup MARKDOWN_FORMAT_ON_SAVE
       autocmd! * <buffer>
-      autocmd BufWritePre <buffer> funcs.FormatWithoutMoving()
+      autocmd BufWritePre <buffer> utils.FormatWithoutMoving()
     augroup END
   endif
 else
-  funcs.Echowarn("'prettier' not installed!'")
+  utils.Echowarn("'prettier' not installed!'")
 endif
 
 export def Make(format = "html")
@@ -55,7 +61,7 @@ export def Make(format = "html")
       exe $'Open {output_file}'
     endif
   else
-    funcs.Echowarn("'pandoc' is not installed.)
+    utils.Echowarn("'pandoc' is not installed.)
   endif
 enddef
 
@@ -77,28 +83,28 @@ if exists(':OutlineToggle') != 0
 endif
 
 # Redefinition of <cr>
-inoremap <buffer> <silent> <CR> <ScriptCmd>funcs.MDContinueList()<CR>
+inoremap <buffer> <silent> <CR> <ScriptCmd>funcs.ContinueList()<CR>
 
 if empty(maparg("<Plug>MarkdownItalic"))
-  noremap <script> <buffer> <Plug>MarkdownItalic <esc><ScriptCmd>funcs.VisualSurround('*', '*')<cr>
+  noremap <script> <buffer> <Plug>MarkdownItalic <esc><ScriptCmd>utils.VisualSurround('*', '*')<cr>
 endif
 if empty(maparg("<Plug>MarkdownBold"))
-  noremap <script> <buffer> <Plug>MarkdownBold <esc><ScriptCmd>funcs.VisualSurround('**', '**')<cr>
+  noremap <script> <buffer> <Plug>MarkdownBold <esc><ScriptCmd>utils.VisualSurround('**', '**')<cr>
 endif
 if empty(maparg("<Plug>MarkdownStrikethrough"))
-  noremap <script> <buffer> <Plug>MarkdownStrikethrough <esc><ScriptCmd>funcs.VisualSurround('~~', '~~')<cr>
+  noremap <script> <buffer> <Plug>MarkdownStrikethrough <esc><ScriptCmd>utils.VisualSurround('~~', '~~')<cr>
 endif
 if empty(maparg("<Plug>MarkdownCode"))
-  noremap <script> <buffer> <Plug>MarkdownCode <esc><ScriptCmd>funcs.VisualSurround('`', '`')<cr>
+  noremap <script> <buffer> <Plug>MarkdownCode <esc><ScriptCmd>utils.VisualSurround('`', '`')<cr>
 endif
 if empty(maparg("<Plug>MarkdownToggleCheck"))
-  noremap <script> <buffer> <Plug>MarkdownToggleCheck <ScriptCmd>funcs.MDToggleMark()<cr>
+  noremap <script> <buffer> <Plug>MarkdownToggleCheck <ScriptCmd>funcs.ToggleMark()<cr>
 endif
 if empty(maparg("<Plug>MarkdownAddLink"))
-  noremap <script> <buffer> <Plug>MarkdownAddLink <ScriptCmd>funcs.MDHandleLink()<cr>
+  noremap <script> <buffer> <Plug>MarkdownAddLink <ScriptCmd>links.HandleLink()<cr>
 endif
 if empty(maparg("<Plug>MarkdownRemoveLink"))
-  noremap <script> <buffer> <Plug>MarkdownRemoveLink <ScriptCmd>funcs.MDRemoveLink()<cr>
+  noremap <script> <buffer> <Plug>MarkdownRemoveLink <ScriptCmd>links.RemoveLink()<cr>
 endif
 if empty(maparg("<Plug>MarkdownToggleCodeBock"))
   noremap <script> <buffer> <Plug>MarkdownToggleCodeBlock <ScriptCmd>funcs.ToggleBlock('```')<cr>

@@ -1,155 +1,7 @@
 vim9script
 
-def Echoerr(msg: string)
-  echohl ErrorMsg | echom $'[markdown_extras] {msg}' | echohl None
-enddef
 
-def Echowarn(msg: string)
-  echohl WarningMsg | echom $'[markdown_extras] {msg}' | echohl None
-enddef
-
-export def FormatWithoutMoving(a: number = 0, b: number = 0)
-  var view = winsaveview()
-  if a == 0 && b == 0
-    silent exe $":norm! gggqG"
-  else
-    var interval = b - a + 1
-    silent exe $":norm! {a}gg{interval}gqq"
-  endif
-
-  if v:shell_error != 0
-    undo
-    echoerr $"'{&l:formatprg->matchstr('^\s*\S*')}' returned errors."
-  else
-    # Display format command
-    redraw
-    if !empty(&l:formatprg)
-      Echowarn($'{&l:formatprg}')
-    else
-      Echowarn("'formatprg' is empty. Using default formatter.")
-    endif
-  endif
-  winrestview(view)
-
-enddef
-
-def GetTextObject(textobject: string): string
-  # You pass a text object like "inside word", etc. and it returns it.
-  # For example GetTextObjet('aw') it returns "around word".
-
-  # backup the content of register t (arbitrary choice, YMMV)
-  var oldreg = getreg("t")
-  # silently yank the text covered by whatever text object
-  # was given as argument into register t
-  noautocmd execute 'silent normal "ty' .. textobject
-  # save the content of register t into a variable
-  var text = getreg("t")
-  # restore register t
-  setreg("t", oldreg)
-  # return the content of given text object
-  return text
-enddef
-
-export def VisualSurround(pre: string, post: string)
-  # Usage:
-  #   Visual select text and hit <leader> + parenthesis
-  #
-  var pre_len = strlen(pre)
-  var post_len = strlen(post)
-  var [line_start, column_start] = getpos("'<")[1 : 2]
-  var [line_end, column_end] = getpos("'>")[1 : 2]
-  if line_start > line_end
-    var tmp = line_start
-    line_start = line_end
-    line_end = tmp
-
-    tmp = column_start
-    column_start = column_end
-    column_end = tmp
-  endif
-  if line_start == line_end && column_start > column_end
-    var tmp = column_start
-    column_start = column_end
-    column_end = tmp
-  endif
-  var leading_chars = strcharpart(getline(line_start), column_start - 1 -
-    pre_len, pre_len)
-  var trailing_chars = strcharpart(getline(line_end), column_end, post_len)
-
-  # echom "leading_chars: " .. leading_chars
-  # echom "trailing_chars: " .. trailing_chars
-
-  cursor(line_start, column_start)
-  var offset = 0
-  if leading_chars == pre
-    exe $"normal! {pre_len}X"
-    offset = -pre_len
-  else
-    exe $"normal! i{pre}"
-    offset = pre_len
-  endif
-
-  # Some chars have been added if you are working on the same line
-  if line_start == line_end
-    cursor(line_end, column_end + offset)
-  else
-    cursor(line_end, column_end)
-  endif
-
-  if trailing_chars == post
-    exe $"normal! l{post_len}x"
-  else
-    exe $"normal! a{post}"
-  endif
-enddef
-
-def MDIsLink(): bool
-  # Compare foo with [foo]. If they match, then what is inside the [] it
-  # possibly be a link. Next, it check if there is a (bla_bla) just after ].
-  # Link alias must be words.
-  # Assume that a link (or a filename) cannot be broken into multiple lines
-  var saved_curpos = getcurpos()
-  var is_link = false
-  var alias_link = GetTextObject('iw')
-
-  # Handle singularity if the cursor is on '[' or ']'
-  if alias_link == '['
-    norm! l
-    alias_link = GetTextObject('iw')
-  elseif alias_link == ']'
-    norm! h
-    alias_link = GetTextObject('iw')
-  endif
-
-  # Check if foo and [foo] match and if there is a [bla bla] after ].
-  var alias_link_bracket = GetTextObject('a[')
-  if alias_link == alias_link_bracket[1 : -2]
-    norm! f]
-    if getline('.')[col('.')] == '('
-        || getline('.')[col('.')] == '['
-      var line_open_parenthesis = line('.')
-      norm! l%
-      var line_close_parenthesis = line('.')
-      if line_open_parenthesis == line_close_parenthesis
-        # echo "Is a link"
-        is_link = true
-      else
-        # echo "Is not a link"
-        is_link = false
-      endif
-    else
-      # echo "Is not a link"
-      is_link = false
-    endif
-  else
-    # echo "Is not a link"
-    is_link = false
-  endif
-  setpos('.', saved_curpos)
-  return is_link
-enddef
-
-export def MDToggleMark()
+export def ToggleMark()
   var line = getline('.')
   if match(line, '\[\s*\]') != -1
     setline('.', substitute(line, '\[\s*\]', '[x]', ''))
@@ -158,124 +10,7 @@ export def MDToggleMark()
   endif
 enddef
 
-def OpenLink()
-    norm! f[l
-    var link_id = GetTextObject('i[')
-    var link = links_dict[link_id]
-    if filereadable(link)
-      exe $'edit {link}'
-    elseif exists(':Open') != 0
-      exe $'Open {link}'
-    elseif IsURL(link)
-      # TODO: I have :Open everywhere but on macos
-      silent exe $'!{g:start_cmd} -a safari.app "{link}"'
-    else
-      echoerr $"File {link} does not exists!"
-    endif
-enddef
-
-var links_dict = {}
-
-def GetLinkID(): number
-  var link = input('Insert link: ', '', 'file')
-  if empty(link)
-    return 0
-  endif
-
-  # TODO: use full-path?
-  if !IsURL(link)
-    link = fnamemodify(link, ':p')
-  endif
-  var link_line = search(link, 'nw')
-  var link_id = 0
-  if link_line == 0
-    # Entirely new link
-    link_id = keys(links_dict)->map('str2nr(v:val)')->max() + 1
-    links_dict[$'{link_id}'] = link
-    # If it is the first link ever, leave a blank line
-    if link_id == 1 && search('\s*#\+\s\+References', 'nw') != 0
-      append(line('$'), '' )
-    elseif link_id == 1 && search('\s*#\+\s\+References', 'nw') == 0
-      append(line('$'), ['', '## References', ''])
-    endif
-    append(line('$'), $'[{link_id}]: {link}' )
-  else
-    # Reuse existing link
-    var tmp = getline(link_line)->substitute('\v^\[(\d*)\].*', '\1', '')
-    link_id = str2nr(tmp)
-  endif
-  return link_id
-enddef
-
-def IsURL(link: string): bool
-  var url_prefixes = [ 'https://', 'http://', 'ftp://', 'ftps://',
-    'sftp://', 'telnet://', 'file://']
-  for url_prefix in url_prefixes
-    if link =~ $'^{url_prefix}'
-      return true
-    endif
-  endfor
-    return false
-enddef
-
-def GenerateLinksDict()
-  var ref_start_line = search('\s*#\+\s\+References', 'nw')
-  var refs = getline(ref_start_line + 1, '$')
-    ->filter('v:val =~ "^\\[\\d\\+\\]:\\s"')
-  for item in refs
-     var key = item->substitute('\[\(\d\+\)\].*', '\1', '')
-     var value = item->substitute('^\[\d\+]\:\s*\(.*\)', '\1', '')
-     links_dict[key] = value
-  endfor
-enddef
-
-export def MDRemoveLink()
-  # Initialization
-  if empty(links_dict)
-    GenerateLinksDict()
-  endif
-  # TODO: it may not be the best but it works so far
-  if MDIsLink()
-      search('[')
-      norm! "_da[
-      search(']', 'bc')
-      norm! "_x
-      search('[', 'bc')
-      norm! "_x
-  endif
-enddef
-
-# TODO
-def MDCleanupReferences()
-  echoerr Not Implemented!
-enddef
-
-export def MDHandleLink()
-  # Initialization
-  if empty(links_dict)
-    GenerateLinksDict()
-  endif
-  if MDIsLink()
-    OpenLink()
-  else
-    var link_id = GetLinkID()
-    if link_id == 0
-      return
-    endif
-    # Surround stuff
-    norm! lbi[
-    norm! ea]
-    execute $'norm! a[{link_id}]'
-    norm! F]h
-    if !IsURL(links_dict[link_id]) && !filereadable(links_dict[link_id])
-      exe $'edit {links_dict[link_id]}'
-      # write
-    endif
-  endif
-enddef
-
-
-export def MDContinueList()
+export def ContinueList()
   # OBS! If there are issues, check 'formatlistpat' value for markdown
   # filetype
   # For continuing items list and enumerations
@@ -404,7 +139,6 @@ def SetBlock(tag: string, start_line: number = -1, end_line: number = -1, fence:
   append(l1, tag)
 enddef
 
-# TODO
 def UnsetBlock(tag: string)
   if !IsInsideBlock(tag) || getline(line('.')) =~ $'^{tag}'
     return
@@ -412,10 +146,10 @@ def UnsetBlock(tag: string)
     var l0 = search(tag, 'cnb')
     var l1 = search(tag, 'cn')
 
-    echom $'l0, l1: {l0},{l1}'
     # Remove indent
     silent! execute $':{l0 + 1},{l1 + 1}s/^\s\+//'
 
+    # Remove tags
     deletebufline(bufnr('%'), l0)
     deletebufline(bufnr('%'), l1 - 1)
   endif
