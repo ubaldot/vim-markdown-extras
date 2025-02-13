@@ -120,7 +120,7 @@ if empty(maparg('<Plug>MarkdownToggleCodeBockVisual'))
 endif
 if empty(maparg('<Plug>MarkdownReferencePreview'))
   noremap <script> <buffer> <Plug>MarkdownReferencePreview
-        \ <ScriptCmd>preview.PreviewPopup()<cr>
+        \  <ScriptCmd>preview.PreviewPopup()<cr>
 endif
 
 
@@ -161,6 +161,6 @@ if exists('g:markdown_extras_config') != 0
     xnoremap <buffer> <silent> <leader>cc <Plug>MarkdownToggleCodeBlockVisual
   endif
   if !hasmapto('<Plug>MarkdownReferencePreview')
-    nnoremap <buffer> <silent> K '<Plug>MarkdownReferencePreview'
+    nnoremap <buffer> <silent> K <Plug>MarkdownReferencePreview
   endif
 endif

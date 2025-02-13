@@ -183,6 +183,7 @@ enddef
 
 # TODO: we need a mapping for this
 export def g:ReferencesPopup()
+  GenerateLinksDict()
   # Build a list such that each item correspond to a link.
   # This to establish an order and a mapping between menu choice->list
   # element
@@ -191,8 +192,15 @@ export def g:ReferencesPopup()
   for val in items
     links_list->add(val)
   endfor
-  var choice = items->popup_menu({
-    title: ' References ',
-    borderchars: ['─', '│', '─', '│', '╭', '╮', '╯', '╰'],
-    callback: (popup_id, choice) => OpenLinkPopup(links_list, popup_id, choice) })
+  if !empty(items)
+    var choice = links_list->popup_menu({
+      title: ' References ',
+      borderchars: ['─', '│', '─', '│', '╭', '╮', '╯', '╰'],
+      callback: (popup_id, choice) => OpenLinkPopup(links_list, popup_id, choice) })
+  else
+    utils.Echowarn('No references found!')
+  endif
 enddef
+
+# TODO: make a function for consolidating the references
+# (SanitizeReferences())

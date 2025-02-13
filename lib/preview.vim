@@ -3,24 +3,24 @@ vim9script
 import autoload "./links.vim"
 import autoload './utils.vim'
 
-export def ShowLinkPreview()
-  # Generate links_dict
-  links.GenerateLinksDict()
+# export def ShowLinkPreview()
+#   # Generate links_dict
+#   links.GenerateLinksDict()
 
-  var current_word = expand('<cword>')
-  if links.IsLink()
-    # Match from the cursor position to the end of line
-    var curr_col = col('.')
-    var link_id = getline('.')
-         ->matchstr($'\%>{curr_col}c\w\+\]\s*\[\s*\zs\d\+\ze\]')
-    if !links.IsURL(links.links_dict[link_id])
-      PreviewPopup()
-      # echo "I will preview the file here."
-    else
-      echo links.links_dict[link_id]
-    endif
-  endif
-enddef
+#   var current_word = expand('<cword>')
+#   if links.IsLink()
+#     # Match from the cursor position to the end of line
+#     var curr_col = col('.')
+#     var link_id = getline('.')
+#          ->matchstr($'\%>{curr_col}c\w\+\]\s*\[\s*\zs\d\+\ze\]')
+#     if !links.IsURL(links.links_dict[link_id])
+#       PreviewPopup()
+#       # echo "I will preview the file here."
+#     else
+#       echo links.links_dict[link_id]
+#     endif
+#   endif
+# enddef
 
 # Key filter function for the hover popup window.
 # Only keys to scroll the popup window are supported.
