@@ -1,7 +1,7 @@
 # vim-markdown-extras
-[WIP] [Editing][3] [markdowns][1] has [never][2] been so pleasant.
+[WIP] [Editing][3] [markdowns][1] has never been so pleasant.
 
-if index(['file', 'file_in_path', '[recent_files][5]', 'buffer'],
+if index(['file', 'file_in_path', 'recent_files', 'buffer'],
 \ search_type) != -1
 PopupCallback = (id, idx) => PopupCallbackFileBuffer(id, preview_id, idx)
 elseif search_type == 'dir'
