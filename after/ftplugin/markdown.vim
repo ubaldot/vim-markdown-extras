@@ -3,19 +3,6 @@ vim9script
 import autoload "../../lib/funcs.vim"
 &l:tabstop = 2
 
-var use_nerd_fonts = true
-
-if exists('g:markdown_extras_config') != 0
-    && has_key(g:markdown_extras_config, 'use_nerd_fonts')
-      && g:markdown_extras_config['use_nerd_fonts']
-  use_nerd_fonts = g:markdown_extras_config['use_nerd_fonts']
-endif
-
-if use_nerd_fonts
-  syntax match TodoCheckbox /\v- \[\]/ conceal cchar=□
-  syntax match DoneCheckbox /\v- \[x\]/ conceal cchar=☑
-endif
-
 
 if executable('prettier')
   if exists('g:markdown_extras_config') != 0
