@@ -70,7 +70,7 @@ enddef
 
 
 export def GetLinkID(): number
-  var link = input('Insert link: ', '', 'file')
+  var link = input('Insert link: ', '', 'customlist,Foo')
   if empty(link)
     return 0
   endif
@@ -204,3 +204,63 @@ enddef
 
 # TODO: make a function for consolidating the references
 # (SanitizeReferences())
+
+
+# TODO JUST ADDED!
+export def AddLinkPopup()
+  # Generate links_dict
+  GenerateLinksDict()
+
+  var previewText = []
+  var refFiletype = 'txt'
+  # TODO: only word are allowed as link aliases
+  var current_word = expand('<cword>')
+  if links.IsLink()
+    # Search from the current cursor position to the end of line
+    var curr_col = col('.')
+    var link_id = getline('.')
+      ->matchstr($'\%>{curr_col}c\w\+\]\s*\[\s*\zs\d\+\ze\]')
+    var link_name = links.links_dict[link_id]
+    if links.IsURL(link_name)
+      previewText = [link_name]
+      refFiletype = 'txt'
+    else
+      previewText = GetFileContent(link_name)
+      refFiletype = 'txt'
+    endif
+  endif
+
+  popup_clear()
+  var winid = previewText->popup_atcursor({moved: 'any',
+           close: 'click',
+           fixed: true,
+           maxwidth: 80,
+           border: [0, 1, 0, 1],
+           borderchars: [' '],
+           filter: PreviewWinFilterKey})
+  win_execute(winid, $'setlocal ft={refFiletype}')
+enddef
+
+def g:Foo(A: any, L: any, P: any): list<string>
+  return values(links_dict)
+enddef
+
+# var x = input('foo: ', '', 'customlist,Foo')
+
+
+# def CustomComplete(findstart: number, base: string): any
+#     if findstart
+#         return match(getline('.'), '\S\+$')  # Find the start of the word
+#     else
+#         var candidates = ['apple', 'applecaca', 'banana', 'blueberry', 'blackberry', 'grape', 'grapefruit']
+#         var filtered = copy(candidates)->filter((_, val) => val =~# printf('^%s', base))
+#         return map(filtered, Bar)
+#     endif
+# enddef
+
+# def Bar(idx: number, val: any): any
+#   return {word: val, menu: '[Custom]'}
+# enddef
+
+# setlocal completefunc=CustomComplete
+# inoremap X <C-X><C-U>
