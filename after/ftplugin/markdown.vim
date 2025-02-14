@@ -35,6 +35,9 @@ endif
 if executable('pandoc')
   compiler pandoc
 
+  # All the coreography happening inside here relies on the compiler
+  # pandoc. If the maintainer of such a compiler changes something, then this
+  # function may not work
   def OpenRenderedFile(cmd: string)
     # Retrieve filename from the make command
     #
@@ -53,9 +56,6 @@ if executable('pandoc')
     endif
   enddef
 
-  # All the coreography happening inside here relies on the compiler
-  # pandoc. If the maintainer of such a compiler changes something, then this
-  # function may not work
   def Make(format: string = 'html')
     var cmd = execute($'make {format}')
     OpenRenderedFile(cmd)
