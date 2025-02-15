@@ -60,6 +60,9 @@ if use_pandoc && executable('pandoc')
 
     var output_file = $'{expand('%:p:h')}.{format}'
     var cmd = execute($'make {format}')
+    # TIP: use g< to show all the echoed messages since now
+    # TIP2: redraw! is used to avoid the "PRESS ENTER" thing
+    echo cmd->matchstr('.*\ze2>&1') | redraw!
 
     if exists(':Open') != 0
       exe $'Open {output_file}'
