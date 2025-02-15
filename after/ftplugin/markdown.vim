@@ -76,7 +76,7 @@ if use_pandoc && executable('pandoc')
   enddef
 
   # Usage :Make, :Make pdf, :Make docx, etc
-  command! -nargs=* -buffer -complete=customlist,MakeCompleteList
+  command! -nargs=? -buffer -complete=customlist,MakeCompleteList
         \ Make Make(<f-args>)
 else
   utils.Echowarn("'pandoc' is not installed.")
