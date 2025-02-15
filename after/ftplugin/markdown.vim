@@ -86,10 +86,8 @@ if use_pandoc && executable('pandoc')
 
   # Command definition
   def MakeCompleteList(A: any, L: any, P: any): list<string>
-    return ['html', 'docx', 'pdf', 'jira',
-      'csv', 'ipynb', 'latex', 'odt', 'rtf', 'gfm', 'beamer', 'pptx',
-      'revealjs', 'slidy', 's5', 'commonmark', 'asciidoc', 'mediawiki',
-      'textile', 'json', 'epub', 'epub3', 'man', 'texinfo']
+    return systemlist('pandoc --list-output-formats')
+      ->filter($'v:val =~ "^{A}"')
   enddef
 
   # Usage :Make, :Make pdf, :Make docx, etc
