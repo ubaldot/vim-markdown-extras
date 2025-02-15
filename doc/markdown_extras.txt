@@ -1,21 +1,55 @@
 *markdown-extras*
-==============================================================================
-CONTENTS                                                     *ReplicaContents*
 
-    1. Introduction ......... |ReplicaIntroduction|
-    2. Requirements ......... |ReplicaRequirements|
-    3. Usage ................ |ReplicaUsage|
-         3.1 Commands ....... |ReplicaCommands|
-         3.2 Mappings ....... |ReplicaMappings|
-    4. Configuration ........ |ReplicaConfiguration|
-    5. Add new languages .... |ReplicaAddLanguages|
-    6. Troubleshooting ...... |ReplicaTroubleshooting|
-    7. Contributing ......... |ReplicaContributing|
-    8. License .............. |ReplicaLicense|
-
+Author: ubaldot (ubaldo DOT tiberi AT gmail DOT com)
+For Vim version 9.0 and above
 
 ==============================================================================
-INTRODUCTION                                         *ReplicaIntroduction*
+CONTENTS                                            *markdown-extras-contents*
 
-Replica allows REPL programs such as Python or Julia, inside Vim in a seamless
-way.
+    1. Introduction ......... |markdown-extras-introduction|
+    2. Requirements ......... |markdown-extras-requirements|
+    3. Usage ................ |markdown-extras-usage|
+         3.1 Commands ....... |markdown-extras-commands|
+         3.2 Mappings ....... |markdown-extras-mappings|
+    4. Configuration ........ |markdown-extras-configuration|
+    8. License .............. |markdown-extras-license|
+
+
+==============================================================================
+INTRODUCTION                                    *markdown-extras-introduction*
+
+Bla bla
+
+==============================================================================
+REQUIREMENTS                                    *markdown-extras-requirements*
+
+Vim 9.0 is required.
+To enable the rendering feature, you need to install `pandoc`.
+To enable the formatting feature, you need to install `prettier`.
+
+==============================================================================
+CONFIGURATION       *markdown-extras-configuration* *g:markdown_extras_config*
+
+The plug configuration is done through `g:markdown_extras_config` dictionary.
+Be sure to create the empty dictionary `g:markdown_extras_config = {}` before
+filling it with he various keys.
+
+      Available keys:
+        "use_pandoc"      Set to `true` if you want to use |compiler-pandoc|.
+                          `pandoc` needs to be installed separately.
+                          Default `true`.
+        "pandoc_args"     List of arguments to be passed to |compiler-pandoc|.
+                          The format shall be list<str>,
+                          e.g. `g:markdown_extras_config['pandoc_args'] =
+                            ['pdf', '--css="path/to/my_css_style.css"']`
+                          Such a value is copied to |b:pandoc_compiler_args|.
+                          The first argument of the list specifies the output
+                          file extension, if not otherwise specified.
+                          If omitted, then such a value will set
+                          to `.html` by default or to the argument passed to
+                          |:Make| command.
+                          For example, if you invoke `:Make docx`, then the
+                          first element of above list is overridden with `docx`.
+        "use_prettier"    Set to `true` if you want to use `prettier` formatter.
+                          `prettier` needs to be installed separately.
+                          Default `true`.

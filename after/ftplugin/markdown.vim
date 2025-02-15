@@ -8,7 +8,22 @@ import autoload '../../lib/utils.vim'
 
 links.GenerateLinksDict()
 
-if executable('prettier')
+var use_pandoc = true
+if exists('g:markdown_extras_config') != 0
+    && has_key(g:markdown_extras_config, 'use_pandoc')
+    && g:markdown_extras_config['use_pandoc']
+  use_pandoc = g:markdown_extras_config['use_pandoc']
+endif
+
+var use_prettier = true
+if exists('g:markdown_extras_config') != 0
+    && has_key(g:markdown_extras_config, 'use_prettier')
+    && g:markdown_extras_config['use_prettier']
+  use_prettier = g:markdown_extras_config['use_prettier']
+endif
+
+# TODO : Do the user want to use prettier?
+if use_prettier && executable('prettier')
   if exists('g:markdown_extras_config') != 0
       && has_key(g:markdown_extras_config, 'formatprg')
     &l:formatprg = g:markdown_extras_config['formatprg']
@@ -30,14 +45,13 @@ else
   utils.Echowarn("'prettier' not installed!'")
 endif
 
-
-
-if executable('pandoc')
+# TODO : Do the user want to use compiler pandoc?
+if use_pandoc && executable('pandoc')
   compiler pandoc
 
   # All the coreography happening inside here relies on the compiler
   # pandoc. If the maintainer of such a compiler changes something, then this
-  # function may not work
+  # function may not work any longer
   def OpenRenderedFile(cmd: string)
     # Retrieve filename from the make command
     #
@@ -56,8 +70,46 @@ if executable('pandoc')
     endif
   enddef
 
-  def Make(format: string = 'html')
-    var cmd = execute($'make {format}')
+  def Make(format: string = '')
+    # If it does not exists, then create it
+    if exists('b:pandoc_compiler_args') == 0
+      b:pandoc_compiler_args = []
+    endif
+
+    # Fill it with user settings
+    if exists('g:markdown_extras_config') != 0
+        && has_key(g:markdown_extras_config, 'pandoc_args')
+      b:pandoc_compiler_args = g:markdown_extras_config['pandoc_args']
+    endif
+
+    # Case b:pandoc_compiler_args is empty
+    if empty(b:pandoc_compiler_args) && empty(format)
+      insert(b:pandoc_compiler_args, 'html', 0)
+    elseif empty(b:pandoc_compiler_args) && !empty(format)
+      insert(b:pandoc_compiler_args, format, 0)
+
+    # Case b:pandoc_compiler_args is non-empty. What to do depends on its
+    # first element
+    elseif !empty(b:pandoc_compiler_args)
+      # No extension specified, e.g. b:pandoc_compiler_args = ['--css=foo']
+      # Set ['html', '--css=foo'] or [format, '--css=foo']
+      if b:pandoc_compiler_args[0] =~ '^-' && empty(format)
+        insert(b:pandoc_compiler_args, 'html', 0)
+      elseif b:pandoc_compiler_args[0] =~ '^-' && !empty(format)
+        insert(b:pandoc_compiler_args, format, 0)
+
+      # Extension specified but :Make called with argument
+      elseif b:pandoc_compiler_args[0] !~ '^-' && !empty(format)
+        b:pandoc_compiler_args[0] =  format
+      endif
+    endif
+
+    # TODO Newer versions of the compiler are changed
+    # var cmd = execute($'make {join(b:pandoc_compiler_args)}')
+    echom "b:pandoc_compiler_args: " .. join(b:pandoc_compiler_args)
+    b:pandoc_compiler_args = join(b:pandoc_compiler_args)
+    var cmd = execute('make')
+    echom cmd
     OpenRenderedFile(cmd)
   enddef
 
