@@ -8,13 +8,6 @@ import autoload '../../lib/utils.vim'
 
 links.GenerateLinksDict()
 
-var use_pandoc = true
-if exists('g:markdown_extras_config') != 0
-    && has_key(g:markdown_extras_config, 'use_pandoc')
-    && g:markdown_extras_config['use_pandoc']
-  use_pandoc = g:markdown_extras_config['use_pandoc']
-endif
-
 var use_prettier = true
 if exists('g:markdown_extras_config') != 0
     && has_key(g:markdown_extras_config, 'use_prettier')
@@ -22,7 +15,6 @@ if exists('g:markdown_extras_config') != 0
   use_prettier = g:markdown_extras_config['use_prettier']
 endif
 
-# TODO : Do the user want to use prettier?
 if use_prettier && executable('prettier')
   if exists('g:markdown_extras_config') != 0
       && has_key(g:markdown_extras_config, 'formatprg')
@@ -32,7 +24,7 @@ if use_prettier && executable('prettier')
       .. $"--stdin-filepath {shellescape(expand('%'))}"
   endif
 
-  # Autocmd to format with prettier
+  # Autocmd to format with prettier on save
   if exists('g:markdown_extras_config') != 0
       && has_key(g:markdown_extras_config, 'format_on_save')
       && g:markdown_extras_config['format_on_save']
@@ -45,32 +37,19 @@ else
   utils.Echowarn("'prettier' not installed!'")
 endif
 
-# TODO : Do the user want to use compiler pandoc?
+# pandoc
+var use_pandoc = true
+if exists('g:markdown_extras_config') != 0
+    && has_key(g:markdown_extras_config, 'use_pandoc')
+    && g:markdown_extras_config['use_pandoc']
+  use_pandoc = g:markdown_extras_config['use_pandoc']
+endif
+
 if use_pandoc && executable('pandoc')
-  compiler pandoc
-
   # All the coreography happening inside here relies on the compiler
-  # pandoc. If the maintainer of such a compiler changes something, then this
-  # function may not work any longer. For example, at the moment --output is
-  # used instead of -o. Hence, this function parses --output.
-  def OpenRenderedFile(cmd: string)
-    # Retrieve filename from the make command
-    #
-    # Assuming that the output file is generated with '--output' instead of
-    # '-o'
-    var output_file =
-      cmd->matchstr('--output\s\+\zs".*"\ze\.')->substitute('"', '', 'g')
-    var output_file_extension =
-      cmd->matchstr('--output\s\+".*"\zs\.\w\+\ze\s')
-    var output_fullpath =
-      fnamemodify($"{output_file}{output_file_extension}", ':p')
-    echom output_fullpath
+  # pandoc.
 
-    if exists(':Open') != 0
-      exe $'Open {output_fullpath}'
-    endif
-  enddef
-
+  compiler pandoc
   def Make(format: string = 'html')
     #
     # b:pandoc_compiler_args is used in the bundled compiler-pandoc
@@ -79,9 +58,12 @@ if use_pandoc && executable('pandoc')
       b:pandoc_compiler_args = join(g:markdown_extras_config['pandoc_args'])
     endif
 
+    var output_file = $'{expand('%:p:h')}.{format}'
     var cmd = execute($'make {format}')
-    # echom cmd
-    OpenRenderedFile(cmd)
+
+    if exists(':Open') != 0
+      exe $'Open {output_file}'
+    endif
   enddef
 
   # Command definition
@@ -96,61 +78,6 @@ if use_pandoc && executable('pandoc')
 else
   utils.Echowarn("'pandoc' is not installed.")
 endif
-
-# In case the pandoc compiler change, you can use the following as fallback
-# solution
-# export def Make(...args: list<string>)
-#   var input_file = $'"{expand('%:p')}"'
-
-#   # Set output filename
-#   var output_file = expand('%:r')
-
-#   # Check if user passed an output file and quote it
-#   var o_idx = index(args, '-o')
-#   var output_idx = index(args, '--output')
-
-#   if o_idx != -1
-#     output_file = $'{args[o_idx + 1]}'
-#     args->remove(o_idx, o_idx + 1)
-#   elseif o_idx != -1
-#     output_file = $'{args[output_idx + 1]}'
-#     args->remove(output_idx, output_idx + 1)
-#   else
-#     output_file = $'{expand('%:p:r')}'
-#   endif
-
-#   # Set output file extension
-#   var t_match = copy(args)->filter("v:val =~ '-t=\w*'")
-#   var to_match = copy(args)->filter("v:val =~ '-to=\w*'")
-
-#   if !empty(t_match)
-#     var t_idx = index(args, t_match[0])
-#     output_file = $'"{output_file}.{args[t_idx]->matchstr('=\s*\zs\w\+')}"'
-#   elseif !empty(to_match)
-#     var to_idx = index(args, to_match[0])
-#     output_file = $'"{output_file}.{args[to_idx]->matchstr('=\s*\zs\w\+')}"'
-#   else
-#     # Default to html
-#     output_file = $'"{output_file}.html"'
-#   endif
-
-#   &l:makeprg = $'pandoc --standalone --metadata '
-#     .. $'--from=markdown --output {output_file} '
-#     .. $'{join(args)} '
-#     .. $'{input_file}'
-
-#   make
-
-#   if exists(':Open') != 0
-#     exe $'Open {output_file->substitute('"', '', 'g')}'
-#   endif
-# enddef
-
-# export def MakeCompleteList(A: any, L: any, P: any): list<string>
-#   return ['--to=html', '--to=docx', '--to=pdf', '--to=jira',
-#     '--to=csv', '--to=ipynb', '--to=latex', '--to=odt', '--to=rtf']
-# enddef
-
 
 # -------- Mappings ------------
 # This is very ugly: you add a - [ ] by pasting the content of register 'o'
