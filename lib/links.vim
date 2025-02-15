@@ -13,19 +13,19 @@ export def IsLink(): bool
   # Assume that a link (or a filename) cannot be broken into multiple lines
   var saved_curpos = getcurpos()
   var is_link = false
-  var alias_link = utils.GetTextObject('iw')
+  var alias_link = utils.GetTextObject('i]').text
 
   # Handle singularity if the cursor is on '[' or ']'
   if alias_link == '['
     norm! l
-    alias_link = utils.GetTextObject('iw')
+    alias_link = utils.GetTextObject('i]').text
   elseif alias_link == ']'
     norm! h
-    alias_link = utils.GetTextObject('iw')
+    alias_link = utils.GetTextObject('i]').text
   endif
 
   # Check if foo and [foo] match and if there is a [bla bla] after ].
-  var alias_link_bracket = utils.GetTextObject('a[')
+  var alias_link_bracket = utils.GetTextObject('a[').text
   if alias_link == alias_link_bracket[1 : -2]
     norm! f]
     if getline('.')[col('.')] == '('
@@ -54,7 +54,7 @@ enddef
 
 def OpenLink()
     norm! f[l
-    var link_id = utils.GetTextObject('i[')
+    var link_id = utils.GetTextObject('i[').text
     var link = links_dict[link_id]
     if filereadable(link)
       exe $'edit {link}'
