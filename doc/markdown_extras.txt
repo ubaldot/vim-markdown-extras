@@ -41,15 +41,9 @@ filling it with he various keys.
         "pandoc_args"     List of arguments to be passed to |compiler-pandoc|.
                           The format shall be list<str>,
                           e.g. `g:markdown_extras_config['pandoc_args'] =
-                            ['pdf', '--css="path/to/my_css_style.css"']`
+                            ['--css="path/to/my_css_style.css"', '--metadata',
+                            'key=value']`
                           Such a value is copied to |b:pandoc_compiler_args|.
-                          The first argument of the list specifies the output
-                          file extension, if not otherwise specified.
-                          If omitted, then such a value will set
-                          to `.html` by default or to the argument passed to
-                          |:Make| command.
-                          For example, if you invoke `:Make docx`, then the
-                          first element of above list is overridden with `docx`.
         "use_prettier"    Set to `true` if you want to use `prettier` formatter.
                           `prettier` needs to be installed separately.
                           Default `true`.

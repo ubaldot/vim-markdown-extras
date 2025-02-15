@@ -51,7 +51,8 @@ if use_pandoc && executable('pandoc')
 
   # All the coreography happening inside here relies on the compiler
   # pandoc. If the maintainer of such a compiler changes something, then this
-  # function may not work any longer
+  # function may not work any longer. For example, at the moment --output is
+  # used instead of -o. Hence, this function parses --output.
   def OpenRenderedFile(cmd: string)
     # Retrieve filename from the make command
     #
@@ -70,53 +71,25 @@ if use_pandoc && executable('pandoc')
     endif
   enddef
 
-  def Make(format: string = '')
-    # If it does not exists, then create it
-    if exists('b:pandoc_compiler_args') == 0
-      b:pandoc_compiler_args = []
-    endif
-
-    # Fill it with user settings
+  def Make(format: string = 'html')
+    #
+    # b:pandoc_compiler_args is used in the bundled compiler-pandoc
     if exists('g:markdown_extras_config') != 0
         && has_key(g:markdown_extras_config, 'pandoc_args')
-      b:pandoc_compiler_args = g:markdown_extras_config['pandoc_args']
+      b:pandoc_compiler_args = join(g:markdown_extras_config['pandoc_args'])
     endif
 
-    # Case b:pandoc_compiler_args is empty
-    if empty(b:pandoc_compiler_args) && empty(format)
-      insert(b:pandoc_compiler_args, 'html', 0)
-    elseif empty(b:pandoc_compiler_args) && !empty(format)
-      insert(b:pandoc_compiler_args, format, 0)
-
-    # Case b:pandoc_compiler_args is non-empty. What to do depends on its
-    # first element
-    elseif !empty(b:pandoc_compiler_args)
-      # No extension specified, e.g. b:pandoc_compiler_args = ['--css=foo']
-      # Set ['html', '--css=foo'] or [format, '--css=foo']
-      if b:pandoc_compiler_args[0] =~ '^-' && empty(format)
-        insert(b:pandoc_compiler_args, 'html', 0)
-      elseif b:pandoc_compiler_args[0] =~ '^-' && !empty(format)
-        insert(b:pandoc_compiler_args, format, 0)
-
-      # Extension specified but :Make called with argument
-      elseif b:pandoc_compiler_args[0] !~ '^-' && !empty(format)
-        b:pandoc_compiler_args[0] =  format
-      endif
-    endif
-
-    # TODO Newer versions of the compiler are changed
-    # var cmd = execute($'make {join(b:pandoc_compiler_args)}')
-    echom "b:pandoc_compiler_args: " .. join(b:pandoc_compiler_args)
-    b:pandoc_compiler_args = join(b:pandoc_compiler_args)
-    var cmd = execute('make')
-    echom cmd
+    var cmd = execute($'make {format}')
+    # echom cmd
     OpenRenderedFile(cmd)
   enddef
 
   # Command definition
   def MakeCompleteList(A: any, L: any, P: any): list<string>
     return ['html', 'docx', 'pdf', 'jira',
-      'csv', 'ipynb', 'latex', 'odt', 'rtf']
+      'csv', 'ipynb', 'latex', 'odt', 'rtf', 'gfm', 'beamer', 'pptx',
+      'revealjs', 'slidy', 's5', 'commonmark', 'asciidoc', 'mediawiki',
+      'textile', 'json', 'epub', 'epub3', 'man', 'texinfo']
   enddef
 
   # Usage :Make, :Make pdf, :Make docx, etc
