@@ -11,7 +11,9 @@ enddef
 
 export def GetTextObject(textobject: string): dict<any>
   # You pass a text object like "inside word", etc. and it returns it, along
-  # with the start and end positions.
+  # with the start and end positions. In-fact, when you yank some text, then
+  # the registers '[' and ']' are set.
+  #
   # Start and end positions are of the form
   # [buffer_number, line_number, column_number, screen_column].
   #
@@ -27,18 +29,29 @@ export def GetTextObject(textobject: string): dict<any>
   # restore register t
   setreg("t", oldreg)
   # return the content of given text object
-  var text_object = {text: text, start_pos: getpos("'["), end_pos: getpos("']")}
+  var text_object = {text: text, start_pos: "'[", end_pos: "']"}
   return text_object
 enddef
 
-export def VisualSurround(pre: string, post: string)
+export def Surround(pre: string, post: string, text_object: string = '')
   # Usage:
-  #   Visual select text and hit <leader> + parenthesis
+  #   Select text and hit <leader> + e.g. parenthesis
   #
+  # Note that Visual Selections and Text Objects are cousins
+  #
+  var [line_start, column_start] = [-1, -1]
+  var [line_end, column_end]  = [-1, -1]
+  if !empty(text_object)
+    [line_start, column_start] = GetTextObject(text_object).start_pos[1 : 2]
+    [line_end, column_end] = GetTextObject(text_object).end_pos[1 : 2]
+  else
+    # If no text_object is passed, then the selection is visual
+    [line_start, column_start] = getpos("'<")[1 : 2]
+    [line_end, column_end] = getpos("'>")[1 : 2]
+  endif
+
   var pre_len = strlen(pre)
   var post_len = strlen(post)
-  var [line_start, column_start] = getpos("'<")[1 : 2]
-  var [line_end, column_end] = getpos("'>")[1 : 2]
   if line_start > line_end
     var tmp = line_start
     line_start = line_end
@@ -81,6 +94,42 @@ export def VisualSurround(pre: string, post: string)
   endif
 enddef
 
+export def SurroundNew(tag: string, text_object: string = '', keep_even: bool = false)
+  # Usage:
+  #   Select text and hit <leader> + e.g. parenthesis
+  #
+  # Note that Visual Selections and Text Objects are cousins
+  #
+  var A = "'<"
+  var B = "'>"
+  if !empty(text_object)
+    A = GetTextObject(text_object).start_pos
+    B = GetTextObject(text_object).end_pos
+  endif
+
+  # Remove all existing tags
+  var surrounded_text = GetTextBetweenMarks(A, B)
+    ->map((_, val) => substitute(val, tag, '', 'g'))
+
+  # Surround text
+  insert(surrounded_text, tag, 0)
+  insert(surrounded_text, tag, len(surrounded_text))
+
+  echom "surrounded_text: " .. string(surrounded_text)
+
+  # Delete old text
+  execute $":{A},{B}d _"
+
+  # Add surrounded text
+  InsertInLine(A, join(surrounded_text))
+
+  # Keep even number of tags in the document
+  if keep_even
+    echom "TBD"
+  endif
+enddef
+
+
 export def FormatWithoutMoving(a: number = 0, b: number = 0)
   var view = winsaveview()
   if a == 0 && b == 0
@@ -104,4 +153,76 @@ export def FormatWithoutMoving(a: number = 0, b: number = 0)
   endif
   winrestview(view)
 
+enddef
+
+export def GetTextBetweenMarks(A: string, B: string): list<string>
+    # Usage: GetTextBetweenPoints("'[", "']"). Arguments must be markers.
+    #
+    var [_, l1, c1, _] = getpos(A)
+    var [_, l2, c2, _] = getpos(B)
+
+    if l1 == l2
+        # Extract text within a single line
+        return [getline(l1)[c1 - 1 : c2 - 2]]
+    else
+        # Extract text across multiple lines
+        var lines = getline(l1, l2)
+        lines[0] = lines[0][c1 - 1 : ]  # Trim the first line from c1
+        lines[-1] = lines[-1][ : c2 - 2]  # Trim the last line up to c2
+        return lines
+    endif
+enddef
+
+export def InsertInLine(marker: string, text: string)
+   # Insert text in the given column
+   var line = getline(line(marker))   # Get the current line
+   var lnum = line(marker)
+   var column = col(marker)
+   var new_line = strcharpart(line, 0, column) .. text .. strcharpart(line, column)
+   setline(lnum, new_line)                  # Set the modified line back
+enddef
+
+# export def g:DeleteTextBetweenMarks(A: string, B: string)
+#     var start_pos = getpos(A)
+#     var end_pos = getpos(B)
+
+#     var start_line = start_pos[1]
+#     var start_col = start_pos[2]
+#     var end_line = end_pos[1]
+#     var end_col = end_pos[2]
+
+#     # ensure a comes before b
+#     if start_line > end_line || (start_line == end_line && start_col > end_col)
+#         [start_line, start_col, end_line, end_col] =
+#                      [end_line, end_col, start_line, start_col]
+#     endif
+
+#     # if both markers are on the same line, delete only the in-between text
+#     if start_line == end_line
+#         var line = getline(start_line)
+#         var new_line = strpart(line, 0, start_col - 1) .. strpart(line, end_col - 1)
+#         setline(start_line, new_line)
+#     else
+#         # get affected lines
+#         var lines = getline(start_line, end_line)
+
+#         # modify first and last line to remove text between a and b
+#         lines[0] = strpart(lines[0], 0, start_col - 1)
+#         lines[-1] = strpart(lines[-1], end_col - 1)
+
+#         # set modified text back
+#         setline(start_line, lines[0])
+#         setline(end_line, lines[-1])
+
+#         # delete middle lines if any
+#         if end_line > start_line + 1
+#             deletebufline('%', start_line + 1, end_line - 1)
+#         endif
+#     endif
+# enddef
+
+
+
+export def g:DeleteTextBetweenMarks(A: string, B: string)
+  execute $'norm! {A}v{B}d _'
 enddef

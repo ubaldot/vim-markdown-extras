@@ -8,6 +8,15 @@ import autoload '../../lib/utils.vim'
 
 links.GenerateLinksDict()
 
+if exists('b:mapleader') == 0
+  b:mapleader = "m"
+endif
+
+if exists('g:markdown_extras_config') != 0
+    && has_key(g:markdown_extras_config, 'leader')
+    b:mapleader = g:markdown_extras_config['leader']
+endif
+
 var use_prettier = true
 if exists('g:markdown_extras_config') != 0
     && has_key(g:markdown_extras_config, 'use_prettier')
@@ -93,22 +102,6 @@ endif
 # Redefinition of <cr>
 inoremap <buffer> <silent> <CR> <ScriptCmd>funcs.ContinueList()<CR>
 
-if empty(maparg('<Plug>MarkdownItalic'))
-  noremap <script> <buffer> <Plug>MarkdownItalic
-        \ <esc><ScriptCmd>utils.VisualSurround('*', '*')<cr>
-endif
-if empty(maparg('<Plug>MarkdownBold'))
-  noremap <script> <buffer> <Plug>MarkdownBold
-        \ <esc><ScriptCmd>utils.VisualSurround('**', '**')<cr>
-endif
-if empty(maparg('<Plug>MarkdownStrikethrough'))
-  noremap <script> <buffer> <Plug>MarkdownStrikethrough
-        \ <esc><ScriptCmd>utils.VisualSurround('~~', '~~')<cr>
-endif
-if empty(maparg('<Plug>MarkdownCode'))
-  noremap <script> <buffer> <Plug>MarkdownCode
-        \ <esc><ScriptCmd>utils.VisualSurround('`', '`')<cr>
-endif
 if empty(maparg('<Plug>MarkdownToggleCheck'))
   noremap <script> <buffer> <Plug>MarkdownToggleCheck
         \ <ScriptCmd>funcs.ToggleMark()<cr>
@@ -136,21 +129,75 @@ endif
 
 
 # use_default_mappings
+var use_default_mappings = true
 if exists('g:markdown_extras_config') != 0
     && has_key(g:markdown_extras_config, 'use_default_mappings')
       && g:markdown_extras_config['use_default_mappings']
+  use_default_mappings = g:markdown_extras_config['use_default_mappings']
+endif
 
+if use_default_mappings
+  # ------------ Text style mappings ------------------
+  #
+  # TEXT-OBJECTS text-style mappings
+  # Text-obects i` and a` are removed since they refer to code
+  var all_Vim_text_objects = ['aw', 'iw', 'aW', 'iW', 'as', 'is', 'ap', 'ip',
+    'a]', 'a[', 'i]', 'i[', 'a)', 'a(', 'ab', 'i)', 'i(', 'ib', 'a>', 'a<',
+    'i>', 'i<', 'at', 'it', 'a}', 'a{', 'aB', 'i}', 'i{', 'iB', 'a\"', 'a''',
+    'i\"', 'i''']
 
-# Bold, italic, strike-through, code
-  if !hasmapto('<Plug>MarkdownItalic')
-    xnoremap <buffer> <silent> <leader>i <Plug>MarkdownItalic
+  for text_object in all_Vim_text_objects
+    # Italic
+    if maparg($"<leader>i{text_object}", "n") == ""
+      exe $'nnoremap <buffer> <leader>i{text_object} '
+      .. $'<ScriptCmd>utils.SurroundNew("*", "{text_object}")<cr>'
+    endif
+
+    # Bold
+    if maparg($"<leader>b{text_object}", "n") == ""
+      exe $'nnoremap <buffer> <leader>b{text_object} '
+      .. $'<ScriptCmd>utils.SurroundNew("\*\*", "{text_object}")<cr>'
+    endif
+
+    # Strikethrough
+    if maparg($"<leader>s{text_object}", "n") == ""
+      exe $'nnoremap <buffer> <leader>s{text_object} '
+      .. $'<ScriptCmd>utils.SurroundNew("~~", "{text_object}")<cr>'
+    endif
+
+    # Code
+    if maparg($"<leader>c{text_object}", "n") == ""
+      exe $'nnoremap <buffer> <leader>c{text_object} '
+      .. $'<ScriptCmd>utils.SurroundNew("`", "{text_object}")<cr>'
+    endif
+  endfor
+
+  # VISUAL text-style mapping
+  # Italic
+  if maparg($"<leader>i", "x") == ""
+     xnoremap <buffer> <leader>i
+          \ <esc><ScriptCmd>utils.SurroundNew('*')<cr>
   endif
-  if !hasmapto('<Plug>MarkdownBold')
-    xnoremap <buffer> <silent> <leader>b <Plug>MarkdownBold
+
+  # Bold
+  if maparg($"<leader>b", "x") == ""
+     xnoremap <buffer> <leader>b
+          \ <esc><ScriptCmd>utils.SurroundNew('**')<cr>
   endif
-  if !hasmapto('<Plug>MarkdownStrikethrough')
-    xnoremap <buffer> <silent> <leader>s <Plug>MarkdownStrikethrough
+
+  # Strikethrough
+  if maparg($"<leader>s", "x") == ""
+     xnoremap <buffer> <leader>s
+          \ <esc><ScriptCmd>utils.SurroundNew('~~')<cr>
   endif
+
+  # Code
+  if maparg($"<leader>c", "x") == ""
+     xnoremap <buffer> <leader>c
+          \ <esc><ScriptCmd>utils.SurroundNew('`')<cr>
+  endif
+
+  # ----------------- Other mappings ------------------------
   if !hasmapto('<Plug>MarkdownCode')
     xnoremap <buffer> <silent> <leader>c <Plug>MarkdownCode
   endif

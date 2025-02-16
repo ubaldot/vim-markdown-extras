@@ -47,3 +47,4 @@ filling it with he various keys.
         "use_prettier"    Set to `true` if you want to use `prettier` formatter.
                           `prettier` needs to be installed separately.
                           Default `true`.
+        "localleader"     Set the value of the `b:localleader`. Default ','.
