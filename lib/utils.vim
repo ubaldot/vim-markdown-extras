@@ -121,6 +121,33 @@ export def FormatWithoutMoving(a: number = 0, b: number = 0)
 
 enddef
 
+
+def RemoveSurrounding(A: string, B: string, lead: number, trail: number)
+  # Remove 'lead' chars from before mark 'A and 'trail' chars after mark 'B
+  if line(A) == line(B)
+    var part1 = strcharpart(getline(A), 0, col(A) - lead - 1)
+    var part2 = strcharpart(getline(A), col(A) - 1, col(B) - col(A) + 1)
+    var part3 = strcharpart(getline(A), col(B) + trail)
+
+    echom part1
+    echom part2
+    echom part3
+
+    var new_line = part1 .. part2 .. part3
+      setline(line(A), new_line)
+  else
+      var first_line = strcharpart(getline(A), 0, col(A) - lead - 1)
+        .. strcharpart(getline(A), col(A) - 1)
+      echom first_line
+      setline(line(A), first_line)
+
+      var last_line = strcharpart(getline(B), 0, col(B) - trail - 1)
+        .. strcharpart(getline(B), col(B) - 1)
+      echom last_line
+      setline(line(B), last_line)
+  endif
+enddef
+
 export def SurroundNew(tagg: string, text_object: string = '', keep_even: bool = false)
   # Usage:
   #   Select text and hit <leader> + e.g. parenthesis
@@ -138,34 +165,35 @@ export def SurroundNew(tagg: string, text_object: string = '', keep_even: bool =
     return
   endif
 
-  var leading_symbol = strcharpart(getline(A), col(A) - len(tagg) - 1, len(tagg))
-  var trailing_symbol = strcharpart(getline(B), col(B), len(tagg))
-  if leading_symbol == tagg || trailing_symbol == tagg
-    if leading_symbol == tagg
-      var new_line = strcharpart(getline(A), 0, col(A) - len(tagg) - 1)
-                    .. strcharpart(getline(A), col(A) - 1,  line('$'))
-      echom new_line
-      setline(line(A), new_line)
-    endif
-    # if trailing_symbol == tagg
-    #   var new_line = strcharpart(getline(B), 0, col(B) - 1)
-    #                 .. strcharpart(getline(B), col(B) + len(tagg),  line('$'))
-    #   setline(line(B), new_line)
-    # endif
+  var lead = strcharpart(getline(A), col(A) - len(tagg) - 1, len(tagg))
+  var trail = strcharpart(getline(B), col(B), len(tagg))
+
+  if lead == tagg && trail == tagg
+    RemoveSurrounding(A, B, len(lead), len(trail))
+    # Remove surrounding
   else
     # Add surrounding
     # Capture text as-is
     var captured_text = GetTextBetweenMarks(A, B)
+    #
+    # Delete old text.
+    # OBS! Markers will be also deleted!
+    # DeleteTextBetweenMarks(A, B)
 
     # TEST
-    echom "l: " .. leading_symbol
-    echom "t: " ..  trailing_symbol
+    # echom "l: " .. lead
+    # echom "t: " ..  trail
 
     # Remove all existing tags
+    # If there is a tag surrounded by white spaces, keep it as it is not a
+    # valid text-style in markdown
     var cleaned_text = captured_text
-      ->map((_, val) => substitute(val, '\*\+', '', 'g'))
-      ->map((_, val) => substitute(val, '\~\~', '', 'g'))
-      ->map((_, val) => substitute(val, '`', '', 'g'))
+      ->map((_, val) => substitute(val, '\S\*\+', '', 'g'))
+      ->map((_, val) => substitute(val, '\*\+\S', '', 'g'))
+      ->map((_, val) => substitute(val, '\S\~\~', '', 'g'))
+      ->map((_, val) => substitute(val, '\~\~\S', '', 'g'))
+      ->map((_, val) => substitute(val, '\S`', '', 'g'))
+      ->map((_, val) => substitute(val, '`\S', '', 'g'))
 
     # Surround text
     # echom captured_text
@@ -176,17 +204,14 @@ export def SurroundNew(tagg: string, text_object: string = '', keep_even: bool =
 
     # echom surrounded_text
 
-    # Delete old text.
-    # OBS! Markers will be also deleted!
-    # DeleteTextBetweenMarks(A, B)
 
     # Add new text
     var first_line = strcharpart(getline(A), 0, col(A) - 1)
       .. surrounded_text[0]
-      .. strcharpart(getline(A), col(A) + len(captured_text[0]) - 1, col('$'))
+      .. strcharpart(getline(A), col(A) + len(captured_text[0]) - 1)
     var last_line = strcharpart(getline(B), 0, col(B) - len(captured_text[-1]) - 1)
       .. surrounded_text[-1]
-      .. strcharpart(getline(B), col(B), col('$'))
+      .. strcharpart(getline(B), col(B))
     echom first_line
     # echom last_line
 
@@ -230,7 +255,7 @@ export def GetTextBetweenMarks(A: string, B: string): list<string>
     endif
 enddef
 
-def InsertLinesAtMark(marker: string, lines: list<string>)
+export def g:InsertLinesAtMark(marker: string, lines: list<string>)
     var pos = getpos(marker)  # Get (line, column) position of the marker
     var line_num = pos[1]     # Line number
     var col = pos[2]          # Column number
@@ -245,7 +270,7 @@ def InsertLinesAtMark(marker: string, lines: list<string>)
 
     # If there's only one line in the list, insert it inline
     if len(lines) == 1
-        var new_line = strpart(current_line, 0, col - 1) .. lines[0] .. strpart(current_line, col - 1)
+        var new_line = strcharpart(current_line, 0, col - 1) .. lines[0] .. strcharpart(current_line, col - 1)
         setline(line_num, new_line)
     else
         # Modify the first line (before the marker)
