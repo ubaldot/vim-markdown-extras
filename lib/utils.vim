@@ -148,7 +148,7 @@ def RemoveSurrounding(A: string, B: string, lead: number, trail: number)
   endif
 enddef
 
-export def SurroundNew(tagg: string, text_object: string = '', keep_even: bool = false)
+export def SurroundNew(open_tag: string, close_tag: string, text_object: string = '', keep_even: bool = false)
   # Usage:
   #   Select text and hit <leader> + e.g. parenthesis
   #
@@ -157,6 +157,8 @@ export def SurroundNew(tagg: string, text_object: string = '', keep_even: bool =
   var A = "'<"
   var B = "'>"
   if !empty(text_object)
+    # A and B are "'[" and "']". Basically, GetTextObject is called for
+    # setting such markers through a yank
     A = GetTextObject(text_object).start_pos
     B = GetTextObject(text_object).end_pos
   endif
@@ -165,8 +167,9 @@ export def SurroundNew(tagg: string, text_object: string = '', keep_even: bool =
     return
   endif
 
-  var lead = strcharpart(getline(A), col(A) - len(tagg) - 1, len(tagg))
-  var trail = strcharpart(getline(B), col(B), len(tagg))
+  # Capture the tags: TODO: replace with "IsInBetweenMarks"
+  var lead = strcharpart(getline(A), col(A) - len(open_tag) - 1, len(open_tag))
+  var trail = strcharpart(getline(B), col(B), len(close_tag))
 
   if lead == tagg && trail == tagg
     RemoveSurrounding(A, B, len(lead), len(trail))

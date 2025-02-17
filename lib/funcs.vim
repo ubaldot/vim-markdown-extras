@@ -99,49 +99,31 @@ def SetBlockStartEndLines(start_line: number = -1,
   return [l0, l1]
 enddef
 
-def g:Test()
-  var is_inside = false
-  var saved_mark_a = getcharpos("'a")
-  var saved_mark_b = getcharpos("'b")
-
-  var ranges = GetBlocksRangesNew('#XXX', 'XXX#')
-
-  for range in ranges
-    setcharpos("'a", range[1])
-    setcharpos("'b", range[2])
-    if IsCursorBetweenMarks("'a", "'b")
-      is_inside = true
-      break
-  endfor
-  setcharpos("'a", saved_mark_a)
-  setcharpos("'b", saved_mark_b)
-  return is_inside
-enddef
-
-
-def IsCursorBetweenMarks(A: string, B: string)
+def IsCursorBetweenMarks(A: string, B: string): bool
     var cursor_pos = getpos(".")
-    var A_pos = getpos("'" .. A)
-    var B_pos = getpos("'" .. B)
+    var A_pos = getcharpos(A)
+    var B_pos = getcharpos(B)
 
-    var cursor_line = cursor_pos[1]
-    var cursor_col = cursor_pos[2]
+    # Convert in floats of the form "line.column" so the check reduces to a
+    # comparison of floats.
+    var lower_float = str2float($'{A_pos[1]}.{A_pos[2]}')
+    var upper_float = str2float($'{B_pos[1]}.{B_pos[2]}')
+    var cursor_pos_float = str2float($'{getcharpos(".")[1]}.{getcharpos(".")[2]}')
 
-    var A_line = A_pos[1]
-    var A_col = A_pos[2]
-    var pos_A = str2nr()
+    # Debugging
+    echom "cur_pos: " .. cursor_pos_float
+    echom "a: " .. string(lower_float)
+    echom "b: " .. string(upper_float)
 
-    var B_line = B_pos[1]
-    var B_col = B_pos[2]
-
-    # Ensure A is before B
-    if [A_line, A_col] > [B_line, B_col]
-        [A_line, A_col, B_line, B_col] = [B_line, B_col, A_line, A_col]
+    # In case the lower limit is larger than the higher limit, swap
+    if upper_float < lower_float
+      var tmp = upper_float
+      upper_float = lower_float
+      lower_float = tmp
     endif
 
-    # Check if cursor is between the marks
-    return ([A_line, A_col] <= [cursor_line, cursor_col]) &&
-           ([cursor_line, cursor_col] <= [B_line, B_col])
+    return lower_float <= cursor_pos_float && cursor_pos_float <= upper_float
+
 enddef
 
 
@@ -204,6 +186,9 @@ enddef
 
 def g:GetBlocksRangesNew(open_tag: string, close_tag: string): list<list<list<number>>>
   # It returns open-intervals, i.e. the tags are excluded
+  # If there is a spare tag, it won't be considered
+  # TODO: It is assumed that the ranges have no intersections. Note that this
+  # won't happen if open_tag = close_tag, as in many languages.
   var saved_cursor = getcursorcharpos()
   cursor(1, 1)
 
@@ -251,10 +236,12 @@ def g:GetBlocksRangesNew(open_tag: string, close_tag: string): list<list<list<nu
   endwhile
   setcursorcharpos(saved_cursor[1 : 2])
 
-  echom "ranges: " .. string(ranges[0 : -1])
-  echom "ranges: " .. string(ranges)
-  # Remove the last element [[0,0,0,0], [0,0,0,0]]
-  return ranges[0 : -2]
+  # Remove the last element junky [[0,0,len(open_tag),0], [0,0,-1,0]]
+  echom "ranges :" .. string(ranges)
+  remove(ranges, -1)
+  echom "ranges :" .. string(ranges)
+
+  return ranges
 enddef
 
 def GetBlocksRanges(tag: string): list<list<number>>
@@ -304,8 +291,33 @@ def IsInsideBlock(tag: string): bool
   return is_inside_block
 enddef
 
+def g:IsInsideBlockNew(open_tag: string, close_tag: string): bool
+  var is_inside_block = false
+
+  # OBS! Ranges are open-intervals!
+  var ranges = g:GetBlocksRangesNew(open_tag, close_tag)
+
+  var saved_mark_a = getcharpos("'a")
+  var saved_mark_b = getcharpos("'b")
+
+  for range in ranges
+    setcharpos("'a", range[0])
+    setcharpos("'b", range[1])
+    if IsCursorBetweenMarks("'a", "'b")
+      is_inside_block = true
+      break
+    endif
+  endfor
+
+  # Restore marks 'a and 'b
+  setcharpos("'a", saved_mark_a)
+  setcharpos("'b", saved_mark_b)
+
+  return is_inside_block
+enddef
+
 #
-#    #XXX
+#    XXX#
 export def ToggleBlock(tag: string, line_start: number = -1,
       \  line_end: number = -1, fence: string = '')
   # Set or unset
@@ -319,6 +331,3 @@ export def ToggleBlock(tag: string, line_start: number = -1,
     UnsetBlock(tag)
   endif
 enddef
-
-# öljwöekj öqkjq 0+02032
-# XXX#
