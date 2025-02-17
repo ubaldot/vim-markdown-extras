@@ -141,7 +141,8 @@ if use_default_mappings
   #
   # TEXT-OBJECTS text-style mappings
   # Text-obects i` and a` are removed since they refer to code
-  var all_Vim_text_objects = ['aw', 'iw', 'aW', 'iW', 'as', 'is', 'ap', 'ip',
+  # 'aw', 'aW', 'as, 'is' are removed as it generate a non-valid markdown
+  var all_Vim_text_objects = ['aw', 'iw', 'iW', 'as', 'is', 'ap', 'ip',
     'a]', 'a[', 'i]', 'i[', 'a)', 'a(', 'ab', 'i)', 'i(', 'ib', 'a>', 'a<',
     'i>', 'i<', 'at', 'it', 'a}', 'a{', 'aB', 'i}', 'i{', 'iB', 'a\"', 'a''',
     'i\"', 'i''']

@@ -94,40 +94,6 @@ export def Surround(pre: string, post: string, text_object: string = '')
   endif
 enddef
 
-export def SurroundNew(tag: string, text_object: string = '', keep_even: bool = false)
-  # Usage:
-  #   Select text and hit <leader> + e.g. parenthesis
-  #
-  # Note that Visual Selections and Text Objects are cousins
-  #
-  var A = "'<"
-  var B = "'>"
-  if !empty(text_object)
-    A = GetTextObject(text_object).start_pos
-    B = GetTextObject(text_object).end_pos
-  endif
-
-  # Remove all existing tags
-  var surrounded_text = GetTextBetweenMarks(A, B)
-    ->map((_, val) => substitute(val, tag, '', 'g'))
-
-  # Surround text
-  insert(surrounded_text, tag, 0)
-  insert(surrounded_text, tag, len(surrounded_text))
-
-  echom "surrounded_text: " .. string(surrounded_text)
-
-  # Delete old text
-  execute $":{A},{B}d _"
-
-  # Add surrounded text
-  InsertInLine(A, join(surrounded_text))
-
-  # Keep even number of tags in the document
-  if keep_even
-    echom "TBD"
-  endif
-enddef
 
 
 export def FormatWithoutMoving(a: number = 0, b: number = 0)
@@ -155,32 +121,154 @@ export def FormatWithoutMoving(a: number = 0, b: number = 0)
 
 enddef
 
+export def SurroundNew(tagg: string, text_object: string = '', keep_even: bool = false)
+  # Usage:
+  #   Select text and hit <leader> + e.g. parenthesis
+  #
+  # Note that Visual Selections and Text Objects are cousins
+  #
+  var A = "'<"
+  var B = "'>"
+  if !empty(text_object)
+    A = GetTextObject(text_object).start_pos
+    B = GetTextObject(text_object).end_pos
+  endif
+
+  if getpos(A) == getpos(B)
+    return
+  endif
+
+  var leading_symbol = strcharpart(getline(A), col(A) - len(tagg) - 1, len(tagg))
+  var trailing_symbol = strcharpart(getline(B), col(B), len(tagg))
+  if leading_symbol == tagg || trailing_symbol == tagg
+    if leading_symbol == tagg
+      var new_line = strcharpart(getline(A), 0, col(A) - len(tagg) - 1)
+                    .. strcharpart(getline(A), col(A) - 1,  line('$'))
+      echom new_line
+      setline(line(A), new_line)
+    endif
+    # if trailing_symbol == tagg
+    #   var new_line = strcharpart(getline(B), 0, col(B) - 1)
+    #                 .. strcharpart(getline(B), col(B) + len(tagg),  line('$'))
+    #   setline(line(B), new_line)
+    # endif
+  else
+    # Add surrounding
+    # Capture text as-is
+    var captured_text = GetTextBetweenMarks(A, B)
+
+    # TEST
+    echom "l: " .. leading_symbol
+    echom "t: " ..  trailing_symbol
+
+    # Remove all existing tags
+    var cleaned_text = captured_text
+      ->map((_, val) => substitute(val, '\*\+', '', 'g'))
+      ->map((_, val) => substitute(val, '\~\~', '', 'g'))
+      ->map((_, val) => substitute(val, '`', '', 'g'))
+
+    # Surround text
+    # echom captured_text
+    # echom cleaned_text
+    var surrounded_text = copy(cleaned_text)
+    surrounded_text[0] = tagg .. cleaned_text[0]
+    surrounded_text[-1] = surrounded_text[-1] .. tagg
+
+    # echom surrounded_text
+
+    # Delete old text.
+    # OBS! Markers will be also deleted!
+    # DeleteTextBetweenMarks(A, B)
+
+    # Add new text
+    var first_line = strcharpart(getline(A), 0, col(A) - 1)
+      .. surrounded_text[0]
+      .. strcharpart(getline(A), col(A) + len(captured_text[0]) - 1, col('$'))
+    var last_line = strcharpart(getline(B), 0, col(B) - len(captured_text[-1]) - 1)
+      .. surrounded_text[-1]
+      .. strcharpart(getline(B), col(B), col('$'))
+    echom first_line
+    # echom last_line
+
+    if len(surrounded_text)  == 1
+      setline(line(A), first_line)
+    elseif len(surrounded_text)  == 2
+      setline(line(A), first_line)
+      setline(line(B), last_line)
+    else
+      setline(line(A), first_line)
+      setline(line(A) + 1, surrounded_text[1 : -1])
+      setline(line(B), last_line)
+    endif
+
+    # Keep even number of tags in the document
+    if keep_even
+      echom "TBD"
+    endif
+  endif
+enddef
+
 export def GetTextBetweenMarks(A: string, B: string): list<string>
-    # Usage: GetTextBetweenPoints("'[", "']"). Arguments must be markers.
+    # Usage: GetTextBetweenPoints("`[", "`]").
+    #
+    # Arguments must be markers
+    # called with the back ticks to get the exact position ('a jump to the
+    # marker but places the cursor at the beginning of the line.)
     #
     var [_, l1, c1, _] = getpos(A)
     var [_, l2, c2, _] = getpos(B)
 
     if l1 == l2
         # Extract text within a single line
-        return [getline(l1)[c1 - 1 : c2 - 2]]
+        return [getline(l1)[c1 - 1 : c2 - 1]]
     else
         # Extract text across multiple lines
         var lines = getline(l1, l2)
         lines[0] = lines[0][c1 - 1 : ]  # Trim the first line from c1
-        lines[-1] = lines[-1][ : c2 - 2]  # Trim the last line up to c2
+        lines[-1] = lines[-1][ : c2 - 1]  # Trim the last line up to c2
         return lines
     endif
 enddef
 
-export def InsertInLine(marker: string, text: string)
-   # Insert text in the given column
-   var line = getline(line(marker))   # Get the current line
-   var lnum = line(marker)
-   var column = col(marker)
-   var new_line = strcharpart(line, 0, column) .. text .. strcharpart(line, column)
-   setline(lnum, new_line)                  # Set the modified line back
+def InsertLinesAtMark(marker: string, lines: list<string>)
+    var pos = getpos(marker)  # Get (line, column) position of the marker
+    var line_num = pos[1]     # Line number
+    var col = pos[2]          # Column number
+
+    # Get the existing line at the marker
+    var current_line = getline(line_num)
+
+    # If the input list is empty, do nothing
+    if empty(lines)
+        return
+    endif
+
+    # If there's only one line in the list, insert it inline
+    if len(lines) == 1
+        var new_line = strpart(current_line, 0, col - 1) .. lines[0] .. strpart(current_line, col - 1)
+        setline(line_num, new_line)
+    else
+        # Modify the first line (before the marker)
+        var first_part = strcharpart(current_line, 0, col - 1)
+        var last_part = strcharpart(current_line, col - 1)
+
+        # Construct the final text to insert
+        var new_lines = [first_part .. lines[0]] + lines[1 : ] + [last_part]
+
+        # Insert the lines into the buffer
+        # setline(line_num - 1, new_lines)
+        append(line_num - 1, new_lines)
+    endif
 enddef
+
+# export def InsertInLine(marker: string, text: list<string>)
+#    # Insert text in the given column
+#    var line = getline(line(marker))   # Get the current line
+#    var lnum = line(marker)
+#    var column = col(marker)
+#    var new_line = strcharpart(line, 0, column) .. text .. strcharpart(line, column)
+#    setline(lnum, new_line)                  # Set the modified line back
+# enddef
 
 # export def g:DeleteTextBetweenMarks(A: string, B: string)
 #     var start_pos = getpos(A)
@@ -207,14 +295,9 @@ enddef
 #         var lines = getline(start_line, end_line)
 
 #         # modify first and last line to remove text between a and b
-#         lines[0] = strpart(lines[0], 0, start_col - 1)
-#         lines[-1] = strpart(lines[-1], end_col - 1)
+         # lines[-1] = strpart(lines[-1], end_col - 1)
 
-#         # set modified text back
-#         setline(start_line, lines[0])
-#         setline(end_line, lines[-1])
-
-#         # delete middle lines if any
+#         # set lines if any
 #         if end_line > start_line + 1
 #             deletebufline('%', start_line + 1, end_line - 1)
 #         endif
@@ -223,6 +306,13 @@ enddef
 
 
 
-export def g:DeleteTextBetweenMarks(A: string, B: string)
-  execute $'norm! {A}v{B}d _'
+export def DeleteTextBetweenMarks(A: string, B: string): string
+  # To jump to the exact position (and not at the beginning of a line) you
+  # have to call the marker with the backtick ` rather than with ', e.g. `a
+  # instead of 'a to jump to the exact marker position
+  var exact_A = substitute(A, "'", "`", "")
+  var exact_B = substitute(B, "'", "`", "")
+  execute $'norm! {exact_A}v{exact_B}d _'
+  # This to get rid off E1186
+  return ''
 enddef
