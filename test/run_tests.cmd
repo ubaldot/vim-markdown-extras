@@ -6,16 +6,19 @@ SETLOCAL
 REM Define the paths and files
 SET "VIMPRG=vim.exe"
 SET "VIMRC=vimrc_for_tests"
-SET "VIM_CMD=%VIMPRG% --clean -u %VIMRC% -i NONE -N --not-a-term"
+SET "VIM_CMD=%VIMPRG% --clean -u %VIMRC% -i NONE"
 
 REM Create or overwrite the vimrc file with the initial setting
 REM
 
 (
+    echo vim9script
+    echo # ---- dummy vimrc file content -----
+    echo set nocompatible
     echo set runtimepath+=..
-    echo set formatoptions+=wnp
-    echo set autoindent
+    echo autoindent
     echo filetype plugin indent on
+    echo # ----------------------------------
 ) >> "%VIMRC%"
 
 REM Check if the vimrc file was created successfully
@@ -40,7 +43,7 @@ if %ERRORLEVEL% EQU 0 (
 )
 
 REM Check test results
-echo MARKDOWN_EXTRAS unit test results
+echo MARKDOWN_EXTRAS unit test results:
 type results.txt
 
 REM Check for FAIL in results.txt

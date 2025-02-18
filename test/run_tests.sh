@@ -22,8 +22,14 @@ fi
 # OBS: You can also run the following lines in the test file because it is
 # source before running the tests anyway. See Vim9-conversion-aid
 VIMRC="VIMRC"
-echo "set runtimepath+=.." > "$VIMRC"
+
+echo "vim9script" > "$VIMRC"
+echo "# ---- dummy vimrc file content -----" >> "$VIMRC"
+echo "set nocompatible" >> "$VIMRC"
+echo "set runtimepath+=.." >> "$VIMRC"
+echo "set autoindent" >> "$VIMRC"
 echo "filetype plugin on" >> "$VIMRC"
+echo "# -----------------------------------" >> "$VIMRC"
 
 # Construct the VIM_CMD with correct variable substitution and quoting
 # VIM_CMD="$VIM_PRG -u $VIMRC -U NONE -i NONE --noplugin -N --not-a-term"
