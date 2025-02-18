@@ -8,6 +8,11 @@ export def Echowarn(msg: string)
   echohl WarningMsg | echom $'[markdown_extras] {msg}' | echohl None
 enddef
 
+export def ZipLists(l1: list<any>, l2: list<any>): list<list<any>>
+    # Zip like function, like in Python
+    var min_len = min([len(l1), len(l2)])
+    return map(range(min_len), $'[{l1}[v:val], {l2}[v:val]]')
+enddef
 
 export def GetTextObject(textobject: string): dict<any>
   # You pass a text object like "inside word", etc. and it returns it, along
@@ -122,7 +127,7 @@ export def FormatWithoutMoving(a: number = 0, b: number = 0)
 enddef
 
 
-def RemoveSurrounding(A: string, B: string, lead: number, trail: number)
+export def RemoveSurrounding(A: string, B: string, lead: number, trail: number)
   # Remove 'lead' chars from before mark 'A and 'trail' chars after mark 'B
   if line(A) == line(B)
     var part1 = strcharpart(getline(A), 0, col(A) - lead - 1)
@@ -154,27 +159,109 @@ export def SurroundNew(open_tag: string, close_tag: string, text_object: string 
   #
   # Note that Visual Selections and Text Objects are cousins
   #
-  var A = "'<"
-  var B = "'>"
-  if !empty(text_object)
-    # A and B are "'[" and "']". Basically, GetTextObject is called for
-    # setting such markers through a yank
-    A = GetTextObject(text_object).start_pos
-    B = GetTextObject(text_object).end_pos
-  endif
-
-  if getpos(A) == getpos(B)
-    return
-  endif
-
-  # Capture the tags: TODO: replace with "IsInBetweenMarks"
-  var lead = strcharpart(getline(A), col(A) - len(open_tag) - 1, len(open_tag))
-  var trail = strcharpart(getline(B), col(B), len(close_tag))
-
-  if lead == tagg && trail == tagg
-    RemoveSurrounding(A, B, len(lead), len(trail))
-    # Remove surrounding
+  if !empty(TagsInterval(open_tag, close_tag))
+    RemoveSurrounding(open_tag, close_tag)
   else
+    # Set marks
+    var A_mark = "'<"
+    var B_mark = "'>"
+    if !empty(text_object)
+      # A and B are "'[" and "']". Basically, GetTextObject is called for
+      # setting such markers through a yank
+      A_mark = GetTextObject(text_object).start_pos
+      B_mark = GetTextObject(text_object).end_pos
+    endif
+
+    # marks -> (x,y) coordinates
+    var A = getcharpos(A_mark)
+    var xA = A[1]
+    var yA = A[2]
+    var B = getcharpos(B_mark)
+    var xB = B[1]
+    var yB = B[2]
+
+    if A == B
+      return
+    endif
+
+    # -------- The search begins -------------
+    # We check conditions like the following and we adjust the style tags
+    # We assume that the existing style ranges are (C,D) and (E,F) and we want
+    # to place (A,B) as in the picture
+    #
+    # -E-------A------------
+    # ------------F---------
+    # ------------C------B--
+    # --------D-------------
+    #
+    # We want to get:
+    #
+    # -E------FA------------
+    # ----------------------
+    # ------------------BC--
+    # --------D-------------
+    #
+    # so that all the styles are visible
+
+    # Check if the cursor is already in a range of another pair of tags
+    var open_tags = ['*', '**', '~~', '`']
+    var close_tags = ['*', '**', '~~', '`']
+    var old_right_tag = ''
+    var old_left_tag = ''
+
+    var found_tags_interval = []
+    # We assume that open and close tags are the same, given that we started
+    # developing for markdown
+    # Check if A falls in an existing interval
+    cursor(xA, yA)
+    for tagg in ZipLists(open_tags, close_tags)
+      found_tags_interval = TagsInterval(tagg[0], tagg[1])
+      if !empty(found_tags_interval)
+        old_right_tag = tagg[0]
+        # Existing blocks shall be disjoint,
+        # so we can break as soon as we find a tag
+        break
+      endif
+    endfor
+
+    var toA = ''
+    if !empty(found_tags_interval)
+      toA = old_right_tag .. open_tag .. strcharpart(getline(xA), 0, yA)
+    else
+      toA = open_tag .. strcharpart(getline(xA), 0, yA)
+    endif
+
+    # Check if also B falls in an existing interval
+    cursor(xB, yB)
+    for tagg in ZipLists(open_tags, close_tags)
+      found_tags_interval = TagsInterval(tagg[0], tagg[1])
+      if !empty(found_tags_interval)
+        old_left_tag = tagg[0]
+        break
+      endif
+    endfor
+
+    var fromB = ''
+    if !empty(found_tags_interval)
+      FromB = close_tag .. old_left_tag .. strcharpart(getline(xB), yB - 1)
+    else
+      FromB = close_tag .. strcharpart(getline(xB), yB - 1)
+    endif
+
+    if xA == xB
+      # Overwrite everything that is in the middle
+      var middle = strcharpart(getline(xA), yA - 1, yB - yA)
+        -> substitute($'\({open_tag[0]}\|{open_tag[1]}
+              \|{open_tag[2]}\|{open_tag[3]}\)', '', 'g')
+      setline(xA, toA .. middle .. fromB)
+    elseif xB - xA = 1
+      echom "TBD"
+    else
+      echom "TBD"
+    endif
+    # The extremes shall set. Next, we have to arrange what happens in the
+    # middle.
+    # TODO
     # Add surrounding
     # Capture text as-is
     var captured_text = GetTextBetweenMarks(A, B)
@@ -187,7 +274,7 @@ export def SurroundNew(open_tag: string, close_tag: string, text_object: string 
     # echom "l: " .. lead
     # echom "t: " ..  trail
 
-    # Remove all existing tags
+    # TODO: This has to be done afterwardsRemove all existing tags between A and B
     # If there is a tag surrounded by white spaces, keep it as it is not a
     # valid text-style in markdown
     var cleaned_text = captured_text
@@ -206,8 +293,6 @@ export def SurroundNew(open_tag: string, close_tag: string, text_object: string 
     surrounded_text[-1] = surrounded_text[-1] .. tagg
 
     # echom surrounded_text
-
-
     # Add new text
     var first_line = strcharpart(getline(A), 0, col(A) - 1)
       .. surrounded_text[0]
@@ -258,7 +343,7 @@ export def GetTextBetweenMarks(A: string, B: string): list<string>
     endif
 enddef
 
-export def g:InsertLinesAtMark(marker: string, lines: list<string>)
+export def InsertLinesAtMark(marker: string, lines: list<string>)
     var pos = getpos(marker)  # Get (line, column) position of the marker
     var line_num = pos[1]     # Line number
     var col = pos[2]          # Column number
@@ -332,7 +417,119 @@ enddef
 #     endif
 # enddef
 
+export def GetTagsRanges(open_tag: string, close_tag: string): list<list<list<number>>>
+  # It returns open-intervals, i.e. the tags are excluded
+  # If there is a spare tag, it won't be considered
+  # TODO: It is assumed that the ranges have no intersections. Note that this
+  # won't happen if open_tag = close_tag, as in many languages.
+  var saved_cursor = getcursorcharpos()
+  cursor(1, 1)
 
+  var ranges = []
+
+  # 2D format due to that searchpos() returns a 2D vector
+  var open_tag_pos_short = [-1, -1]
+  var close_tag_pos_short = [-1, -1]
+  var open_tag_pos_short_final = [-1, -1]
+  var close_tag_pos_short_final = [-1, -1]
+  #
+  # 4D format due to that markers have 4-coordinates
+  var open_tag_pos = [0] + open_tag_pos_short + [0]
+  var close_tag_pos = [0] + close_tag_pos_short + [0]
+
+   # ölkjqw #XXX
+  while open_tag_pos_short != [0, 0]
+    open_tag_pos_short = searchpos(open_tag, 'W')
+
+    if getline(open_tag_pos_short[0]) =~ $'{open_tag}$'
+      # If the open tag is the tail of the line, then the open-interval starts from
+      # the next line, column 1
+      open_tag_pos_short_final[0] = open_tag_pos_short[0] + 1
+      open_tag_pos_short_final[1] = 1
+    else
+      # Pick the open-interval
+      open_tag_pos_short_final[0] = open_tag_pos_short[0]
+      open_tag_pos_short_final[1] = open_tag_pos_short[1] + len(open_tag)
+    endif
+    open_tag_pos = [0] + open_tag_pos_short_final + [0]
+
+    close_tag_pos_short = searchpos(close_tag, 'W')
+    # If the closed tag is the lead of the line, then the open-interval starts from
+    # the previous line, last column
+    if getline(close_tag_pos_short[0]) =~ $'^{close_tag}'
+      close_tag_pos_short_final[0] = close_tag_pos_short[0] - 1
+      close_tag_pos_short_final[1] = len(getline(close_tag_pos_short_final[0]))
+    else
+      close_tag_pos_short_final[0] = close_tag_pos_short[0]
+      close_tag_pos_short_final[1] = close_tag_pos_short[1] - 1
+    endif
+    close_tag_pos = [0] + close_tag_pos_short_final + [0]
+
+    add(ranges, [open_tag_pos, close_tag_pos])
+  endwhile
+  setcursorcharpos(saved_cursor[1 : 2])
+
+  # Remove the last element junky [[0,0,len(open_tag),0], [0,0,-1,0]]
+  echom "ranges :" .. string(ranges)
+  remove(ranges, -1)
+  echom "ranges :" .. string(ranges)
+
+  return ranges
+enddef
+
+export def IsBetweenMarks(A: string, B: string): bool
+    var cursor_pos = getpos(".")
+    var A_pos = getcharpos(A)
+    var B_pos = getcharpos(B)
+
+    # Convert in floats of the form "line.column" so the check reduces to a
+    # comparison of floats.
+    var lower_float = str2float($'{A_pos[1]}.{A_pos[2]}')
+    var upper_float = str2float($'{B_pos[1]}.{B_pos[2]}')
+    var cursor_pos_float = str2float($'{getcharpos(".")[1]}.{getcharpos(".")[2]}')
+
+    # Debugging
+    echom "cur_pos: " .. cursor_pos_float
+    echom "a: " .. string(lower_float)
+    echom "b: " .. string(upper_float)
+
+    # In case the lower limit is larger than the higher limit, swap
+    if upper_float < lower_float
+      var tmp = upper_float
+      upper_float = lower_float
+      lower_float = tmp
+    endif
+
+    return lower_float <= cursor_pos_float && cursor_pos_float <= upper_float
+
+enddef
+
+export def TagsInterval(open_tag: string, close_tag: string): list<list<number>>
+  # Return the range of the tags if the cursor is within such a range,
+  # otherwise return an empty list.
+  var interval = []
+
+  # OBS! Ranges are open-intervals!
+  var ranges = g:GetBlocksRangesNew(open_tag, close_tag)
+
+  var saved_mark_a = getcharpos("'a")
+  var saved_mark_b = getcharpos("'b")
+
+  for range in ranges
+    var A = setcharpos("'a", range[0])
+    var B = setcharpos("'b", range[1])
+    if IsBetweenMarks("'a", "'b")
+      interval = [A, B]
+      break
+    endif
+  endfor
+
+  # Restore marks 'a and 'b
+  setcharpos("'a", saved_mark_a)
+  setcharpos("'b", saved_mark_b)
+
+  return is_inside_block
+enddef
 
 export def DeleteTextBetweenMarks(A: string, B: string): string
   # To jump to the exact position (and not at the beginning of a line) you

@@ -24,12 +24,15 @@ fi
 VIMRC="VIMRC"
 
 echo "vim9script" > "$VIMRC"
-echo ""
+echo "">> "$VIMRC"
 echo "set runtimepath+=.." >> "$VIMRC"
 echo "set runtimepath+=../after"  >> "$VIMRC"
 echo "filetype plugin on" >> "$VIMRC"
 echo "" >> "$VIMRC"
 
+echo "----- vimrc content ---------"
+cat $VIMRC
+echo "-----------------------------"
 # Construct the VIM_CMD with correct variable substitution and quoting
 # VIM_CMD="$VIM_PRG -u $VIMRC -U NONE -i NONE --noplugin -N --not-a-term"
 VIM_CMD="$VIM_PRG --clean -u $VIMRC -i NONE --not-a-term"
