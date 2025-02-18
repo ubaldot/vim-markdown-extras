@@ -15,8 +15,8 @@ export def ContinueList()
   # filetype
   # For continuing items list and enumerations
   # Check if the current line starts with '- [ ]' or '- '
-  var variant_1 = '-\s\[\s*\]\s\+' # - [ ] bla bla bla
-  var variant_2 = '-\s\+' # - bla bla bla
+  var variant_1 = '-\s\[\(\s*\|x\)*\]\s\+' # - [ ] bla bla bla
+  var variant_2 = '-\s\+\(\[\)\@!' # - bla bla bla
   var variant_3 = '\*\s\+' # * bla bla bla
   var variant_4 = '\d\+\.\s\+' # 123. bla bla bla
 
@@ -40,12 +40,13 @@ export def ContinueList()
           break
     endif
   endfor
-              # lqdjwhcnq  qwökjc 208371r -., XXX#
+
   # Scan the current line through the less general regex (a regex can be
   # contained in another regex)
   if !only_bullet
      if current_line =~ $'^\s*{variant_1}'
-       tmp = $"{current_line->matchstr($'^\s*{variant_1}')}"
+       # If - [x], the next item should be - [ ] anyway.
+       tmp = $"{current_line->matchstr($'^\s*{variant_1}')->substitute('x', ' ', 'g')}"
      elseif current_line =~ $'^\s*{variant_2}'
        tmp = $"{current_line->matchstr($'^\s*{variant_2}')}"
      elseif current_line =~ $'^\s*{variant_3}'
