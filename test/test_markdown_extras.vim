@@ -118,9 +118,7 @@ def g:Test_markdown_lists()
 
   # redraw!
   # sleep 3
-
-  quit!
-
+  :%bw!
   Cleanup_markdown_testfile()
 enddef
 
@@ -137,5 +135,8 @@ def g:Test_check_uncheck_todo_keybinding()
   echom assert_true(getline('.') =~ '- \[x\] ')
   execute $"silent norm! \<Plug>MarkdownToggleCheck"
   echom assert_true(getline('.') =~ '- \[ \] ')
+
+  :%bw!
+  Cleanup_markdown_testfile()
 
 enddef

@@ -3,7 +3,8 @@ vim9script
 # The global variable TestName should be set to the name of the file
 # containing the tests.
 
-# source common.vim
+# Uncomment the following to debug this script
+# g:TestName = 'test_markdown_extras.vim'
 
 def RunTests()
   set nomore
@@ -20,6 +21,8 @@ def RunTests()
     writefile(['No tests are found'], 'results.txt')
     return
   endif
+
+	# Execute the functions
   for f in fns
     v:errors = []
     v:errmsg = ''
@@ -29,6 +32,7 @@ def RunTests()
     catch
       add(v:errors, $'Error: Test {f} failed with exception {v:exception} at {v:throwpoint}')
     endtry
+
     if v:errmsg != ''
       add(v:errors, $'Error: Test {f} generated error {v:errmsg}')
     endif
