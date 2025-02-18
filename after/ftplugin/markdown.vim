@@ -5,11 +5,6 @@ import autoload "../../lib/preview.vim"
 import autoload "../../lib/links.vim"
 import autoload '../../lib/utils.vim'
 
-
-&l:tabstop = 2
-setlocal formatoptions+=n
-setlocal autoindent
-
 links.GenerateLinksDict()
 
 if exists('b:mapleader') == 0

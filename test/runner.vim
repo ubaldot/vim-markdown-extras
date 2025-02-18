@@ -6,12 +6,12 @@ vim9script
 # source common.vim
 
 def RunTests()
-  :set nomore
-  :set debug=beep
+  set nomore
+  set debug=beep
   delete('results.txt')
 
   # Get the list of test functions in this file and call them
-  var fns: list<string> = execute('function /^Test_')
+  var fns: list<string> = execute('def /^Test_')
 		    ->split("\n")
 		    ->map("v:val->substitute('^def ', '', '')")
 		    ->sort()

@@ -1,2 +1,1 @@
-command line..script C:\Users\yt75534\vimfiles\plugins\vim-markdown-extras\test\runner.vim[46]..function <SNR>22_RunTests[20]..Test_markdown_lists line 74: Pattern '    - barrr' does not match '    - bar'
-Test_markdown_lists(): FAIL
+Test_markdown_lists(): pass
