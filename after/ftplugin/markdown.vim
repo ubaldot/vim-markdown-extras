@@ -58,14 +58,16 @@ if use_pandoc && executable('pandoc')
   # All the coreography happening inside here relies on the compiler
   # pandoc.
 
+  # b:pandoc_compiler_args is used in the bundled compiler-pandoc
+  if exists('g:markdown_extras_config') != 0
+      && has_key(g:markdown_extras_config, 'pandoc_args')
+    b:pandoc_compiler_args = join(g:markdown_extras_config['pandoc_args'])
+  endif
+
   compiler pandoc
+
   def Make(format: string = 'html')
     #
-    # b:pandoc_compiler_args is used in the bundled compiler-pandoc
-    if exists('g:markdown_extras_config') != 0
-        && has_key(g:markdown_extras_config, 'pandoc_args')
-      b:pandoc_compiler_args = join(g:markdown_extras_config['pandoc_args'])
-    endif
 
     var output_file = $'{expand('%:p:h')}.{format}'
     var cmd = execute($'make {format}')
