@@ -48,50 +48,50 @@ def g:Test_markdown_lists()
   # OBS! normal is without ! to prevent bypassing mappings
   execute "normal 7ggi-\<space>foo\<enter>"
 
-  # echom assert_match(expected_line, getline(8))
+  assert_match(expected_line, getline(8))
 
   # 1. Write 'bar' to line 8 and hit <cr> twice
   silent execute "normal abar\<enter>\<enter>"
   expected_line = '- bar'
-  # echom assert_match(expected_line, getline(8))
+  assert_match(expected_line, getline(8))
 
   expected_line = ''
-  # echom assert_match('', getline(9))
-  # echom assert_match('', getline(10))
+  assert_match('', getline(9))
+  assert_match('', getline(10))
 
   # 2. Try with the tedious * as item
   # Current line = 10
   silent execute "normal i*\<space>bar\<enter>baz\<enter>\<enter>"
   expected_line = '* bar'
-  # echom assert_match('', getline(10))
+  assert_match('', getline(10))
   expected_line = '* baz'
-  # echom assert_match('', getline(11))
+  assert_match('', getline(11))
   expected_line = ''
-  # echom assert_match('', getline(12))
-  # echom assert_match('', getline(13))
+  assert_match('', getline(12))
+  assert_match('', getline(13))
 
   # 3. Try with the TODO lists - [ ]
   #
   silent execute "normal i-\<space>[\<space>]\<space>foo\<enter>bar\<enter>\<enter>"
   expected_line = "- [ ] foo"
-  # echom assert_true(expected_line ==# getline(13))
+  assert_true(expected_line ==# getline(13))
   expected_line = "- [ ] bar"
-  # echom assert_true(expected_line ==# getline(14))
+  assert_true(expected_line ==# getline(14))
   expected_line = ''
-  # echom assert_match('', getline(15))
-  # echom assert_match('', getline(16))
+  assert_match('', getline(15))
+  assert_match('', getline(16))
 
 
   # Current line = 16
   # Test numbered list
   silent execute "normal i99.\<space>foo\<enter>bar\<enter>\<enter>"
   expected_line = "99. foo"
-  # echom assert_true(expected_line ==# getline(16))
+  assert_true(expected_line ==# getline(16))
   expected_line = "100. bar"
-  # echom assert_true(expected_line ==# getline(17))
+  assert_true(expected_line ==# getline(17))
   expected_line = ''
-  # echom assert_match('', getline(18))
-  # echom assert_match('', getline(19))
+  assert_match('', getline(18))
+  assert_match('', getline(19))
 
   # Current line = 19
   # Test indentation
@@ -100,26 +100,26 @@ def g:Test_markdown_lists()
   silent execute "normal I\<space>\<space>\<esc>Afoo\<enter>bar\<enter>\<enter>"
   # silent execute "normal i\<space>\<space>ifoo\<enter>bar\<enter>"
   expected_line = '- foo'
-  # echom assert_match(expected_line, getline(19))
+  assert_match(expected_line, getline(19))
   expected_line = '- bar'
-  # echom assert_match(expected_line, getline(20))
+  assert_match(expected_line, getline(20))
   expected_line = '  - foo'
-  # echom assert_match(expected_line, getline(21))
+  assert_match(expected_line, getline(21))
   expected_line = '  - bar'
-  # echom assert_match(expected_line, getline(22))
+  assert_match(expected_line, getline(22))
   expected_line = '    - foo'
-  # echom assert_match(expected_line, getline(23))
+  assert_match(expected_line, getline(23))
   expected_line = '    - bar'
-  # echom assert_match(expected_line, getline(24))
+  assert_match(expected_line, getline(24))
   expected_line = ''
-  # echom assert_match(expected_line, getline(25))
+  assert_match(expected_line, getline(25))
   expected_line = ''
-  # echom assert_match(expected_line, getline(26))
+  assert_match(expected_line, getline(26))
 
   # redraw!
   # sleep 3
 
-  quit!
+  # quit!
   # edit!
 
 

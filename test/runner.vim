@@ -1,8 +1,5 @@
 vim9script
 
-# Script copied from LSP plugin
-
-# Script to run a language server unit tests
 # The global variable TestName should be set to the name of the file
 # containing the tests.
 
