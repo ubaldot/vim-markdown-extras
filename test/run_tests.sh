@@ -33,7 +33,7 @@ echo "# -----------------------------------" >> "$VIMRC"
 
 # Construct the VIM_CMD with correct variable substitution and quoting
 # VIM_CMD="$VIM_PRG -u $VIMRC -U NONE -i NONE --noplugin -N --not-a-term"
-VIM_CMD="$VIM_PRG -u $VIMRC -U NONE -i NONE -N --not-a-term"
+VIM_CMD="$VIM_PRG --clean -u $VIMRC -i NONE"
 
 # Add space separated tests, i.e. "test_markdown_extras.vim test_pippo.vim etc"
 TESTS="test_markdown_extras.vim"
