@@ -122,6 +122,5 @@ def g:Test_markdown_lists()
   # quit!
   # edit!
 
-
   Cleanup_markdown_testfile()
 enddef
