@@ -69,7 +69,7 @@ if use_pandoc && executable('pandoc')
   def Make(format: string = 'html')
     #
 
-    var output_file = $'{expand('%:p:h')}.{format}'
+    var output_file = $'{expand('%:p:r')}.{format}'
     var cmd = execute($'make {format}')
     # TIP: use g< to show all the echoed messages since now
     # TIP2: redraw! is used to avoid the "PRESS ENTER" thing
@@ -84,6 +84,8 @@ if use_pandoc && executable('pandoc')
   def MakeCompleteList(A: any, L: any, P: any): list<string>
     return systemlist('pandoc --list-output-formats')
       ->filter($'v:val =~ "^{A}"')
+      # Get rid off the ^M in Windows
+      ->map((_, val) => substitute(val, '\r', '', 'g'))
   enddef
 
   # Usage :Make, :Make pdf, :Make docx, etc
