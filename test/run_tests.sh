@@ -25,10 +25,8 @@ VIMRC="VIMRC"
 
 echo "vim9script" > "$VIMRC"
 echo "# ---- dummy vimrc file content -----" >> "$VIMRC"
-echo "set nocompatible" >> "$VIMRC"
 echo "set runtimepath+=.." >> "$VIMRC"
 echo "set runtimepath+=../after"  >> "$VIMRC"
-echo "set autoindent" >> "$VIMRC"
 echo "filetype plugin on" >> "$VIMRC"
 echo "# -----------------------------------" >> "$VIMRC"
 
