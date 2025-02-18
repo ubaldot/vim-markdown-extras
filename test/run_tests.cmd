@@ -16,6 +16,7 @@ REM
     echo # ---- dummy vimrc file content -----
     echo set nocompatible
     echo set runtimepath+=..
+    echo set runtimepath+=../after
     echo autoindent
     echo filetype plugin indent on
     echo # ----------------------------------
