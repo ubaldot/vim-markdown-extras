@@ -1,1 +1,10 @@
-Test_replica_basic(): pass
+command line..script C:\Users\yt75534\vimfiles\plugins\vim-markdown-extras\test\runner.vim[49]..function <SNR>22_RunTests[20]..Test_markdown_lists line 12: Pattern '- ' does not match ''
+command line..script C:\Users\yt75534\vimfiles\plugins\vim-markdown-extras\test\runner.vim[49]..function <SNR>22_RunTests[20]..Test_markdown_lists line 17: Pattern '- bar' does not match 'bar'
+command line..script C:\Users\yt75534\vimfiles\plugins\vim-markdown-extras\test\runner.vim[49]..function <SNR>22_RunTests[20]..Test_markdown_lists line 40: Expected True but got false
+command line..script C:\Users\yt75534\vimfiles\plugins\vim-markdown-extras\test\runner.vim[49]..function <SNR>22_RunTests[20]..Test_markdown_lists line 52: Expected True but got false
+command line..script C:\Users\yt75534\vimfiles\plugins\vim-markdown-extras\test\runner.vim[49]..function <SNR>22_RunTests[20]..Test_markdown_lists line 66: Pattern '- bar' does not match 'bar'
+command line..script C:\Users\yt75534\vimfiles\plugins\vim-markdown-extras\test\runner.vim[49]..function <SNR>22_RunTests[20]..Test_markdown_lists line 68: Pattern '  - foo' does not match '  foo'
+command line..script C:\Users\yt75534\vimfiles\plugins\vim-markdown-extras\test\runner.vim[49]..function <SNR>22_RunTests[20]..Test_markdown_lists line 70: Pattern '  - bar' does not match '  bar'
+command line..script C:\Users\yt75534\vimfiles\plugins\vim-markdown-extras\test\runner.vim[49]..function <SNR>22_RunTests[20]..Test_markdown_lists line 72: Pattern '    - foo' does not match '  foo'
+command line..script C:\Users\yt75534\vimfiles\plugins\vim-markdown-extras\test\runner.vim[49]..function <SNR>22_RunTests[20]..Test_markdown_lists line 74: Pattern '    - bar' does not match '  bar'
+Test_markdown_lists(): FAIL

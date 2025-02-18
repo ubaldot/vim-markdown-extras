@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Script to run the unit-tests for the vim-replica.vim
+# Script to run the unit-tests for the vim-markdown_extras.vim
 # Copied and adapted from Vim LSP plugin
 
 GITHUB=1
@@ -29,8 +29,8 @@ echo "filetype plugin on" >> "$VIMRC"
 # VIM_CMD="$VIM_PRG -u $VIMRC -U NONE -i NONE --noplugin -N --not-a-term"
 VIM_CMD="$VIM_PRG -u $VIMRC -U NONE -i NONE -N --not-a-term"
 
-# Add space separated tests, i.e. "test_replica.vim test_pippo.vim etc"
-TESTS="test_replica.vim"
+# Add space separated tests, i.e. "test_markdown_extras.vim test_pippo.vim etc"
+TESTS="test_markdown_extras.vim"
 
 RunTestsInFile() {
   testfile=$1

@@ -1,16 +1,22 @@
 @echo off
 
-REM Script to run the unit-tests for the REPLICA Vim plugin on MS-Windows
+REM Script to run the unit-tests for the MARKDOWN_EXTRAS Vim plugin on MS-Windows
 
 SETLOCAL
 REM Define the paths and files
 SET "VIMPRG=vim.exe"
 SET "VIMRC=vimrc_for_tests"
-SET "VIM_CMD=%VIMPRG% -u %VIMRC% -U NONE -i NONE -N --not-a-term"
+SET "VIM_CMD=%VIMPRG% --clean -u %VIMRC% -i NONE -N --not-a-term"
 
 REM Create or overwrite the vimrc file with the initial setting
-echo set runtimepath+=.. > "%VIMRC%"
-echo filetype plugin on >> "%VIMRC%"
+REM
+
+(
+    echo set runtimepath+=..
+    echo set formatoptions+=wnp
+    echo set autoindent
+    echo filetype plugin indent on
+) >> "%VIMRC%"
 
 REM Check if the vimrc file was created successfully
 if NOT EXIST "%VIMRC%" (
@@ -22,7 +28,7 @@ REM Display the contents of VIMRC (for debugging purposes)
 type "%VIMRC%"
 
 REM Run Vim with the specified configuration and additional commands
-%VIM_CMD% -c "vim9cmd g:TestName='test_replica.vim'" -S "runner.vim"
+%VIM_CMD% -c "vim9cmd g:TestName = 'test_markdown_extras.vim'" -S "runner.vim"
 
 REM Check the exit code of Vim command
 if %ERRORLEVEL% EQU 0 (
@@ -34,7 +40,7 @@ if %ERRORLEVEL% EQU 0 (
 )
 
 REM Check test results
-echo REPLICA unit test results
+echo MARKDOWN_EXTRAS unit test results
 type results.txt
 
 REM Check for FAIL in results.txt
