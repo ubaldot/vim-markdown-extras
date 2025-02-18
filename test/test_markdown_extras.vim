@@ -119,8 +119,23 @@ def g:Test_markdown_lists()
   # redraw!
   # sleep 3
 
-  # quit!
-  # edit!
+  quit!
 
   Cleanup_markdown_testfile()
+enddef
+
+
+def g:Test_check_uncheck_todo_keybinding()
+  Generate_markdown_testfile()
+
+  exe $"edit {src_name}"
+  exe "set filetype=md"
+
+  execute "silent norm! Go\<cr>-\<space>[\<space>]\<space>foo"
+  echom assert_true(getline(line('.')) =~ '^- \[ \] ')
+  execute $"silent norm! \<Plug>MarkdownToggleCheck"
+  echom assert_true(getline('.') =~ '- \[x\] ')
+  execute $"silent norm! \<Plug>MarkdownToggleCheck"
+  echom assert_true(getline('.') =~ '- \[ \] ')
+
 enddef
