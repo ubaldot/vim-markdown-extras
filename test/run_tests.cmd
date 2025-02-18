@@ -13,10 +13,8 @@ REM
 (
     echo vim9script
     echo # ---- dummy vimrc file content -----
-    echo set nocompatible
     echo set runtimepath+=..
     echo set runtimepath+=../after
-    echo set autoindent
     echo filetype plugin indent on
     echo # ----------------------------------
 ) >> "%VIMRC%"
@@ -37,7 +35,7 @@ REM Run Vim with the specified configuration and additional commands
 %VIM_CMD% -c "vim9cmd g:TestName = 'test_markdown_extras.vim'" -S "runner.vim"
 REM If things go wrong uncomment the following line and see e.g. if the
 REM vimrc_for_test is valid, check :messages and so on.
-REM %VIM_CMD% -c "vim9cmd g:TestName = 'test_markdown_extras.vim'" -c "e some_file.vim"
+REM %VIM_CMD% -c "vim9cmd g:TestName = 'test_markdown_extras.vim'" -c "e README.md"
 
 REM Check the exit code of Vim command
 if %ERRORLEVEL% EQU 0 (
