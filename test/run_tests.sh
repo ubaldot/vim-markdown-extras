@@ -24,11 +24,11 @@ fi
 VIMRC="VIMRC"
 
 echo "vim9script" > "$VIMRC"
-echo "# ---- dummy vimrc file content -----" >> "$VIMRC"
+echo ""
 echo "set runtimepath+=.." >> "$VIMRC"
 echo "set runtimepath+=../after"  >> "$VIMRC"
 echo "filetype plugin on" >> "$VIMRC"
-echo "# -----------------------------------" >> "$VIMRC"
+echo "" >> "$VIMRC"
 
 # Construct the VIM_CMD with correct variable substitution and quoting
 # VIM_CMD="$VIM_PRG -u $VIMRC -U NONE -i NONE --noplugin -N --not-a-term"
@@ -51,7 +51,10 @@ RunTestsInFile() {
 	fi
   fi
 
+	echo "Test results: "
+	echo ""
   cat results.txt
+	echo ""
 
   if grep -qw FAIL results.txt; then
     echo "ERROR: Some test(s) in $testfile failed."

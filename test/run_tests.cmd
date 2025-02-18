@@ -12,11 +12,11 @@ REM
 
 (
     echo vim9script
-    echo # ---- dummy vimrc file content -----
+    echo/
     echo set runtimepath+=..
     echo set runtimepath+=../after
     echo filetype plugin indent on
-    echo # ----------------------------------
+    echo/
 ) >> "%VIMRC%"
 
 SET "VIM_CMD=%VIMPRG% --clean -u %VIMRC% -i NONE"
@@ -28,6 +28,8 @@ if NOT EXIST "%VIMRC%" (
 )
 
 REM Display the contents of VIMRC (for debugging purposes)
+echo/
+echo ----- dummy_vimrc content -------
 type "%VIMRC%"
 
 REM Run Vim with the specified configuration and additional commands
@@ -46,8 +48,11 @@ if %ERRORLEVEL% EQU 0 (
 )
 
 REM REM Check test results
-echo MARKDOWN_EXTRAS unit test results:
+echo ----------------------------------
+echo MARKDOWN_EXTRAS unit-test results:
+echo/
 type results.txt
+echo/
 
 REM REM Check for FAIL in results.txt
 findstr /I "FAIL" results.txt > nul 2>&1
@@ -56,7 +61,7 @@ if %ERRORLEVEL% EQU 0 (
     del %VIMRC%
     exit /b 1
 ) else (
-    echo All tests passed.
+    echo SUCCESS: All tests passed.
 )
 
 REM REM Exit script with success
