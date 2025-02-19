@@ -159,7 +159,7 @@ export def SurroundNew(open_delimiter: string, close_delimiter: string, text_obj
   #
   # Note that Visual Selections and Text Objects are cousins
   #
-  if !empty(CursorDelimitersInterval(open_delimiter, close_delimiter))
+  if !empty(IsInRange(open_delimiter, close_delimiter))
     RemoveSurrounding(open_delimiter, close_delimiter)
   else
     # Set marks
@@ -215,7 +215,7 @@ export def SurroundNew(open_delimiter: string, close_delimiter: string, text_obj
     # Check if A falls in an existing interval
     cursor(xA, yA)
     for delimiterg in ZipLists(open_delimiters, close_delimiters)
-      found_delimiters_interval = CursorDelimitersInterval(delimiterg[0], delimiterg[1])
+      found_delimiters_interval = IsInRange(delimiterg[0], delimiterg[1])
       if !empty(found_delimiters_interval)
         old_right_delimiter = delimiterg[0]
         # Existing blocks shall be disjoint,
@@ -234,7 +234,7 @@ export def SurroundNew(open_delimiter: string, close_delimiter: string, text_obj
     # Check if also B falls in an existing interval
     cursor(xB, yB)
     for delimiterg in ZipLists(open_delimiters, close_delimiters)
-      found_delimiters_interval = CursorDelimitersInterval(delimiterg[0], delimiterg[1])
+      found_delimiters_interval = IsInRange(delimiterg[0], delimiterg[1])
       if !empty(found_delimiters_interval)
         old_left_delimiter = delimiterg[0]
         break
@@ -419,11 +419,12 @@ enddef
 
 export def GetDelimitersRanges(open_delimiter: string,
     close_delimiter: string,
-    open_delimiter_length_max: number = 5,
-    close_delimiter_length_max: number = 5
+    open_delimiter_length_max: number = 2,
+    close_delimiter_length_max: number = 2
     ): list<list<list<number>>>
   # It returns open-intervals, i.e. the delimiters are excluded
-  # If there is a spare delimiter, it won't be considered
+  # If there is a spare delimiter, it won't be considered. Delimiters are
+  # regex
   #
   # TODO: It is assumed that the ranges have no intersections. Note that this
   # won't happen if open_delimiter = close_delimiter, as in many languages.
@@ -447,6 +448,7 @@ export def GetDelimitersRanges(open_delimiter: string,
   var close_delimiter_match = ''
 
   while open_delimiter_pos_short != [0, 0]
+    echom "open_delimiter: " .. open_delimiter
     open_delimiter_pos_short = searchpos(open_delimiter, 'W')
 
     # If you pass a regex, you don't know how long is the captured string
@@ -456,7 +458,7 @@ export def GetDelimitersRanges(open_delimiter: string,
       ->matchstr(open_delimiter)
     open_delimiter_length = len(open_delimiter_match)
 
-    if getline(open_delimiter_pos_short[0]) =~ $'{open_delimiter}$'
+    if open_delimiter_pos_short[1] + open_delimiter_length == col('$')
       # If the open delimiter is the tail of the line, then the open-interval starts from
       # the next line, column 1
       open_delimiter_pos_short_final[0] = open_delimiter_pos_short[0] + 1
@@ -468,8 +470,8 @@ export def GetDelimitersRanges(open_delimiter: string,
     endif
     open_delimiter_pos = [0] + open_delimiter_pos_short_final + [0]
 
+    # Close delimiter
     close_delimiter_pos_short = searchpos(close_delimiter, 'W')
-
     # If you pass a regex, you don't know how long is the captured string
     close_delimiter_match = strcharpart(
       getline(close_delimiter_pos_short[0]),
@@ -479,7 +481,7 @@ export def GetDelimitersRanges(open_delimiter: string,
 
     # If the closed delimiter is the lead of the line, then the open-interval starts from
     # the previous line, last column
-    if getline(close_delimiter_pos_short[0]) =~ $'^{close_delimiter}'
+    if close_delimiter_pos_short[1] - 1 == 0
       close_delimiter_pos_short_final[0] = close_delimiter_pos_short[0] - 1
       close_delimiter_pos_short_final[1] = len(getline(close_delimiter_pos_short_final[0]))
     else
@@ -512,9 +514,9 @@ export def IsBetweenMarks(A: string, B: string): bool
     var cursor_pos_float = str2float($'{getcharpos(".")[1]}.{getcharpos(".")[2]}')
 
     # Debugging
-    echom "cur_pos: " .. cursor_pos_float
-    echom "a: " .. string(lower_float)
-    echom "b: " .. string(upper_float)
+    # echom "cur_pos: " .. cursor_pos_float
+    # echom "a: " .. string(lower_float)
+    # echom "b: " .. string(upper_float)
 
     # In case the lower limit is larger than the higher limit, swap
     if upper_float < lower_float
@@ -527,31 +529,33 @@ export def IsBetweenMarks(A: string, B: string): bool
 
 enddef
 
-export def CursorDelimitersInterval(open_delimiter: string, close_delimiter: string): list<list<number>>
+export def IsInRange(open_delimiter: string, close_delimiter: string): list<list<number>>
   # Return the range of the delimiters if the cursor is within such a range,
   # otherwise return an empty list.
+  # Arguments must be regex.
   var interval = []
 
   # OBS! Ranges are open-intervals!
-  var ranges = g:GetBlocksRangesNew(open_delimiter, close_delimiter)
+  var ranges = GetDelimitersRanges(open_delimiter, close_delimiter)
 
   var saved_mark_a = getcharpos("'a")
   var saved_mark_b = getcharpos("'b")
 
   for range in ranges
-    var A = setcharpos("'a", range[0])
-    var B = setcharpos("'b", range[1])
+    setcharpos("'a", range[0])
+    setcharpos("'b", range[1])
     if IsBetweenMarks("'a", "'b")
-      interval = [A, B]
+      interval = [range[0], range[1]]
       break
     endif
   endfor
 
+  echom "interval: " .. string(interval)
   # Restore marks 'a and 'b
   setcharpos("'a", saved_mark_a)
   setcharpos("'b", saved_mark_b)
 
-  return is_inside_block
+  return interval
 enddef
 
 export def DeleteTextBetweenMarks(A: string, B: string): string

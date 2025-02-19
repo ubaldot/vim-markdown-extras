@@ -47,9 +47,9 @@ eval $VIM_CMD " -c \"vim9cmd g:TestName = [$TESTS_STRING]\" -S runner.vim"
 
 # Check that Vim started and that the runner did its job
 if [ $? -eq 0 ]; then
-    echo "\nVim executed successfully."
+    echo "Vim executed successfully.\n"
 else
-    echo "\nVim execution failed with exit code $?."
+    echo "Vim execution failed with exit code $?.\n"
 		exit 1
 fi
 
