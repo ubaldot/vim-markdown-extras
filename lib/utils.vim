@@ -153,14 +153,14 @@ export def RemoveSurrounding(A: string, B: string, lead: number, trail: number)
   endif
 enddef
 
-export def SurroundNew(open_tag: string, close_tag: string, text_object: string = '', keep_even: bool = false)
+export def SurroundNew(open_delimiter: string, close_delimiter: string, text_object: string = '', keep_even: bool = false)
   # Usage:
   #   Select text and hit <leader> + e.g. parenthesis
   #
   # Note that Visual Selections and Text Objects are cousins
   #
-  if !empty(TagsInterval(open_tag, close_tag))
-    RemoveSurrounding(open_tag, close_tag)
+  if !empty(CursorDelimitersInterval(open_delimiter, close_delimiter))
+    RemoveSurrounding(open_delimiter, close_delimiter)
   else
     # Set marks
     var A_mark = "'<"
@@ -185,7 +185,7 @@ export def SurroundNew(open_tag: string, close_tag: string, text_object: string 
     endif
 
     # -------- The search begins -------------
-    # We check conditions like the following and we adjust the style tags
+    # We check conditions like the following and we adjust the style delimiters
     # We assume that the existing style ranges are (C,D) and (E,F) and we want
     # to place (A,B) as in the picture
     #
@@ -203,56 +203,56 @@ export def SurroundNew(open_tag: string, close_tag: string, text_object: string 
     #
     # so that all the styles are visible
 
-    # Check if the cursor is already in a range of another pair of tags
-    var open_tags = ['*', '**', '~~', '`']
-    var close_tags = ['*', '**', '~~', '`']
-    var old_right_tag = ''
-    var old_left_tag = ''
+    # Check if the cursor is already in a range of another pair of delimiters
+    var open_delimiters = ['*', '**', '~~', '`']
+    var close_delimiters = ['*', '**', '~~', '`']
+    var old_right_delimiter = ''
+    var old_left_delimiter = ''
 
-    var found_tags_interval = []
-    # We assume that open and close tags are the same, given that we started
+    var found_delimiters_interval = []
+    # We assume that open and close delimiters are the same, given that we started
     # developing for markdown
     # Check if A falls in an existing interval
     cursor(xA, yA)
-    for tagg in ZipLists(open_tags, close_tags)
-      found_tags_interval = TagsInterval(tagg[0], tagg[1])
-      if !empty(found_tags_interval)
-        old_right_tag = tagg[0]
+    for delimiterg in ZipLists(open_delimiters, close_delimiters)
+      found_delimiters_interval = CursorDelimitersInterval(delimiterg[0], delimiterg[1])
+      if !empty(found_delimiters_interval)
+        old_right_delimiter = delimiterg[0]
         # Existing blocks shall be disjoint,
-        # so we can break as soon as we find a tag
+        # so we can break as soon as we find a delimiter
         break
       endif
     endfor
 
     var toA = ''
-    if !empty(found_tags_interval)
-      toA = old_right_tag .. open_tag .. strcharpart(getline(xA), 0, yA)
+    if !empty(found_delimiters_interval)
+      toA = old_right_delimiter .. open_delimiter .. strcharpart(getline(xA), 0, yA)
     else
-      toA = open_tag .. strcharpart(getline(xA), 0, yA)
+      toA = open_delimiter .. strcharpart(getline(xA), 0, yA)
     endif
 
     # Check if also B falls in an existing interval
     cursor(xB, yB)
-    for tagg in ZipLists(open_tags, close_tags)
-      found_tags_interval = TagsInterval(tagg[0], tagg[1])
-      if !empty(found_tags_interval)
-        old_left_tag = tagg[0]
+    for delimiterg in ZipLists(open_delimiters, close_delimiters)
+      found_delimiters_interval = CursorDelimitersInterval(delimiterg[0], delimiterg[1])
+      if !empty(found_delimiters_interval)
+        old_left_delimiter = delimiterg[0]
         break
       endif
     endfor
 
     var fromB = ''
-    if !empty(found_tags_interval)
-      FromB = close_tag .. old_left_tag .. strcharpart(getline(xB), yB - 1)
+    if !empty(found_delimiters_interval)
+      FromB = close_delimiter .. old_left_delimiter .. strcharpart(getline(xB), yB - 1)
     else
-      FromB = close_tag .. strcharpart(getline(xB), yB - 1)
+      FromB = close_delimiter .. strcharpart(getline(xB), yB - 1)
     endif
 
     if xA == xB
       # Overwrite everything that is in the middle
       var middle = strcharpart(getline(xA), yA - 1, yB - yA)
-        -> substitute($'\({open_tag[0]}\|{open_tag[1]}
-              \|{open_tag[2]}\|{open_tag[3]}\)', '', 'g')
+        -> substitute($'\({open_delimiter[0]}\|{open_delimiter[1]}
+              \|{open_delimiter[2]}\|{open_delimiter[3]}\)', '', 'g')
       setline(xA, toA .. middle .. fromB)
     elseif xB - xA = 1
       echom "TBD"
@@ -274,8 +274,8 @@ export def SurroundNew(open_tag: string, close_tag: string, text_object: string 
     # echom "l: " .. lead
     # echom "t: " ..  trail
 
-    # TODO: This has to be done afterwardsRemove all existing tags between A and B
-    # If there is a tag surrounded by white spaces, keep it as it is not a
+    # TODO: This has to be done afterwardsRemove all existing delimiters between A and B
+    # If there is a delimiter surrounded by white spaces, keep it as it is not a
     # valid text-style in markdown
     var cleaned_text = captured_text
       ->map((_, val) => substitute(val, '\S\*\+', '', 'g'))
@@ -289,8 +289,8 @@ export def SurroundNew(open_tag: string, close_tag: string, text_object: string 
     # echom captured_text
     # echom cleaned_text
     var surrounded_text = copy(cleaned_text)
-    surrounded_text[0] = tagg .. cleaned_text[0]
-    surrounded_text[-1] = surrounded_text[-1] .. tagg
+    surrounded_text[0] = delimiterg .. cleaned_text[0]
+    surrounded_text[-1] = surrounded_text[-1] .. delimiterg
 
     # echom surrounded_text
     # Add new text
@@ -314,7 +314,7 @@ export def SurroundNew(open_tag: string, close_tag: string, text_object: string 
       setline(line(B), last_line)
     endif
 
-    # Keep even number of tags in the document
+    # Keep even number of delimiters in the document
     if keep_even
       echom "TBD"
     endif
@@ -328,8 +328,8 @@ export def GetTextBetweenMarks(A: string, B: string): list<string>
     # called with the back ticks to get the exact position ('a jump to the
     # marker but places the cursor at the beginning of the line.)
     #
-    var [_, l1, c1, _] = getpos(A)
-    var [_, l2, c2, _] = getpos(B)
+    var [_, l1, c1, _] = getcharpos(A)
+    var [_, l2, c2, _] = getcharpos(B)
 
     if l1 == l2
         # Extract text within a single line
@@ -417,62 +417,85 @@ enddef
 #     endif
 # enddef
 
-export def GetTagsRanges(open_tag: string, close_tag: string): list<list<list<number>>>
-  # It returns open-intervals, i.e. the tags are excluded
-  # If there is a spare tag, it won't be considered
+export def GetDelimitersRanges(open_delimiter: string,
+    close_delimiter: string,
+    open_delimiter_length_max: number = 5,
+    close_delimiter_length_max: number = 5
+    ): list<list<list<number>>>
+  # It returns open-intervals, i.e. the delimiters are excluded
+  # If there is a spare delimiter, it won't be considered
+  #
   # TODO: It is assumed that the ranges have no intersections. Note that this
-  # won't happen if open_tag = close_tag, as in many languages.
+  # won't happen if open_delimiter = close_delimiter, as in many languages.
   var saved_cursor = getcursorcharpos()
   cursor(1, 1)
 
   var ranges = []
 
   # 2D format due to that searchpos() returns a 2D vector
-  var open_tag_pos_short = [-1, -1]
-  var close_tag_pos_short = [-1, -1]
-  var open_tag_pos_short_final = [-1, -1]
-  var close_tag_pos_short_final = [-1, -1]
+  var open_delimiter_pos_short = [-1, -1]
+  var close_delimiter_pos_short = [-1, -1]
+  var open_delimiter_pos_short_final = [-1, -1]
+  var close_delimiter_pos_short_final = [-1, -1]
   #
   # 4D format due to that markers have 4-coordinates
-  var open_tag_pos = [0] + open_tag_pos_short + [0]
-  var close_tag_pos = [0] + close_tag_pos_short + [0]
+  var open_delimiter_pos = [0] + open_delimiter_pos_short + [0]
+  var open_delimiter_match = ''
+  var open_delimiter_length = 0
+  var close_delimiter_pos = [0] + close_delimiter_pos_short + [0]
+  var close_delimiter_length = 0
+  var close_delimiter_match = ''
 
-   # ölkjqw #XXX
-  while open_tag_pos_short != [0, 0]
-    open_tag_pos_short = searchpos(open_tag, 'W')
+  while open_delimiter_pos_short != [0, 0]
+    open_delimiter_pos_short = searchpos(open_delimiter, 'W')
 
-    if getline(open_tag_pos_short[0]) =~ $'{open_tag}$'
-      # If the open tag is the tail of the line, then the open-interval starts from
+    # If you pass a regex, you don't know how long is the captured string
+    open_delimiter_match = strcharpart(
+      getline(open_delimiter_pos_short[0]),
+      open_delimiter_pos_short[1] - 1, open_delimiter_length_max)
+      ->matchstr(open_delimiter)
+    open_delimiter_length = len(open_delimiter_match)
+
+    if getline(open_delimiter_pos_short[0]) =~ $'{open_delimiter}$'
+      # If the open delimiter is the tail of the line, then the open-interval starts from
       # the next line, column 1
-      open_tag_pos_short_final[0] = open_tag_pos_short[0] + 1
-      open_tag_pos_short_final[1] = 1
+      open_delimiter_pos_short_final[0] = open_delimiter_pos_short[0] + 1
+      open_delimiter_pos_short_final[1] = 1
     else
       # Pick the open-interval
-      open_tag_pos_short_final[0] = open_tag_pos_short[0]
-      open_tag_pos_short_final[1] = open_tag_pos_short[1] + len(open_tag)
+      open_delimiter_pos_short_final[0] = open_delimiter_pos_short[0]
+      open_delimiter_pos_short_final[1] = open_delimiter_pos_short[1] + open_delimiter_length
     endif
-    open_tag_pos = [0] + open_tag_pos_short_final + [0]
+    open_delimiter_pos = [0] + open_delimiter_pos_short_final + [0]
 
-    close_tag_pos_short = searchpos(close_tag, 'W')
-    # If the closed tag is the lead of the line, then the open-interval starts from
+    close_delimiter_pos_short = searchpos(close_delimiter, 'W')
+
+    # If you pass a regex, you don't know how long is the captured string
+    close_delimiter_match = strcharpart(
+      getline(close_delimiter_pos_short[0]),
+      close_delimiter_pos_short[1] - 1, close_delimiter_length_max)
+      ->matchstr(close_delimiter)
+    close_delimiter_length = len(close_delimiter_match)
+
+    # If the closed delimiter is the lead of the line, then the open-interval starts from
     # the previous line, last column
-    if getline(close_tag_pos_short[0]) =~ $'^{close_tag}'
-      close_tag_pos_short_final[0] = close_tag_pos_short[0] - 1
-      close_tag_pos_short_final[1] = len(getline(close_tag_pos_short_final[0]))
+    if getline(close_delimiter_pos_short[0]) =~ $'^{close_delimiter}'
+      close_delimiter_pos_short_final[0] = close_delimiter_pos_short[0] - 1
+      close_delimiter_pos_short_final[1] = len(getline(close_delimiter_pos_short_final[0]))
     else
-      close_tag_pos_short_final[0] = close_tag_pos_short[0]
-      close_tag_pos_short_final[1] = close_tag_pos_short[1] - 1
+      close_delimiter_pos_short_final[0] = close_delimiter_pos_short[0]
+      close_delimiter_pos_short_final[1] = close_delimiter_pos_short[1] - 1
     endif
-    close_tag_pos = [0] + close_tag_pos_short_final + [0]
+    close_delimiter_pos = [0] + close_delimiter_pos_short_final + [0]
 
-    add(ranges, [open_tag_pos, close_tag_pos])
+    add(ranges, [open_delimiter_pos, close_delimiter_pos])
   endwhile
   setcursorcharpos(saved_cursor[1 : 2])
 
-  # Remove the last element junky [[0,0,len(open_tag),0], [0,0,-1,0]]
-  echom "ranges :" .. string(ranges)
+  # Remove the last element junky [[0,0,len(open_delimiter),0], [0,0,-1,0]]
+  # echom "ranges :" .. string(ranges)
   remove(ranges, -1)
-  echom "ranges :" .. string(ranges)
+  # echom "ranges :" .. string(ranges)
 
   return ranges
 enddef
@@ -504,13 +527,13 @@ export def IsBetweenMarks(A: string, B: string): bool
 
 enddef
 
-export def TagsInterval(open_tag: string, close_tag: string): list<list<number>>
-  # Return the range of the tags if the cursor is within such a range,
+export def CursorDelimitersInterval(open_delimiter: string, close_delimiter: string): list<list<number>>
+  # Return the range of the delimiters if the cursor is within such a range,
   # otherwise return an empty list.
   var interval = []
 
   # OBS! Ranges are open-intervals!
-  var ranges = g:GetBlocksRangesNew(open_tag, close_tag)
+  var ranges = g:GetBlocksRangesNew(open_delimiter, close_delimiter)
 
   var saved_mark_a = getcharpos("'a")
   var saved_mark_b = getcharpos("'b")
