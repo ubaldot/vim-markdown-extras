@@ -29,58 +29,48 @@ echo "set runtimepath+=.." >> "$VIMRC"
 echo "set runtimepath+=../after"  >> "$VIMRC"
 echo "filetype plugin on" >> "$VIMRC"
 
+# Display vimrc content
 echo "----- vimrc content ---------"
 cat $VIMRC
 echo ""
 # Construct the VIM_CMD with correct variable substitution and quoting
-# VIM_CMD="$VIM_PRG -u $VIMRC -U NONE -i NONE --noplugin -N --not-a-term"
 VIM_CMD="$VIM_PRG --clean -u $VIMRC -i NONE --not-a-term"
 
-# Add space separated tests, i.e. "test_markdown_extras.vim test_pippo.vim etc"
-TESTS=["test_markdown_extras.vim", "test_utils.vim"]
+# Add test files here:
+TESTS=('test_markdown_extras.vim' 'test_utils.vim')
 
-RunTestsInFile() {
-  testfile=$1
-  echo "Running tests in $testfile"
-  # If you want to see the output remove the & from the line below
-  eval $VIM_CMD " -c \"vim9cmd g:TestName = ['$testfile']\" -S runner.vim"
+# convert bash list to Vim list
+TESTS_STRING=$(printf "'%s', " "${TESTS[@]}")
+TESTS_STRING=${TESTS_STRING%, }  # Remove trailing comma
 
-  if ! [ -f results.txt ]; then
-    echo "ERROR: Test results file 'results.txt' is not found."
-	if [ "$GITHUB" -eq 1 ]; then
-	   rm VIMRC
-	   exit 2
-	fi
-  fi
+eval $VIM_CMD " -c \"vim9cmd g:TestName = [$TESTS_STRING]\" -S runner.vim"
 
-	echo "Test results: "
-	echo ""
-  cat results.txt
-	echo ""
-
-  if grep -qw FAIL results.txt; then
-    echo "ERROR: Some test(s) in $testfile failed."
-		if [ "$GITHUB" -eq 1 ]; then
-			exit 3
-		fi
-	else
-		echo "SUCCESS: All the tests in $testfile passed."
-		echo
-  fi
-}
-
-for testfile in $TESTS
-do
-  RunTestsInFile $testfile
-done
-
-echo "--------------------------------"
-echo "SUCCESS: All the tests passed."
-# UBA: uncomment the line below
-if [ "$GITHUB" -eq 1 ]; then
-  exit 0
+# Check that Vim started and that the runner did its job
+if [ $? -eq 0 ]; then
+    echo "\nVim executed successfully."
+else
+    echo "\nVim execution failed with exit code $?."
+		exit 1
 fi
 
-rm "$VIMRC"
+# Check the test results
+cat results.txt
+echo "-------------------------------"
+if grep -qw FAIL results.txt; then
+	echo "ERROR: Some test(s) failed."
+	echo
+	if [ "$GITHUB" -eq 1 ]; then
+		rm "$VIMRC"
+		rm results.txt
+		exit 3
+	fi
+else
+	echo "SUCCESS: All the tests  passed."
+	echo
+	rm "$VIMRC"
+	rm results.txt
+	exit 0
+fi
+
 # kill %- > /dev/null
 # vim: shiftwidth=2 softtabstop=2 noexpandtab
