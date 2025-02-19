@@ -7,10 +7,16 @@ import "./common.vim"
 import "../lib/utils.vim"
 var WaitForAssert = common.WaitForAssert
 
-var code_regex = '\(^\|[^`]\)\zs`\ze\([^`]\|$\)'
-var italic_regex = '\(^\|[^\*]\)\zs\*\ze\([^\*]\|$\)'
-var bold_regex = '\(^\|[^\*]\)\zs\*\*\ze\([^\*]\|$\)'
-var strikethrough_regex = '\(^\|[^\~]\)\zs\~\~\ze\([^\~]\|$\)'
+# var code_regex = '\(^\|[^`]\)\zs`\ze\([^`]\|$\)'
+# var italic_regex = '\(^\|[^\*]\)\zs\*\ze\([^\*]\|$\)'
+# var bold_regex = '\(^\|[^\*]\)\zs\*\*\ze\([^\*]\|$\)'
+# var strikethrough_regex = '\(^\|[^\~]\)\zs\~\~\ze\([^\~]\|$\)'
+
+# see :help /\@<! and :help /\@!
+var code_regex = '\v`@<!``@!'
+var italic_regex = '\v\*@<!\*\*@!'
+var bold_regex = '\v\*@<!\*\*\*@!'
+var strikethrough_regex = '\v\~@<!\~\~\~@!'
 
 var src_name = 'testfile.md'
 

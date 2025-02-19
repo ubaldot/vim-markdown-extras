@@ -383,39 +383,6 @@ enddef
 #    setline(lnum, new_line)                  # Set the modified line back
 # enddef
 
-# export def g:DeleteTextBetweenMarks(A: string, B: string)
-#     var start_pos = getpos(A)
-#     var end_pos = getpos(B)
-
-#     var start_line = start_pos[1]
-#     var start_col = start_pos[2]
-#     var end_line = end_pos[1]
-#     var end_col = end_pos[2]
-
-#     # ensure a comes before b
-#     if start_line > end_line || (start_line == end_line && start_col > end_col)
-#         [start_line, start_col, end_line, end_col] =
-#                      [end_line, end_col, start_line, start_col]
-#     endif
-
-#     # if both markers are on the same line, delete only the in-between text
-#     if start_line == end_line
-#         var line = getline(start_line)
-#         var new_line = strpart(line, 0, start_col - 1) .. strpart(line, end_col - 1)
-#         setline(start_line, new_line)
-#     else
-#         # get affected lines
-#         var lines = getline(start_line, end_line)
-
-#         # modify first and last line to remove text between a and b
-         # lines[-1] = strpart(lines[-1], end_col - 1)
-
-#         # set lines if any
-#         if end_line > start_line + 1
-#             deletebufline('%', start_line + 1, end_line - 1)
-#         endif
-#     endif
-# enddef
 
 export def GetDelimitersRanges(open_delimiter: string,
     close_delimiter: string,
