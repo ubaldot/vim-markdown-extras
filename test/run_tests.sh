@@ -28,23 +28,22 @@ echo "">> "$VIMRC"
 echo "set runtimepath+=.." >> "$VIMRC"
 echo "set runtimepath+=../after"  >> "$VIMRC"
 echo "filetype plugin on" >> "$VIMRC"
-echo "" >> "$VIMRC"
 
 echo "----- vimrc content ---------"
 cat $VIMRC
-echo "-----------------------------"
+echo ""
 # Construct the VIM_CMD with correct variable substitution and quoting
 # VIM_CMD="$VIM_PRG -u $VIMRC -U NONE -i NONE --noplugin -N --not-a-term"
 VIM_CMD="$VIM_PRG --clean -u $VIMRC -i NONE --not-a-term"
 
 # Add space separated tests, i.e. "test_markdown_extras.vim test_pippo.vim etc"
-TESTS="test_markdown_extras.vim"
+TESTS=["test_markdown_extras.vim", "test_utils.vim"]
 
 RunTestsInFile() {
   testfile=$1
   echo "Running tests in $testfile"
   # If you want to see the output remove the & from the line below
-  eval $VIM_CMD " -c \"vim9cmd g:TestName = '$testfile'\" -S runner.vim"
+  eval $VIM_CMD " -c \"vim9cmd g:TestName = ['$testfile']\" -S runner.vim"
 
   if ! [ -f results.txt ]; then
     echo "ERROR: Test results file 'results.txt' is not found."
@@ -75,6 +74,7 @@ do
   RunTestsInFile $testfile
 done
 
+echo "--------------------------------"
 echo "SUCCESS: All the tests passed."
 # UBA: uncomment the line below
 if [ "$GITHUB" -eq 1 ]; then

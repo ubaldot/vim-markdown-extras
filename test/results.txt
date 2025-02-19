@@ -1,2 +1,9 @@
+o test_markdown_extras.vim
 Test_check_uncheck_todo_keybinding(): pass
 Test_markdown_lists(): pass
+
+o test_utils.vim
+WARNING: The following tests are skipped: ['Sto_cazzo()']
+
+Test_sto_cazzo(): pass
+

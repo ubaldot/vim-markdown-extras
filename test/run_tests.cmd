@@ -16,7 +16,6 @@ REM
     echo set runtimepath+=..
     echo set runtimepath+=../after
     echo filetype plugin indent on
-    echo/
 ) >> "%VIMRC%"
 
 SET "VIM_CMD=%VIMPRG% --clean -u %VIMRC% -i NONE --not-a-term"
@@ -31,9 +30,11 @@ REM Display the contents of VIMRC (for debugging purposes)
 echo/
 echo ----- dummy_vimrc content -------
 type "%VIMRC%"
+echo/
 
 REM Run Vim with the specified configuration and additional commands
-%VIM_CMD% -c "vim9cmd g:TestName = 'test_markdown_extras.vim'" -S "runner.vim"
+SET "TEST_FILES=['test_markdown_extras.vim', 'test_utils.vim']"
+%VIM_CMD% -c "vim9cmd g:TestFiles =  %TEST_FILES%" -S "runner.vim"
 REM If things go wrong uncomment the following line and see e.g. if the
 REM vimrc_for_test is valid, check :messages and so on.
 REM %VIM_CMD% -c "vim9cmd g:TestName = 'test_markdown_extras.vim'" -c "e README.md"
@@ -42,19 +43,20 @@ REM Check the exit code of Vim command
 if %ERRORLEVEL% EQU 0 (
     echo Vim command executed successfully.
 ) else (
+    echo/
     echo ERROR: Vim command failed with exit code %ERRORLEVEL%.
     del %VIMRC%
     exit /b 1
 )
 
-REM REM Check test results
+REM Check test results
 echo ----------------------------------
 echo MARKDOWN_EXTRAS unit-test results:
 echo/
 type results.txt
-echo/
+echo ----------------------------------
 
-REM REM Check for FAIL in results.txt
+REM Check for FAIL in results.txt
 findstr /I "FAIL" results.txt > nul 2>&1
 if %ERRORLEVEL% EQU 0 (
     echo ERROR: Some test failed.
@@ -63,6 +65,7 @@ if %ERRORLEVEL% EQU 0 (
 ) else (
     echo SUCCESS: All tests passed.
 )
+echo/
 
 REM REM Exit script with success
 del %VIMRC%
