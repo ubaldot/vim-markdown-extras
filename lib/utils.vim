@@ -9,7 +9,7 @@ export def Echowarn(msg: string)
 enddef
 
 export def ZipLists(l1: list<any>, l2: list<any>): list<list<any>>
-    # Zip like function, like in Python
+    # Zip function, like in Python
     var min_len = min([len(l1), len(l2)])
     return map(range(min_len), $'[{l1}[v:val], {l2}[v:val]]')
 enddef
@@ -299,6 +299,8 @@ export def GetDelimitersRanges(open_delimiter: string,
   var close_delimiter_match = ''
 
   while open_delimiter_pos_short != [0, 0]
+
+    # A. ------------ open_delimiter -----------------
     open_delimiter_pos_short = searchpos(open_delimiter, 'W')
 
     # If you pass a regex, you don't know how long is the captured string
@@ -308,9 +310,9 @@ export def GetDelimitersRanges(open_delimiter: string,
       ->matchstr(open_delimiter)
     open_delimiter_length = len(open_delimiter_match)
 
+    # If the open delimiter is the tail of the line, then the open-interval starts from
+    # the next line, column 1
     if open_delimiter_pos_short[1] + open_delimiter_length == col('$')
-      # If the open delimiter is the tail of the line, then the open-interval starts from
-      # the next line, column 1
       open_delimiter_pos_short_final[0] = open_delimiter_pos_short[0] + 1
       open_delimiter_pos_short_final[1] = 1
     else
@@ -321,7 +323,7 @@ export def GetDelimitersRanges(open_delimiter: string,
     endif
     open_delimiter_pos = [0] + open_delimiter_pos_short_final + [0]
 
-    # Close delimiter
+    # B. ------ Close delimiter -------
     close_delimiter_pos_short = searchpos(close_delimiter, 'W')
     # If you pass a regex, you don't know how long is the captured string
     close_delimiter_match = strcharpart(
@@ -330,8 +332,8 @@ export def GetDelimitersRanges(open_delimiter: string,
       ->matchstr(close_delimiter)
     close_delimiter_length = len(close_delimiter_match)
 
-    # If the closed delimiter is the lead of the line, then the open-interval starts from
-    # the previous line, last column
+    # If the closed delimiter is the lead of the line, then the open-interval
+    # starts from the previous line, last column
     if close_delimiter_pos_short[1] - 1 == 0
       close_delimiter_pos_short_final[0] = close_delimiter_pos_short[0] - 1
       close_delimiter_pos_short_final[1] = len(getline(close_delimiter_pos_short_final[0]))
@@ -346,9 +348,7 @@ export def GetDelimitersRanges(open_delimiter: string,
   setcursorcharpos(saved_cursor[1 : 2])
 
   # Remove the last element junky [[0,0,len(open_delimiter),0], [0,0,-1,0]]
-  # echom "ranges :" .. string(ranges)
   remove(ranges, -1)
-  # echom "ranges :" .. string(ranges)
 
   return ranges
 enddef
@@ -365,11 +365,6 @@ export def IsBetweenMarks(A: string, B: string): bool
     var cursor_pos_float =
       str2float($'{getcharpos(".")[1]}.{getcharpos(".")[2]}')
 
-    # Debugging
-    # echom "cur_pos: " .. cursor_pos_float
-    # echom "a: " .. string(lower_float)
-    # echom "b: " .. string(upper_float)
-
     # In case the lower limit is larger than the higher limit, swap
     if upper_float < lower_float
       var tmp = upper_float
@@ -378,7 +373,6 @@ export def IsBetweenMarks(A: string, B: string): bool
     endif
 
     return lower_float <= cursor_pos_float && cursor_pos_float <= upper_float
-
 enddef
 
 export def IsInRange(open_delimiter: string,
@@ -403,7 +397,6 @@ export def IsInRange(open_delimiter: string,
     endif
   endfor
 
-  # echom "interval: " .. string(interval)
   # Restore marks 'a and 'b
   setcharpos("'a", saved_mark_a)
   setcharpos("'b", saved_mark_b)
