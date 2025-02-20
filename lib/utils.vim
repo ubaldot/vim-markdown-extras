@@ -14,17 +14,14 @@ export def ZipLists(l1: list<any>, l2: list<any>): list<list<any>>
     return map(range(min_len), $'[{l1}[v:val], {l2}[v:val]]')
 enddef
 
-export def GetTextObject(textobject: string): dict<any>
-  # You pass a text object like "inside word", etc. and it returns it, along
-  # with the start and end positions. In-fact, when you yank some text, then
-  # the registers '[' and ']' are set.
-  #
-  # Start and end positions are of the form
-  # [buffer_number, line_number, column_number, screen_column].
-  #
-  # For example GetTextObjet('aw') it returns "around word".
+export def GetTextObject(textobject: string): string
+  # You pass a text object like "iw" and it returns the text
+  # associated to it.
+  # Note that when you yank some text, the registers '[' and ']' are set, so
+  # after call this function, you can retrieve start and end position of the
+  # text-object by looking at such marks.
 
-  # backup the content of register t (arbitrary choice, YMMV)
+  # Backup the content of register t (arbitrary choice, YMMV)
   var oldreg = getreg("t")
   # silently yank the text covered by whatever text object
   # was given as argument into register t
@@ -33,9 +30,7 @@ export def GetTextObject(textobject: string): dict<any>
   var text = getreg("t")
   # restore register t
   setreg("t", oldreg)
-  # return the content of given text object
-  var text_object = {text: text, start_pos: "'[", end_pos: "']"}
-  return text_object
+  return text
 enddef
 
 export def FormatWithoutMoving(a: number = 0, b: number = 0)
@@ -62,52 +57,69 @@ export def FormatWithoutMoving(a: number = 0, b: number = 0)
   winrestview(view)
 enddef
 
-export def Surround(open_delimiter: string,
+def RemoveSurrounding(a: any, b: any)
+  echom "TBD"
+enddef
+
+export def g:Surround(open_delimiter: string,
     close_delimiter: string,
-    all_open_delimiters: dict<string>,
-    all_close_delimiters: dict<string>,
+    open_delimiters_dict: dict<string>,
+    close_delimiters_dict: dict<string>,
     text_object: string = '')
   # Usage:
   #   Select text and hit <leader> + e.g. parenthesis
   #
-  # open_delimiter and close_delimiter are keys for the respective
-  # dictionaries
-  # keep_even may not be needed...
-  # Note that Visual Selections and Text Objects are cousins
+  # open_delimiter and close_delimiter are the strings to add to the text.
+  # They also serves as keys for the dics open_delimiters_dict and
+  # close_delimiters_dict.
   #
+  # We need dicts because we need both the strings to add to the text for
+  # surrounding purposes, but also a mechanism to search the surrounding
+  # delimiters in the text.
+  # We need regex because the delimiters strings may not be disjoint (think
+  # for example, in the markdown case, you have '*' delimiter which is
+  # contained in the '**' delimiter) and therefore we cannot find the
+  # delimiting string as-is.
+  # Finally, open_delimiters_dict[ii] is associated to
+  # close_delimiters_dict[ii].
+  #
+  # Remember that Visual Selections and Text Objects are cousins.
+  # Also, remember that a yank set the marks '[ and '].
 
   var open_string = open_delimiter
-  var open_regex = all_close_delimiters[open_delimiter]
+  var open_regex = close_delimiters_dict[open_string]
   var close_string = close_delimiter
-  var close_regex = all_close_delimiters[close_delimiter]
+  var close_regex = close_delimiters_dict[close_string]
 
   if !empty(IsInRange(open_regex, close_regex))
     RemoveSurrounding(open_regex, close_regex)
   else
     # Set marks
-    var A_mark = "'<"
-    var B_mark = "'>"
+    var A = getcharpos("'<")
+    var B = getcharpos("'>")
     if !empty(text_object)
-      # A and B are "'[" and "']". Basically, GetTextObject is called for
-      # setting such markers through a yank
-      A_mark = GetTextObject(text_object).start_pos
-      B_mark = GetTextObject(text_object).end_pos
+      # GetTextObject is called for setting '[ and '] marks through a yank.
+      GetTextObject(text_object)
+      A = getcharpos("'[")
+      B = getcharpos("']")
     endif
 
     # marks -> (x,y) coordinates
-    var A = getcharpos(A_mark)
-    var xA = A[1]
-    var yA = A[2]
-    var B = getcharpos(B_mark)
-    var xB = B[1]
-    var yB = B[2]
+    # line and column
+    var lA = A[1]
+    var cA = A[2]
+
+    # line and column
+    var lB = B[1]
+    var cB = B[2]
 
     if A == B
       return
     endif
 
     # -------- The search begins -------------
-    # We check conditions like the following and we adjust the style delimiters
+    # We check conditions like the following and we adjust the style
+    # delimiters
     # We assume that the existing style ranges are (C,D) and (E,F) and we want
     # to place (A,B) as in the picture
     #
@@ -126,20 +138,23 @@ export def Surround(open_delimiter: string,
     # so that all the styles are visible
 
     # Check if the cursor is already in a range of another pair of delimiters
-    var open_delimiters = values(all_open_delimiters)
-    var close_delimiters = values(all_close_delimiters)
-    var old_right_delimiter = ''
-    var old_left_delimiter = ''
+    var open_delim_leftovers = keys(open_delimiters_dict)
+      ->filter($"v:val != '{open_string}'")
+    var close_delim_leftovers = keys(close_delimiters_dict)
+      ->filter($"v:val != '{close_string}'")
 
     var found_delimiters_interval = []
-    # We assume that open and close delimiters are the same, given that we started
-    # developing for markdown
     # Check if A falls in an existing interval
-    cursor(xA, yA)
-    for delimiterg in ZipLists(open_delimiters, close_delimiters)
-      found_delimiters_interval = IsInRange(delimiterg[0], delimiterg[1])
+    # TODO You can remove the target regex here in all_open_delim_regex
+    cursor(lA, cA)
+    var old_right_delimiter = ''
+    for delim in ZipLists(open_delim_leftovers, close_delim_leftovers)
+      found_delimiters_interval =
+        IsInRange(open_delimiters_dict[delim[0]],
+        close_delimiters_dict[delim[1]])
+
       if !empty(found_delimiters_interval)
-        old_right_delimiter = delimiterg[0]
+        old_right_delimiter = delim[0]
         # Existing blocks shall be disjoint,
         # so we can break as soon as we find a delimiter
         break
@@ -148,101 +163,56 @@ export def Surround(open_delimiter: string,
 
     var toA = ''
     if !empty(found_delimiters_interval)
-      toA = old_right_delimiter .. open_delimiter
-        .. strcharpart(getline(xA), 0, yA)
+      toA = strcharpart(getline(lA), 0, cA - 1) .. old_right_delimiter .. open_string
     else
-      toA = open_delimiter .. strcharpart(getline(xA), 0, yA)
+      toA = strcharpart(getline(lA), 0, cA - 1) .. open_string
     endif
 
-    # Check if also B falls in an existing interval
-    cursor(xB, yB)
-    for delimiterg in ZipLists(open_delimiters, close_delimiters)
-      found_delimiters_interval = IsInRange(delimiterg[0], delimiterg[1])
+    # # # Check if also B falls in an existing interval
+    cursor(lB, cB)
+    var old_left_delimiter = ''
+    found_delimiters_interval = []
+    for delim in ZipLists(close_delim_leftovers, close_delim_leftovers)
+      found_delimiters_interval =
+        IsInRange(close_delimiters_dict[delim[0]],
+        close_delimiters_dict[delim[1]])
+
       if !empty(found_delimiters_interval)
-        old_left_delimiter = delimiterg[0]
+        old_left_delimiter = delim[0]
+        # Existing blocks shall be disjoint,
+        # so we can break as soon as we find a delimiter
         break
       endif
     endfor
 
     var fromB = ''
     if !empty(found_delimiters_interval)
-      FromB = close_delimiter .. old_left_delimiter
-        .. strcharpart(getline(xB), yB - 1)
+      fromB = close_string .. old_left_delimiter
+        .. strcharpart(getline(lB), cB)
     else
-      FromB = close_delimiter .. strcharpart(getline(xB), yB - 1)
+      fromB = close_string .. strcharpart(getline(lB), cB)
     endif
 
-    if xA == xB
+    # # We have compute the partial strings until A and the partial string that
+    # # leaves B. Existing delimiters are set.
+    # # Next, we have to adjust the text between A and B, by removing all the
+    # # possible delimiters.
+
+    if lA == lB
+      echom "TBD"
       # Overwrite everything that is in the middle
-      var middle = strcharpart(getline(xA), yA - 1, yB - yA)
-        -> substitute($'\({open_delimiter[0]}\|{open_delimiter[1]}
-              \|{open_delimiter[2]}\|{open_delimiter[3]}\)', '', 'g')
-      setline(xA, toA .. middle .. fromB)
-    elseif xB - xA = 1
+      var middle = strcharpart(getline(lA), cA - 1, cB - cA)
+        -> substitute($'\({all_open_delim_regex[0]}\|{all_open_delim_regex[1]}
+              \|{all_open_delim_regex[2]}\|{all_open_delim_regex[3]}\)', '', 'g')
+      setline(lA, toA .. middle .. fromB)
+    elseif lB - lA == 1
       echom "TBD"
     else
       echom "TBD"
     endif
-    # The extremes shall set. Next, we have to arrange what happens in the
-    # middle.
-    # TODO
-    # Add surrounding
-    # Capture text as-is
-    var captured_text = GetTextBetweenMarks(A, B)
-    #
-    # Delete old text.
-    # OBS! Markers will be also deleted!
-    # DeleteTextBetweenMarks(A, B)
 
-    # TEST
-    # echom "l: " .. lead
-    # echom "t: " ..  trail
-
-    # TODO: This has to be done afterwardsRemove all existing delimiters between
-    # A and B
-    # If there is a delimiter surrounded by white spaces, keep it as it is not a
-    # valid text-style in markdown
-    var cleaned_text = captured_text
-      ->map((_, val) => substitute(val, '\S\*\+', '', 'g'))
-      ->map((_, val) => substitute(val, '\*\+\S', '', 'g'))
-      ->map((_, val) => substitute(val, '\S\~\~', '', 'g'))
-      ->map((_, val) => substitute(val, '\~\~\S', '', 'g'))
-      ->map((_, val) => substitute(val, '\S`', '', 'g'))
-      ->map((_, val) => substitute(val, '`\S', '', 'g'))
-
-    # Surround text
-    # echom captured_text
-    # echom cleaned_text
-    var surrounded_text = copy(cleaned_text)
-    surrounded_text[0] = delimiterg .. cleaned_text[0]
-    surrounded_text[-1] = surrounded_text[-1] .. delimiterg
-
-    # echom surrounded_text
-    # Add new text
-    var first_line = strcharpart(getline(A), 0, col(A) - 1)
-      .. surrounded_text[0]
-      .. strcharpart(getline(A), col(A) + len(captured_text[0]) - 1)
-    var last_line = strcharpart(getline(B), 0, col(B) - len(captured_text[-1]) - 1)
-      .. surrounded_text[-1]
-      .. strcharpart(getline(B), col(B))
-    echom first_line
-    # echom last_line
-
-    if len(surrounded_text)  == 1
-      setline(line(A), first_line)
-    elseif len(surrounded_text)  == 2
-      setline(line(A), first_line)
-      setline(line(B), last_line)
-    else
-      setline(line(A), first_line)
-      setline(line(A) + 1, surrounded_text[1 : -1])
-      setline(line(B), last_line)
-    endif
-
-    # Keep even number of delimiters in the document
-    if keep_even
-      echom "TBD"
-    endif
+    echom 'toA: ' .. toA
+    echom 'fromB: ' .. fromB
   endif
 enddef
 
@@ -274,8 +244,7 @@ export def GetDelimitersRanges(open_delimiter: string,
     close_delimiter_length_max: number = 2
     ): list<list<list<number>>>
   # It returns open-intervals, i.e. the delimiters are excluded
-  # If there is a spare delimiter, it won't be considered. Delimiters are
-  # regex
+  # Passed delimiters are regex.
   #
   # TODO: It is assumed that the ranges have no intersections. Note that this
   # won't happen if open_delimiter = close_delimiter, as in many languages.
@@ -290,7 +259,7 @@ export def GetDelimitersRanges(open_delimiter: string,
   var open_delimiter_pos_short_final = [-1, -1]
   var close_delimiter_pos_short_final = [-1, -1]
   #
-  # 4D format due to that markers have 4-coordinates
+  # 4D format due to that marks have 4-coordinates
   var open_delimiter_pos = [0] + open_delimiter_pos_short + [0]
   var open_delimiter_match = ''
   var open_delimiter_length = 0
@@ -303,7 +272,8 @@ export def GetDelimitersRanges(open_delimiter: string,
     # A. ------------ open_delimiter -----------------
     open_delimiter_pos_short = searchpos(open_delimiter, 'W')
 
-    # If you pass a regex, you don't know how long is the captured string
+    # If you pass a regex, you don't know how long is the captured
+    # string. The captured string length is used as offset.
     open_delimiter_match = strcharpart(
       getline(open_delimiter_pos_short[0]),
       open_delimiter_pos_short[1] - 1, open_delimiter_length_max)

@@ -12,6 +12,11 @@ var italic_regex = '\v\*@<!\*\*@!'
 var bold_regex = '\v\*@<!\*\*\*@!'
 var strikethrough_regex = '\v\~@<!\~\~\~@!'
 
+var text_style_dict = {'`': code_regex,
+  '*': italic_regex,
+  '**': bold_regex,
+  '~~': strikethrough_regex}
+
 var code_dict = {'`': code_regex}
 var italic_dict = {'*': italic_regex}
 var bold_dict = {'**': bold_regex}
