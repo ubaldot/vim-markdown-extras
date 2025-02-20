@@ -165,8 +165,6 @@ def g:Test_IsInRange()
   Cleanup_markdown_testfile()
 enddef
 
-
-
 def g:Test_GetTextObject()
   Generate_markdown_testfile()
   exe $"edit {src_name}"
@@ -249,6 +247,28 @@ def g:Test_GetTextObject()
   # actual_value = utils.GetTextObject('i"')
   # AssertGetTextObject(expected_value, actual_value)
 
-  # :%bw!
-  # Cleanup_markdown_testfile()
+  :%bw!
+  Cleanup_markdown_testfile()
+enddef
+
+
+def g:Test_DeleteTextBetweenMarks()
+  Generate_markdown_testfile()
+  exe $"edit {src_name}"
+
+  setcharpos("'A", [0, 9, 23, 0])
+  setcharpos("'B", [0, 18, 39, 0])
+
+  var expected_value =
+    ['Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet,',
+      'consectetur, adipisci dignissimos ducimus qui',
+    'blanditiis praesentium voluptatum deleniti atque corrupti quos dolores~~']
+
+  utils.DeleteTextBetweenMarks("'A", "'B")
+  var actual_value = getline(8, 10)
+
+  assert_equal(expected_value, actual_value)
+
+  :%bw!
+  Cleanup_markdown_testfile()
 enddef

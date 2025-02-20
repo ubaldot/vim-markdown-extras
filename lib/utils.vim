@@ -38,67 +38,6 @@ export def GetTextObject(textobject: string): dict<any>
   return text_object
 enddef
 
-export def Surround(pre: string, post: string, text_object: string = '')
-  # Usage:
-  #   Select text and hit <leader> + e.g. parenthesis
-  #
-  # Note that Visual Selections and Text Objects are cousins
-  #
-  var [line_start, column_start] = [-1, -1]
-  var [line_end, column_end]  = [-1, -1]
-  if !empty(text_object)
-    [line_start, column_start] = GetTextObject(text_object).start_pos[1 : 2]
-    [line_end, column_end] = GetTextObject(text_object).end_pos[1 : 2]
-  else
-    # If no text_object is passed, then the selection is visual
-    [line_start, column_start] = getpos("'<")[1 : 2]
-    [line_end, column_end] = getpos("'>")[1 : 2]
-  endif
-
-  var pre_len = strlen(pre)
-  var post_len = strlen(post)
-  if line_start > line_end
-    var tmp = line_start
-    line_start = line_end
-    line_end = tmp
-
-    tmp = column_start
-    column_start = column_end
-    column_end = tmp
-  endif
-  if line_start == line_end && column_start > column_end
-    var tmp = column_start
-    column_start = column_end
-    column_end = tmp
-  endif
-  var leading_chars = strcharpart(getline(line_start), column_start - 1 -
-    pre_len, pre_len)
-  var trailing_chars = strcharpart(getline(line_end), column_end, post_len)
-
-  cursor(line_start, column_start)
-  var offset = 0
-  if leading_chars == pre
-    exe $"normal! {pre_len}X"
-    offset = -pre_len
-  else
-    exe $"normal! i{pre}"
-    offset = pre_len
-  endif
-
-  # Some chars have been added if you are working on the same line
-  if line_start == line_end
-    cursor(line_end, column_end + offset)
-  else
-    cursor(line_end, column_end)
-  endif
-
-  if trailing_chars == post
-    exe $"normal! l{post_len}x"
-  else
-    exe $"normal! a{post}"
-  endif
-enddef
-
 export def FormatWithoutMoving(a: number = 0, b: number = 0)
   var view = winsaveview()
   if a == 0 && b == 0
@@ -123,33 +62,7 @@ export def FormatWithoutMoving(a: number = 0, b: number = 0)
   winrestview(view)
 enddef
 
-export def RemoveSurrounding(A: string, B: string, lead: number, trail: number)
-  # Remove 'lead' chars from before mark 'A and 'trail' chars after mark 'B
-  if line(A) == line(B)
-    var part1 = strcharpart(getline(A), 0, col(A) - lead - 1)
-    var part2 = strcharpart(getline(A), col(A) - 1, col(B) - col(A) + 1)
-    var part3 = strcharpart(getline(A), col(B) + trail)
-
-    echom part1
-    echom part2
-    echom part3
-
-    var new_line = part1 .. part2 .. part3
-      setline(line(A), new_line)
-  else
-      var first_line = strcharpart(getline(A), 0, col(A) - lead - 1)
-        .. strcharpart(getline(A), col(A) - 1)
-      echom first_line
-      setline(line(A), first_line)
-
-      var last_line = strcharpart(getline(B), 0, col(B) - trail - 1)
-        .. strcharpart(getline(B), col(B) - 1)
-      echom last_line
-      setline(line(B), last_line)
-  endif
-enddef
-
-export def SurroundNew(open_delimiter: string,
+export def Surround(open_delimiter: string,
     close_delimiter: string,
     text_object: string = '',
     keep_even: bool = false)
@@ -345,49 +258,6 @@ export def GetTextBetweenMarks(A: string, B: string): list<string>
     endif
 enddef
 
-export def InsertLinesAtMark(marker: string, lines: list<string>)
-    # ----- NOT WORKING ----------------------
-    var pos = getpos(marker)  # Get (line, column) position of the marker
-    var line_num = pos[1]     # Line number
-    var col = pos[2]          # Column number
-
-    # Get the existing line at the marker
-    var current_line = getline(line_num)
-
-    # If the input list is empty, do nothing
-    if empty(lines)
-        return
-    endif
-
-    # If there's only one line in the list, insert it inline
-    if len(lines) == 1
-        var new_line = strcharpart(current_line, 0, col - 1) .. lines[0]
-          .. strcharpart(current_line, col - 1)
-        setline(line_num, new_line)
-    else
-        # Modify the first line (before the marker)
-        var first_part = strcharpart(current_line, 0, col - 1)
-        var last_part = strcharpart(current_line, col - 1)
-
-        # Construct the final text to insert
-        var new_lines = [first_part .. lines[0]] + lines[1 : ] + [last_part]
-
-        # Insert the lines into the buffer
-        # setline(line_num - 1, new_lines)
-        append(line_num - 1, new_lines)
-    endif
-enddef
-
-# export def InsertInLine(marker: string, text: list<string>)
-#    # Insert text in the given column
-#    var line = getline(line(marker))   # Get the current line
-#    var lnum = line(marker)
-#    var column = col(marker)
-#    var new_line = strcharpart(line, 0, column) .. text .. strcharpart(line, column)
-#    setline(lnum, new_line)                  # Set the modified line back
-# enddef
-
-
 export def GetDelimitersRanges(open_delimiter: string,
     close_delimiter: string,
     open_delimiter_length_max: number = 2,
@@ -419,7 +289,6 @@ export def GetDelimitersRanges(open_delimiter: string,
   var close_delimiter_match = ''
 
   while open_delimiter_pos_short != [0, 0]
-    echom "open_delimiter: " .. open_delimiter
     open_delimiter_pos_short = searchpos(open_delimiter, 'W')
 
     # If you pass a regex, you don't know how long is the captured string
@@ -524,7 +393,7 @@ export def IsInRange(open_delimiter: string,
     endif
   endfor
 
-  echom "interval: " .. string(interval)
+  # echom "interval: " .. string(interval)
   # Restore marks 'a and 'b
   setcharpos("'a", saved_mark_a)
   setcharpos("'b", saved_mark_b)
