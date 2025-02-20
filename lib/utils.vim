@@ -64,15 +64,25 @@ enddef
 
 export def Surround(open_delimiter: string,
     close_delimiter: string,
-    text_object: string = '',
-    keep_even: bool = false)
+    all_open_delimiters: dict<string>,
+    all_close_delimiters: dict<string>,
+    text_object: string = '')
   # Usage:
   #   Select text and hit <leader> + e.g. parenthesis
   #
+  # open_delimiter and close_delimiter are keys for the respective
+  # dictionaries
+  # keep_even may not be needed...
   # Note that Visual Selections and Text Objects are cousins
   #
-  if !empty(IsInRange(open_delimiter, close_delimiter))
-    RemoveSurrounding(open_delimiter, close_delimiter)
+
+  var open_string = open_delimiter
+  var open_regex = all_close_delimiters[open_delimiter]
+  var close_string = close_delimiter
+  var close_regex = all_close_delimiters[close_delimiter]
+
+  if !empty(IsInRange(open_regex, close_regex))
+    RemoveSurrounding(open_regex, close_regex)
   else
     # Set marks
     var A_mark = "'<"
@@ -116,8 +126,8 @@ export def Surround(open_delimiter: string,
     # so that all the styles are visible
 
     # Check if the cursor is already in a range of another pair of delimiters
-    var open_delimiters = ['*', '**', '~~', '`']
-    var close_delimiters = ['*', '**', '~~', '`']
+    var open_delimiters = values(all_open_delimiters)
+    var close_delimiters = values(all_close_delimiters)
     var old_right_delimiter = ''
     var old_left_delimiter = ''
 
@@ -373,9 +383,9 @@ enddef
 
 export def IsInRange(open_delimiter: string,
     close_delimiter: string): list<list<number>>
+  # Arguments must be regex.
   # Return the range of the delimiters if the cursor is within such a range,
   # otherwise return an empty list.
-  # Arguments must be regex.
   var interval = []
 
   # OBS! Ranges are open-intervals!
