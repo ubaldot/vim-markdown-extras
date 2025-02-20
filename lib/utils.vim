@@ -99,8 +99,6 @@ export def Surround(pre: string, post: string, text_object: string = '')
   endif
 enddef
 
-
-
 export def FormatWithoutMoving(a: number = 0, b: number = 0)
   var view = winsaveview()
   if a == 0 && b == 0
@@ -123,9 +121,7 @@ export def FormatWithoutMoving(a: number = 0, b: number = 0)
     endif
   endif
   winrestview(view)
-
 enddef
-
 
 export def RemoveSurrounding(A: string, B: string, lead: number, trail: number)
   # Remove 'lead' chars from before mark 'A and 'trail' chars after mark 'B
@@ -350,6 +346,7 @@ export def GetTextBetweenMarks(A: string, B: string): list<string>
 enddef
 
 export def InsertLinesAtMark(marker: string, lines: list<string>)
+    # ----- NOT WORKING ----------------------
     var pos = getpos(marker)  # Get (line, column) position of the marker
     var line_num = pos[1]     # Line number
     var col = pos[2]          # Column number
@@ -541,7 +538,7 @@ export def DeleteTextBetweenMarks(A: string, B: string): string
   # instead of 'a to jump to the exact marker position
   var exact_A = substitute(A, "'", "`", "")
   var exact_B = substitute(B, "'", "`", "")
-  execute $'norm! {exact_A}v{exact_B}d _'
+  execute $'norm! {exact_A}v{exact_B}"_d'
   # This to get rid off E1186
   return ''
 enddef
