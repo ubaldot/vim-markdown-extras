@@ -153,7 +153,10 @@ export def RemoveSurrounding(A: string, B: string, lead: number, trail: number)
   endif
 enddef
 
-export def SurroundNew(open_delimiter: string, close_delimiter: string, text_object: string = '', keep_even: bool = false)
+export def SurroundNew(open_delimiter: string,
+    close_delimiter: string,
+    text_object: string = '',
+    keep_even: bool = false)
   # Usage:
   #   Select text and hit <leader> + e.g. parenthesis
   #
@@ -226,7 +229,8 @@ export def SurroundNew(open_delimiter: string, close_delimiter: string, text_obj
 
     var toA = ''
     if !empty(found_delimiters_interval)
-      toA = old_right_delimiter .. open_delimiter .. strcharpart(getline(xA), 0, yA)
+      toA = old_right_delimiter .. open_delimiter
+        .. strcharpart(getline(xA), 0, yA)
     else
       toA = open_delimiter .. strcharpart(getline(xA), 0, yA)
     endif
@@ -243,7 +247,8 @@ export def SurroundNew(open_delimiter: string, close_delimiter: string, text_obj
 
     var fromB = ''
     if !empty(found_delimiters_interval)
-      FromB = close_delimiter .. old_left_delimiter .. strcharpart(getline(xB), yB - 1)
+      FromB = close_delimiter .. old_left_delimiter
+        .. strcharpart(getline(xB), yB - 1)
     else
       FromB = close_delimiter .. strcharpart(getline(xB), yB - 1)
     endif
@@ -274,7 +279,8 @@ export def SurroundNew(open_delimiter: string, close_delimiter: string, text_obj
     # echom "l: " .. lead
     # echom "t: " ..  trail
 
-    # TODO: This has to be done afterwardsRemove all existing delimiters between A and B
+    # TODO: This has to be done afterwardsRemove all existing delimiters between
+    # A and B
     # If there is a delimiter surrounded by white spaces, keep it as it is not a
     # valid text-style in markdown
     var cleaned_text = captured_text
@@ -358,7 +364,8 @@ export def InsertLinesAtMark(marker: string, lines: list<string>)
 
     # If there's only one line in the list, insert it inline
     if len(lines) == 1
-        var new_line = strcharpart(current_line, 0, col - 1) .. lines[0] .. strcharpart(current_line, col - 1)
+        var new_line = strcharpart(current_line, 0, col - 1) .. lines[0]
+          .. strcharpart(current_line, col - 1)
         setline(line_num, new_line)
     else
         # Modify the first line (before the marker)
@@ -433,7 +440,8 @@ export def GetDelimitersRanges(open_delimiter: string,
     else
       # Pick the open-interval
       open_delimiter_pos_short_final[0] = open_delimiter_pos_short[0]
-      open_delimiter_pos_short_final[1] = open_delimiter_pos_short[1] + open_delimiter_length
+      open_delimiter_pos_short_final[1] = open_delimiter_pos_short[1]
+                                             + open_delimiter_length
     endif
     open_delimiter_pos = [0] + open_delimiter_pos_short_final + [0]
 
@@ -478,7 +486,8 @@ export def IsBetweenMarks(A: string, B: string): bool
     # comparison of floats.
     var lower_float = str2float($'{A_pos[1]}.{A_pos[2]}')
     var upper_float = str2float($'{B_pos[1]}.{B_pos[2]}')
-    var cursor_pos_float = str2float($'{getcharpos(".")[1]}.{getcharpos(".")[2]}')
+    var cursor_pos_float =
+      str2float($'{getcharpos(".")[1]}.{getcharpos(".")[2]}')
 
     # Debugging
     # echom "cur_pos: " .. cursor_pos_float
@@ -496,7 +505,8 @@ export def IsBetweenMarks(A: string, B: string): bool
 
 enddef
 
-export def IsInRange(open_delimiter: string, close_delimiter: string): list<list<number>>
+export def IsInRange(open_delimiter: string,
+    close_delimiter: string): list<list<number>>
   # Return the range of the delimiters if the cursor is within such a range,
   # otherwise return an empty list.
   # Arguments must be regex.

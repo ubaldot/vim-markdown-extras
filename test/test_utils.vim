@@ -44,6 +44,16 @@ def Generate_markdown_testfile()
         et quas molestias excepturi sint~~ occaecati cupiditate non provident,
         similique sunt in culpa qui officia ~~deserunt mollitia animi, id est
         ~~laborum et dolorum fuga.
+
+        Et harum quidem rerum facilis est et expedita distinctio. Nam libero
+        tempore, cum soluta nobis est (eligendi optio cumque nihil) impedit quo
+        minus id quod maxime [placeat facere possimus, omnis] voluptas assumenda
+        est, omnis "dolor repellendus". Temporibus autem quibusdam et aut
+        officiis debitis aut {rerum necessitatibus} saepe eveniet ut et
+        voluptates repudiandae sint et molestiae non recusandae. Itaque earum
+        rerum hic tenetur 'a sapiente' delectus, ut aut reiciendis voluptatibus
+        maiores alias consequatur aut perferendis doloribus asperiores
+        repellat.
   END
    writefile(lines, src_name)
 enddef
@@ -153,4 +163,92 @@ def g:Test_IsInRange()
 
   :%bw!
   Cleanup_markdown_testfile()
+enddef
+
+
+
+def g:Test_GetTextObject()
+  Generate_markdown_testfile()
+  exe $"edit {src_name}"
+
+  def AssertGetTextObject(expected_value: dict<any>, actual_value: dict<any>)
+    assert_equal(expected_value.text, actual_value.text)
+    assert_equal(expected_value.start_pos, getcharpos(actual_value.start_pos))
+    assert_equal(expected_value.end_pos, getcharpos(actual_value.end_pos))
+  enddef
+
+  # test 'iw'
+  cursor(1, 8)
+  var expected_value = {text: 'perspiciatis',
+    start_pos: [0, 1, 8, 0],
+    end_pos: [0, 1, 19, 0]}
+
+  var actual_value = utils.GetTextObject('iw')
+
+  # test 'iW'
+  actual_value = utils.GetTextObject('iW')
+  AssertGetTextObject(expected_value, actual_value)
+
+  # test 'aw'
+  expected_value = {text: 'perspiciatis ',
+    start_pos: [0, 1, 8, 0],
+    end_pos: [0, 1, 20, 0]}
+
+  actual_value = utils.GetTextObject('aw')
+  AssertGetTextObject(expected_value, actual_value)
+
+  # test 'aW'
+  actual_value = utils.GetTextObject('aW')
+  AssertGetTextObject(expected_value, actual_value)
+
+  # Test 'i('
+  cursor(25, 33)
+  expected_value = {text: 'eligendi optio cumque nihil',
+    start_pos: [0, 25, 32, 0],
+    end_pos: [0, 25, 58, 0]}
+
+  actual_value = utils.GetTextObject('i(')
+  AssertGetTextObject(expected_value, actual_value)
+  # Test 'yib'
+  actual_value = utils.GetTextObject('ib')
+  AssertGetTextObject(expected_value, actual_value)
+
+  # Test 'a('
+  expected_value = {text: '(eligendi optio cumque nihil)',
+    start_pos: [0, 25, 31, 0],
+    end_pos: [0, 25, 59, 0]}
+
+  actual_value = utils.GetTextObject('a(')
+  AssertGetTextObject(expected_value, actual_value)
+  # Test 'ab'
+  actual_value = utils.GetTextObject('ab')
+  AssertGetTextObject(expected_value, actual_value)
+
+  # Test 'i{'
+  cursor(28, 25)
+  expected_value = {text: 'rerum necessitatibus',
+    start_pos: [0, 28, 23, 0],
+    end_pos: [0, 28, 42, 0]}
+  actual_value = utils.GetTextObject('i{')
+  AssertGetTextObject(expected_value, actual_value)
+
+  # Test 'a{'
+  expected_value = {text: '{rerum necessitatibus}',
+    start_pos: [0, 28, 22, 0],
+    end_pos: [0, 28, 43, 0]}
+  actual_value = utils.GetTextObject('a{')
+  AssertGetTextObject(expected_value, actual_value)
+
+  # Test quoted text
+  # TODO: it does not work due to a bug in vim, see:
+  # https://github.com/vim/vim/issues/16679
+  # cursor(27, 22)
+  # expected_value = {text: 'dolor repellendus',
+  #   start_pos: [0, 27, 13, 0],
+  #   end_pos: [0, 27, 29, 0]}
+  # actual_value = utils.GetTextObject('i"')
+  # AssertGetTextObject(expected_value, actual_value)
+
+  # :%bw!
+  # Cleanup_markdown_testfile()
 enddef
