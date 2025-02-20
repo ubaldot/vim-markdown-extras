@@ -7,9 +7,15 @@ import autoload '../../lib/utils.vim'
 
 links.GenerateLinksDict()
 
-if exists('b:mapleader') == 0
-  b:mapleader = "m"
-endif
+var code_regex = '\v`@<!``@!'
+var italic_regex = '\v\*@<!\*\*@!'
+var bold_regex = '\v\*@<!\*\*\*@!'
+var strikethrough_regex = '\v\~@<!\~\~\~@!'
+
+var code_dict = {'`': code_regex}
+var italic_dict = {'*': italic_regex}
+var bold_dict = {'**': bold_regex}
+var strikethrough_dict = {'~~': strikethrough_regex}
 
 if exists('g:markdown_extras_config') != 0
     && has_key(g:markdown_extras_config, 'leader')

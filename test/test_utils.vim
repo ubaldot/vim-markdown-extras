@@ -272,3 +272,19 @@ def g:Test_DeleteTextBetweenMarks()
   :%bw!
   Cleanup_markdown_testfile()
 enddef
+
+def g:Test_ZipList()
+
+  var list_a = [1, 2, 3, 4]
+  var list_b = [4, 3, 2, 1]
+  var expected_value = [[1, 4], [2, 3], [3, 2], [4, 1]]
+  var actual_value = utils.ZipLists(list_a, list_b)
+  assert_equal(expected_value, actual_value)
+
+  # Test with different lengths
+  add(list_b, 0)
+  actual_value = utils.ZipLists(list_a, list_b)
+  assert_equal(expected_value, actual_value)
+
+  quit!
+enddef
