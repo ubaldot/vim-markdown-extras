@@ -286,5 +286,4 @@ def g:Test_ZipList()
   actual_value = utils.ZipLists(list_a, list_b)
   assert_equal(expected_value, actual_value)
 
-  quit!
 enddef
