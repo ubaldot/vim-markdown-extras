@@ -1,8 +1,8 @@
 vim9script
 
 # The global variable g:TestFiles is a list containing all the tests filenames.
-if exists('g:TestFiles') == 0
-	g:TestFiles = ['test_markdown_extras.vim', 'test_utils.vim']
+if !exists('g:TestFiles')
+	g:TestFiles = ['test_markdown_extras.vim', 'test_utils.vim', 'test_regex.vim']
 endif
 
 delete('results.txt')

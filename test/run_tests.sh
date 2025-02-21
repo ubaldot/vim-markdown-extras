@@ -37,7 +37,7 @@ echo ""
 VIM_CMD="$VIM_PRG --clean -u $VIMRC -i NONE --not-a-term"
 
 # Add test files here:
-TESTS=('test_markdown_extras.vim' 'test_utils.vim')
+TESTS=('test_markdown_extras.vim' 'test_utils.vim' 'test_regex.vim')
 
 # convert bash list to Vim list
 TESTS_STRING=$(printf "'%s', " "${TESTS[@]}")
