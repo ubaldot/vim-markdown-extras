@@ -8,7 +8,10 @@ import autoload '../../lib/utils.vim'
 links.GenerateLinksDict()
 
 var code_regex = '\v`@<!``@!'
-var italic_regex = '\v\*@<!\*\*@!'
+# var italic_regex = '\v(\\|\*)@<!\*\*@!'
+# The following picks standalone * and the last * of \**
+# It excludes escaped * (i.e. \*\*\*, and sequences like ****)
+var italic_regex = '\v((\\|\*)@<!|(\\\*)@<=)\*\*@!'
 var bold_regex = '\v\*@<!\*\*\*@!'
 var strikethrough_regex = '\v\~@<!\~\~\~@!'
 
