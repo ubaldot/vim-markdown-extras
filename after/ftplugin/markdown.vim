@@ -15,6 +15,8 @@ export var italic_regex = '\v((\\|\*)@<!|(\\\*)@<=)\*\*@!'
 export var bold_regex = '\v(\\|\*)@<!\*\*\*@!'
 export var strikethrough_regex = '\v(\\|\~)@<!\~\~\~@!'
 
+g:A = ['\v(\\|\~)\v@<!\~\~\~@!', '\v(\\|\*)@<!\*\*\*@!', '\v((\\|\*)@<!|(\\\*)@<=)\*\*@!', '\v(\\|`)@<!``@!']
+
 var text_style_dict = {'`': code_regex,
   '*': italic_regex,
   '**': bold_regex,

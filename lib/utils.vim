@@ -14,6 +14,12 @@ export def ZipLists(l1: list<any>, l2: list<any>): list<list<any>>
     return map(range(min_len), $'[{l1}[v:val], {l2}[v:val]]')
 enddef
 
+export def RegexList2RegexOR(regex_list: list<string>): string
+  # Valid only for very-magic regex.
+  return regex_list->map((_, val) => substitute(val, '^\(\\v\)', '', ''))
+          ->join('|')->printf('\v(%s)')
+enddef
+
 export def GetTextObject(textobject: string): string
   # You pass a text object like "iw" and it returns the text
   # associated to it.
@@ -323,26 +329,46 @@ export def GetDelimitersRanges(open_delimiter: string,
   return ranges
 enddef
 
+export def IsGreater(l1: list<number>, l2: list<number>): bool
+    # Compare two list of integers of size 2 based on the first element
+    # return true if l1 > l2
+
+    if l1[0] > l2[0]
+     return true
+    elseif l1[0] == l2[0] && l1[1] > l2[1]
+      return true
+    else
+      return false
+    endif
+enddef
+
+export def IsGreaterEqual(l1: list<number>, l2: list<number>): bool
+    # Compare two list of integers of size 2 based on the first element
+    # return true if l1 >= l2
+
+    if l1[0] > l2[0]
+     return true
+    elseif l1[0] == l2[0] && l1[1] > l2[1]
+      return true
+    elseif l1[0] == l2[0] && l1[1] == l2[1]
+      return true
+    else
+      return false
+    endif
+enddef
+
 export def IsBetweenMarks(A: string, B: string): bool
     var cursor_pos = getpos(".")
-    var A_pos = getcharpos(A)
-    var B_pos = getcharpos(B)
+    var A_pos = getcharpos(A)[1 : 2]
+    var B_pos = getcharpos(B)[1 : 2]
 
-    # Convert in floats of the form "line.column" so the check reduces to a
-    # comparison of floats.
-    var lower_float = str2float($'{A_pos[1]}.{A_pos[2]}')
-    var upper_float = str2float($'{B_pos[1]}.{B_pos[2]}')
-    var cursor_pos_float =
-      str2float($'{getcharpos(".")[1]}.{getcharpos(".")[2]}')
-
-    # In case the lower limit is larger than the higher limit, swap
-    if upper_float < lower_float
-      var tmp = upper_float
-      upper_float = lower_float
-      lower_float = tmp
+    if IsGreater(A_pos, B_pos)
+      var tmp = B_pos
+      B_pos = A_pos
+      A_pos = tmp
     endif
 
-    return lower_float <= cursor_pos_float && cursor_pos_float <= upper_float
+    return IsGreaterEqual(cursor_pos, A_pos) && IsGreaterEqual(B_pos, cursor_pos)
 enddef
 
 export def IsInRange(open_delimiter: string,

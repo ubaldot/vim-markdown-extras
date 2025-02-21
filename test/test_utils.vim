@@ -112,6 +112,24 @@ def g:Test_GetDelimitersRanges()
   Cleanup_markdown_testfile()
 enddef
 
+def g:Test_ListComparison()
+  var A = [5, 19]
+  var B = [3, 43]
+  assert_true(utils.IsGreater(A, B))
+  assert_true(utils.IsGreaterEqual(A, B))
+
+  A = [3, 48]
+  B = [3, 21]
+  assert_true(utils.IsGreater(A, B))
+  assert_true(utils.IsGreaterEqual(A, B))
+
+  # Equality
+  A = [3, 48]
+  B = [3, 48]
+  assert_false(utils.IsGreater(A, B))
+  assert_true(utils.IsGreaterEqual(A, B))
+enddef
+
 def g:Test_IsBetweenMarks()
   Generate_markdown_testfile()
   exe $"edit {src_name}"
@@ -272,4 +290,15 @@ def g:Test_ZipList()
   actual_value = utils.ZipLists(list_a, list_b)
   assert_equal(expected_value, actual_value)
 
+enddef
+
+def g:Test_RegexList2RegexOr()
+    var A = '\v(\d+|\a)\s'
+    var B = '\v^\s*\w\d*\w'
+    var C = '\v^\s*\w\d*\w'
+    var test_list = [A, B, C]
+
+    var expected_string = '\v((\d+|\a)\s|^\s*\w\d*\w|^\s*\w\d*\w)'
+    var actual_string = utils.RegexList2RegexOR(test_list)
+    assert_equal(expected_string, actual_string)
 enddef
