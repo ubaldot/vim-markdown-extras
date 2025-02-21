@@ -208,8 +208,7 @@ export def g:Surround(open_delimiter: string,
       echom "TBD"
       # Overwrite everything that is in the middle
       var middle = strcharpart(getline(lA), cA - 1, cB - cA)
-        -> substitute($'\({all_open_delim_regex[0]}\|{all_open_delim_regex[1]}
-              \|{all_open_delim_regex[2]}\|{all_open_delim_regex[3]}\)', '', 'g')
+        -> substitute(RegexList2RegexOR(values(open_delimiters_dict)), '', 'g')
       setline(lA, toA .. middle .. fromB)
     elseif lB - lA == 1
       echom "TBD"
