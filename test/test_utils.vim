@@ -307,7 +307,7 @@ def g:Test_ZipList()
 
 enddef
 
-def g:Test_RegexList2RegexOr()
+def g:Test_RegexList2RegexOR()
     var A = '\v(\d+|\a)\s'
     var B = '\v^\s*\w\d*\w'
     var C = '\v\w*\d+\w'

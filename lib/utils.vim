@@ -16,6 +16,8 @@ enddef
 
 export def RegexList2RegexOR(regex_list: list<string>,
     very_magic: bool = false): string
+  # Convert a list of regex into an atom where each regex is separated by a OR
+  # condition
 
   var result = ''
   if very_magic
@@ -28,8 +30,9 @@ export def RegexList2RegexOR(regex_list: list<string>,
 enddef
 
 export def GetTextObject(textobject: string): string
-  # You pass a text object like "iw" and it returns the text
+  # You pass a text object like 'iw' and it returns the text
   # associated to it.
+  #
   # Note that when you yank some text, the registers '[' and ']' are set, so
   # after call this function, you can retrieve start and end position of the
   # text-object by looking at such marks.
@@ -47,6 +50,7 @@ export def GetTextObject(textobject: string): string
 enddef
 
 export def FormatWithoutMoving(a: number = 0, b: number = 0)
+  # To be used for formatting through autocmds
   var view = winsaveview()
   if a == 0 && b == 0
     silent exe $":norm! gggqG"
@@ -62,7 +66,7 @@ export def FormatWithoutMoving(a: number = 0, b: number = 0)
     # Display format command
     redraw
     if !empty(&l:formatprg)
-      Echowarn($'{&l:formatprg}')
+      echo $'{&l:formatprg}'
     else
       Echowarn("'formatprg' is empty. Using default formatter.")
     endif
@@ -82,19 +86,20 @@ export def g:Surround(open_delimiter: string,
   # Usage:
   #   Select text and hit <leader> + e.g. parenthesis
   #
-  # open_delimiter and close_delimiter are the strings to add to the text.
-  # They also serves as keys for the dics open_delimiters_dict and
-  # close_delimiters_dict.
+  # 'open_delimiter' and 'close_delimiter' are the strings to add to the text.
+  # They also serves as keys for the dics 'open_delimiters_dict' and
+  # 'close_delimiters_dict'.
   #
-  # We need dicts because we need both the strings to add to the text for
+  # We need dicts because we need the strings to add to the text for
   # surrounding purposes, but also a mechanism to search the surrounding
   # delimiters in the text.
   # We need regex because the delimiters strings may not be disjoint (think
   # for example, in the markdown case, you have '*' delimiter which is
   # contained in the '**' delimiter) and therefore we cannot find the
   # delimiting string as-is.
-  # Finally, open_delimiters_dict[ii] is associated to
-  # close_delimiters_dict[ii].
+  # Finally, open_delimiters_dict[ii] is zipped with
+  # close_delimiters_dict[ii], therefore be sure that there is correspondence
+  # between opening and closing delimiters.
   #
   # Remember that Visual Selections and Text Objects are cousins.
   # Also, remember that a yank set the marks '[ and '].
@@ -158,10 +163,11 @@ export def g:Surround(open_delimiter: string,
 
     var found_delimiters_interval = []
     # Check if A falls in an existing interval
-    # TODO You can remove the target regex here in all_open_delim_regex
+    # TODO You can remove the target regex here in 'all_open_delim_regex'
     cursor(lA, cA)
     var old_right_delimiter = ''
     for delim in ZipLists(open_delim_leftovers, close_delim_leftovers)
+
       found_delimiters_interval =
         IsInRange(open_delimiters_dict[delim[0]],
         close_delimiters_dict[delim[1]])
@@ -176,16 +182,18 @@ export def g:Surround(open_delimiter: string,
 
     var toA = ''
     if !empty(found_delimiters_interval)
-      toA = strcharpart(getline(lA), 0, cA - 1) .. old_right_delimiter .. open_string
+      toA = strcharpart(getline(lA), 0, cA - 1)
+        .. old_right_delimiter .. open_string
     else
       toA = strcharpart(getline(lA), 0, cA - 1) .. open_string
     endif
 
-    # # # Check if also B falls in an existing interval
+    # Check if B falls in an existing interval
     cursor(lB, cB)
     var old_left_delimiter = ''
     found_delimiters_interval = []
     for delim in ZipLists(close_delim_leftovers, close_delim_leftovers)
+
       found_delimiters_interval =
         IsInRange(close_delimiters_dict[delim[0]],
         close_delimiters_dict[delim[1]])
@@ -200,22 +208,22 @@ export def g:Surround(open_delimiter: string,
 
     var fromB = ''
     if !empty(found_delimiters_interval)
-      fromB = close_string .. old_left_delimiter
-        .. strcharpart(getline(lB), cB)
+      fromB = close_string .. old_left_delimiter .. strcharpart(getline(lB), cB)
     else
       fromB = close_string .. strcharpart(getline(lB), cB)
     endif
 
-    # # We have compute the partial strings until A and the partial string that
-    # # leaves B. Existing delimiters are set.
-    # # Next, we have to adjust the text between A and B, by removing all the
-    # # possible delimiters.
+    # We have compute the partial strings until A and the partial string that
+    # leaves B. Existing delimiters are set.
+    # Next, we have to adjust the text between A and B, by removing all the
+    # possible delimiters left between them.
 
     if lA == lB
-      echom "TBD"
       # Overwrite everything that is in the middle
+      var junk_delimiters =
+        RegexList2RegexOR(values(open_delimiters_dict), true)
       var middle = strcharpart(getline(lA), cA - 1, cB - cA)
-        -> substitute(RegexList2RegexOR(values(open_delimiters_dict), true), '', 'g')
+        -> substitute(junk_delimiters, '', 'g')
       setline(lA, toA .. middle .. fromB)
     elseif lB - lA == 1
       echom "TBD"
@@ -231,9 +239,9 @@ enddef
 export def GetTextBetweenMarks(A: string, B: string): list<string>
     # Usage: GetTextBetweenPoints("`[", "`]").
     #
-    # Arguments must be markers
-    # called with the back ticks to get the exact position ('a jump to the
-    # marker but places the cursor at the beginning of the line.)
+    # Arguments must be marks called with the back ticks to get the exact
+    # position ('a jump to the marker but places the cursor
+    # at the beginning of the line.)
     #
     var [_, l1, c1, _] = getcharpos(A)
     var [_, l2, c2, _] = getcharpos(B)
@@ -259,7 +267,8 @@ export def GetDelimitersRanges(open_delimiter: string,
   # Passed delimiters are regex.
   #
   # TODO: It is assumed that the ranges have no intersections. Note that this
-  # won't happen if open_delimiter = close_delimiter, as in many languages.
+  # won't happen if 'open_delimiter' = 'close_delimiter', as in many languages.
+  # TODO: the idea of 'guessing' the length of a delimiter is a bit flaky.
   var saved_cursor = getcursorcharpos()
   cursor(1, 1)
 
@@ -270,7 +279,7 @@ export def GetDelimitersRanges(open_delimiter: string,
   var close_delimiter_pos_short = [-1, -1]
   var open_delimiter_pos_short_final = [-1, -1]
   var close_delimiter_pos_short_final = [-1, -1]
-  #
+
   # 4D format due to that marks have 4-coordinates
   var open_delimiter_pos = [0] + open_delimiter_pos_short + [0]
   var open_delimiter_match = ''
@@ -292,8 +301,8 @@ export def GetDelimitersRanges(open_delimiter: string,
       ->matchstr(open_delimiter)
     open_delimiter_length = len(open_delimiter_match)
 
-    # If the open delimiter is the tail of the line, then the open-interval starts from
-    # the next line, column 1
+    # If the open delimiter is the tail of the line,
+    # then the open-interval starts from the next line, column 1
     if open_delimiter_pos_short[1] + open_delimiter_length == col('$')
       open_delimiter_pos_short_final[0] = open_delimiter_pos_short[0] + 1
       open_delimiter_pos_short_final[1] = 1
@@ -357,7 +366,7 @@ enddef
 export def IsGreater(l1: list<number>, l2: list<number>): bool
   # Lexicographic comparison on common prefix, i.e.for two vectors in N^n and
   # N^m you compare their projections onto the smaller subspace.
-    #
+
   var min_length = min([len(l1), len(l2)])
   var result = false
 
@@ -377,7 +386,6 @@ export def IsEqual(l1: list<number>, l2: list<number>): bool
   var min_length = min([len(l1), len(l2)])
   return l1[: min_length - 1] == l2[: min_length - 1]
 enddef
-
 
 export def IsBetweenMarks(A: string, B: string): bool
     var cursor_pos = getpos(".")
@@ -433,7 +441,10 @@ enddef
 export def DeleteTextBetweenMarks(A: string, B: string): string
   # To jump to the exact position (and not at the beginning of a line) you
   # have to call the marker with the backtick ` rather than with ', e.g. `a
-  # instead of 'a to jump to the exact marker position
+  # instead of 'a
+  # TODO
+  # This implementation most likely modify the jumplist.
+  # Find a solution based on functions instead
   var exact_A = substitute(A, "'", "`", "")
   var exact_B = substitute(B, "'", "`", "")
   execute $'norm! {exact_A}v{exact_B}"_d'
