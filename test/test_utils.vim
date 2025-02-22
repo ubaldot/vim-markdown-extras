@@ -310,10 +310,19 @@ enddef
 def g:Test_RegexList2RegexOr()
     var A = '\v(\d+|\a)\s'
     var B = '\v^\s*\w\d*\w'
-    var C = '\v^\s*\w\d*\w'
+    var C = '\v\w*\d+\w'
     var test_list = [A, B, C]
 
-    var expected_string = '\v((\d+|\a)\s|^\s*\w\d*\w|^\s*\w\d*\w)'
-    var actual_string = utils.RegexList2RegexOR(test_list)
+    var expected_string = '\v((\d+|\a)\s|^\s*\w\d*\w|\w*\d+\w)'
+    var actual_string = utils.RegexList2RegexOR(test_list, true)
+    assert_equal(expected_string, actual_string)
+
+    A = '\(\d\+\|\a\)\s'
+    B = '^\s*\w\d*\w'
+    C = '\w*\d\+\w'
+    test_list = [A, B, C]
+
+    expected_string = '\(\(\d\+\|\a\)\s\|^\s*\w\d*\w\|\w*\d\+\w\)'
+    actual_string = utils.RegexList2RegexOR(test_list)
     assert_equal(expected_string, actual_string)
 enddef

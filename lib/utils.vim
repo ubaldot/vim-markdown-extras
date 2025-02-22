@@ -14,10 +14,17 @@ export def ZipLists(l1: list<any>, l2: list<any>): list<list<any>>
     return map(range(min_len), $'[{l1}[v:val], {l2}[v:val]]')
 enddef
 
-export def RegexList2RegexOR(regex_list: list<string>): string
-  # Valid only for very-magic regex.
-  return regex_list->map((_, val) => substitute(val, '^\(\\v\)', '', ''))
+export def RegexList2RegexOR(regex_list: list<string>,
+    very_magic: bool = false): string
+
+  var result = ''
+  if very_magic
+    result =  regex_list->map((_, val) => substitute(val, '^\(\\v\)', '', ''))
           ->join('|')->printf('\v(%s)')
+  else
+    result = regex_list->join('\|')->printf('\(%s\)')
+  endif
+  return result
 enddef
 
 export def GetTextObject(textobject: string): string
@@ -208,7 +215,7 @@ export def g:Surround(open_delimiter: string,
       echom "TBD"
       # Overwrite everything that is in the middle
       var middle = strcharpart(getline(lA), cA - 1, cB - cA)
-        -> substitute(RegexList2RegexOR(values(open_delimiters_dict)), '', 'g')
+        -> substitute(RegexList2RegexOR(values(open_delimiters_dict), true), '', 'g')
       setline(lA, toA .. middle .. fromB)
     elseif lB - lA == 1
       echom "TBD"
