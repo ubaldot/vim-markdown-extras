@@ -78,7 +78,7 @@ def RemoveSurrounding(a: any, b: any)
   echom "TBD"
 enddef
 
-export def g:Surround(open_delimiter: string,
+export def Surround(open_delimiter: string,
     close_delimiter: string,
     open_delimiters_dict: dict<string>,
     close_delimiters_dict: dict<string>,
@@ -180,10 +180,26 @@ export def g:Surround(open_delimiter: string,
       endif
     endfor
 
+    # Try to preserve overlapping ranges by moving the delimiters.
+    # For example. If we have the pairs (C, D) and (E,F) as it follows:
+    # ------C-------D------E------F
+    #  and we want to add (A, B) as it follows
+    # ------C---A---D-----E--B---F
+    #  then the results becomes a mess. The idea is to move D before A and E
+    #  after E, thus obtaining:
+    # ------C--DA-----------BE----F
+    #
+    # TODO:
+    # If you don't want to try to automatically adjust existing ranges, then
+    # remove 'old_right_delimiter' and 'old_left_limiter' from what follows,
+    # AND don't remove anything between A and B
+    #
+    # TODO: the following is specifically designed for markdown, so if you use
+    # for other languages, you have to modify it!
     var toA = ''
     if !empty(found_delimiters_interval)
-      toA = strcharpart(getline(lA), 0, cA - 1)
-        .. old_right_delimiter .. open_string
+      toA = strcharpart(getline(lA), 0, cA - 1)->substitute('\s*$', '', '')
+        .. $'{old_right_delimiter} {open_string}'
     else
       toA = strcharpart(getline(lA), 0, cA - 1) .. open_string
     endif
@@ -208,7 +224,8 @@ export def g:Surround(open_delimiter: string,
 
     var fromB = ''
     if !empty(found_delimiters_interval)
-      fromB = close_string .. old_left_delimiter .. strcharpart(getline(lB), cB)
+      fromB = $'{close_string} {old_left_delimiter}'
+        .. strcharpart(getline(lB), cB)->substitute('^\s*', '', '')
     else
       fromB = close_string .. strcharpart(getline(lB), cB)
     endif
@@ -218,21 +235,26 @@ export def g:Surround(open_delimiter: string,
     # Next, we have to adjust the text between A and B, by removing all the
     # possible delimiters left between them.
 
+    var AAA = ''
     if lA == lB
       # Overwrite everything that is in the middle
       var junk_delimiters =
         RegexList2RegexOR(values(open_delimiters_dict), true)
-      var middle = strcharpart(getline(lA), cA - 1, cB - cA)
+
+      AAA = strcharpart(getline(lA), cA - 1, cB - cA + 1)
         -> substitute(junk_delimiters, '', 'g')
-      setline(lA, toA .. middle .. fromB)
+
+      setline(lA, toA .. AAA .. fromB)
+
     elseif lB - lA == 1
       echom "TBD"
     else
       echom "TBD"
     endif
 
-    echom 'toA: ' .. toA
-    echom 'fromB: ' .. fromB
+    # echom 'toA: ' .. toA
+    # echom 'middle: ' .. AAA
+    # echom 'fromB: ' .. fromB
   endif
 enddef
 
