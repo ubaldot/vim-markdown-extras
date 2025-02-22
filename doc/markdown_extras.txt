@@ -47,4 +47,5 @@ filling it with he various keys.
         "use_prettier"    Set to `true` if you want to use `prettier` formatter.
                           `prettier` needs to be installed separately.
                           Default `true`.
-        "localleader"     Set the value of the `b:localleader`. Default ','.
+        "use_nerd_fonts"  To set eye-candy check-boxes. Require some nerd-font
+                          installed. Default false.
