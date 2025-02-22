@@ -5,6 +5,7 @@ vim9script
 
 import "./common.vim"
 import "../lib/utils.vim"
+import "../after/ftplugin/markdown.vim"
 var WaitForAssert = common.WaitForAssert
 
 # var code_regex = '\(^\|[^`]\)\zs`\ze\([^`]\|$\)'
@@ -13,10 +14,10 @@ var WaitForAssert = common.WaitForAssert
 # var strikethrough_regex = '\(^\|[^\~]\)\zs\~\~\ze\([^\~]\|$\)'
 
 # see :help /\@<! and :help /\@!
-var code_regex = '\v`@<!``@!'
-var italic_regex = '\v\*@<!\*\*@!'
-var bold_regex = '\v\*@<!\*\*\*@!'
-var strikethrough_regex = '\v\~@<!\~\~\~@!'
+var code_regex = markdown.code_regex
+var italic_regex = markdown.italic_regex
+var bold_regex = markdown.bold_regex
+var strikethrough_regex = markdown.strikethrough_regex
 
 var src_name = 'testfile.md'
 
@@ -113,35 +114,49 @@ def g:Test_GetDelimitersRanges()
 enddef
 
 def g:Test_ListComparison()
-  var A = [5, 19]
+  var A = [5, 19, 22]
   var B = [3, 43]
   assert_true(utils.IsGreater(A, B))
-  assert_true(utils.IsGreaterEqual(A, B))
+  assert_false(utils.IsLess(A, B))
+  assert_false(utils.IsEqual(A, B))
 
   A = [3, 48]
-  B = [3, 21]
+  B = [3, 21, 33]
   assert_true(utils.IsGreater(A, B))
-  assert_true(utils.IsGreaterEqual(A, B))
+  assert_false(utils.IsLess(A, B))
+  assert_false(utils.IsEqual(A, B))
 
   # Equality
-  A = [3, 48]
+  A = [3, 48, 29]
   B = [3, 48]
   assert_false(utils.IsGreater(A, B))
-  assert_true(utils.IsGreaterEqual(A, B))
+  assert_false(utils.IsLess(A, B))
+  assert_true(utils.IsEqual(A, B))
+
 enddef
 
 def g:Test_IsBetweenMarks()
   Generate_markdown_testfile()
   exe $"edit {src_name}"
 
-  setpos("'A", [4, 23])
-  setpos("'B", [9, 11])
+  setcharpos("'p", [0, 4, 23, 0])
+  setcharpos("'q", [0, 9, 11, 0])
 
+  # Test 1
   cursor(2, 15)
-  assert_false(utils.IsBetweenMarks("'A", "'B"))
-
+  echom assert_false(utils.IsBetweenMarks("'p", "'q"))
   cursor(8, 3)
-  assert_true(utils.IsBetweenMarks("'A", "'B"))
+  echom assert_true(utils.IsBetweenMarks("'p", "'q"))
+
+  # Test 2
+  cursor(8, 3)
+  setcharpos("'p", [0, 3, 20, 0])
+  setcharpos("'q", [0, 3, 28, 0])
+  echom assert_false(utils.IsBetweenMarks("'p", "'q"))
+
+  setcharpos("'p", [0, 4, 18, 0])
+  setcharpos("'q", [0, 5, 29, 0])
+  echom assert_false(utils.IsBetweenMarks("'p", "'q"))
 
   :%bw!
   Cleanup_markdown_testfile()

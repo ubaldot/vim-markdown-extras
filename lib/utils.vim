@@ -328,38 +328,54 @@ export def GetDelimitersRanges(open_delimiter: string,
   return ranges
 enddef
 
+export def IsLess(l1: list<number>, l2: list<number>): bool
+  # Lexicographic comparison on common prefix, i.e.for two vectors in N^n and
+  # N^m you compare their projections onto the smaller subspace.
+
+  var min_length = min([len(l1), len(l2)])
+  var result = false
+
+  for ii in range(min_length)
+    if l1[ii] < l2[ii]
+      result = true
+      break
+    elseif l1[ii] > l2[ii]
+      result = false
+      break
+    endif
+  endfor
+  return result
+enddef
+
 export def IsGreater(l1: list<number>, l2: list<number>): bool
-    # Compare two list of integers of size 2 based on the first element
-    # return true if l1 > l2
+  # Lexicographic comparison on common prefix, i.e.for two vectors in N^n and
+  # N^m you compare their projections onto the smaller subspace.
+    #
+  var min_length = min([len(l1), len(l2)])
+  var result = false
 
-    if l1[0] > l2[0]
-     return true
-    elseif l1[0] == l2[0] && l1[1] > l2[1]
-      return true
-    else
-      return false
+  for ii in range(min_length)
+    if l1[ii] > l2[ii]
+      result = true
+      break
+    elseif l1[ii] < l2[ii]
+      result = false
+      break
     endif
+  endfor
+  return result
 enddef
 
-export def IsGreaterEqual(l1: list<number>, l2: list<number>): bool
-    # Compare two list of integers of size 2 based on the first element
-    # return true if l1 >= l2
-
-    if l1[0] > l2[0]
-     return true
-    elseif l1[0] == l2[0] && l1[1] > l2[1]
-      return true
-    elseif l1[0] == l2[0] && l1[1] == l2[1]
-      return true
-    else
-      return false
-    endif
+export def IsEqual(l1: list<number>, l2: list<number>): bool
+  var min_length = min([len(l1), len(l2)])
+  return l1[: min_length - 1] == l2[: min_length - 1]
 enddef
+
 
 export def IsBetweenMarks(A: string, B: string): bool
     var cursor_pos = getpos(".")
-    var A_pos = getcharpos(A)[1 : 2]
-    var B_pos = getcharpos(B)[1 : 2]
+    var A_pos = getcharpos(A)
+    var B_pos = getcharpos(B)
 
     if IsGreater(A_pos, B_pos)
       var tmp = B_pos
@@ -367,7 +383,11 @@ export def IsBetweenMarks(A: string, B: string): bool
       A_pos = tmp
     endif
 
-    return IsGreaterEqual(cursor_pos, A_pos) && IsGreaterEqual(B_pos, cursor_pos)
+    # Check 'A_pos <= cursor_pos <= B_pos'
+    var result = (IsGreater(cursor_pos, A_pos) || IsEqual(cursor_pos, A_pos))
+      && (IsGreater(B_pos, cursor_pos) || IsEqual(B_pos, cursor_pos))
+
+    return result
 enddef
 
 export def IsInRange(open_delimiter: string,
@@ -387,6 +407,10 @@ export def IsInRange(open_delimiter: string,
     setcharpos("'a", range[0])
     setcharpos("'b", range[1])
     if IsBetweenMarks("'a", "'b")
+      # echom "cur_pos: " .. string(getcharpos('.'))
+      # echom "range[0]: " .. string(range[0])
+      # echom "range[1]: " .. string(range[1])
+      echom IsBetweenMarks("'a", "'b")
       interval = [range[0], range[1]]
       break
     endif
