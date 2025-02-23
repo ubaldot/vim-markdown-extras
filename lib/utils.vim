@@ -8,6 +8,20 @@ export def Echowarn(msg: string)
   echohl WarningMsg | echom $'[markdown_extras] {msg}' | echohl None
 enddef
 
+export def DictToListOfDicts(d: dict<any>): list<dict<any>>
+  # Convert a dict in a list of dict.
+  #
+  # Dor example, {a: 'foo', b: 'bar', c: 'baz'} becomes
+  # [{a: 'foo'}, {b: 'bar'}, {c: 'baz'}]
+  #
+  var list_of_dicts = []
+  for [k, v] in items(d)
+    add(list_of_dicts, {[k]: v})
+  endfor
+  return list_of_dicts
+enddef
+
+
 export def ZipLists(l1: list<any>, l2: list<any>): list<list<any>>
     # Zip function, like in Python
     var min_len = min([len(l1), len(l2)])
@@ -164,15 +178,8 @@ export def Surround(open_delimiter: string,
     unlet close_delim_leftovers[close_string]
 
     # We need a list-of-dicts [{a: 'foo'}, {b: 'bar'}, {c: 'baz'}]
-    var open_delim_leftovers_list = []
-    for [k, v] in items(open_delim_leftovers)
-      add(open_delim_leftovers_list, {[k]: v})
-    endfor
-    var close_delim_leftovers_list = []
-    for [k, v] in items(close_delim_leftovers)
-      add(close_delim_leftovers_list, {[k]: v})
-    endfor
-    echom "close_delim_leftovers_list: " .. string(close_delim_leftovers_list)
+    var open_delim_leftovers_list = DictToListOfDicts(open_delim_leftovers)
+    var close_delim_leftovers_list = DictToListOfDicts(close_delim_leftovers)
 
     # Check if A falls in an existing interval
     var found_delimiters_interval = []

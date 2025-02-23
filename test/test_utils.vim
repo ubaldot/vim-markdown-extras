@@ -326,3 +326,12 @@ def g:Test_RegexList2RegexOR()
     actual_string = utils.RegexList2RegexOR(test_list)
     assert_equal(expected_string, actual_string)
 enddef
+
+def g:Test_Dict2ListOfDicts()
+
+  var my_dict = {a: 'foo', b: 'bar', c: 'baz'}
+  var expected_value = [{a: 'foo'}, {b: 'bar'}, {c: 'baz'}]
+  var actual_value = utils.DictToListOfDicts(my_dict)
+  assert_equal(expected_value, actual_value)
+
+enddef
