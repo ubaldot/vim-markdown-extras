@@ -196,6 +196,7 @@ def g:Test_Surround_one_line()
 enddef
 
 def g:Test_Surround_one_line_smart_delimiters()
+  vnew
   Generate_markdown_testfile()
   exe $"edit {src_name}"
 

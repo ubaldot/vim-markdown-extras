@@ -2,10 +2,10 @@ vim9script noclear
 
 import "../after/ftplugin/markdown.vim"
 
-var italic_regex = markdown.italic_regex
-var bold_regex = markdown.bold_regex
-var code_regex = markdown.code_regex
-var strikethrough_regex = markdown.strikethrough_regex
+var italic_regex = markdown.italic_dict['*']
+var bold_regex = markdown.bold_dict['**']
+var code_regex = markdown.code_dict['`']
+var strikethrough_regex = markdown.strikethrough_dict['~~']
 
 var src_name = 'testfile.md'
 

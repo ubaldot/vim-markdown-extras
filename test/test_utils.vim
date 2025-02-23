@@ -8,16 +8,16 @@ import "../lib/utils.vim"
 import "../after/ftplugin/markdown.vim"
 var WaitForAssert = common.WaitForAssert
 
-# var code_regex = '\(^\|[^`]\)\zs`\ze\([^`]\|$\)'
-# var italic_regex = '\(^\|[^\*]\)\zs\*\ze\([^\*]\|$\)'
-# var bold_regex = '\(^\|[^\*]\)\zs\*\*\ze\([^\*]\|$\)'
-# var strikethrough_regex = '\(^\|[^\~]\)\zs\~\~\ze\([^\~]\|$\)'
+var code_dict = markdown.code_dict
+var italic_dict = markdown.italic_dict
+var bold_dict = markdown.bold_dict
+var strikethrough_dict = markdown.strikethrough_dict
 
 # see :help /\@<! and :help /\@!
-var code_regex = markdown.code_regex
-var italic_regex = markdown.italic_regex
-var bold_regex = markdown.bold_regex
-var strikethrough_regex = markdown.strikethrough_regex
+var code_regex = values(code_dict)
+var italic_regex = values(italic_dict)
+var bold_regex = values(bold_dict)
+var strikethrough_regex = values(strikethrough_dict)
 
 var src_name = 'testfile.md'
 
@@ -90,23 +90,23 @@ def g:Test_GetDelimitersRanges()
   exe $"edit {src_name}"
 
   var expected_ranges = [[[0, 9, 31, 0], [0, 12, 19, 0]]]
-  var actual_ranges = utils.GetDelimitersRanges(code_regex, code_regex)
+  var actual_ranges = utils.GetDelimitersRanges(code_dict, code_dict)
   assert_equal(expected_ranges, actual_ranges)
 
   expected_ranges = [[[0, 3, 20, 0], [0, 3, 28, 0]],
     [[0, 4, 18, 0], [0, 5, 29, 0]]]
-  actual_ranges = utils.GetDelimitersRanges(italic_regex, italic_regex)
+  actual_ranges = utils.GetDelimitersRanges(italic_dict, italic_dict)
   assert_equal(expected_ranges, actual_ranges)
 
   expected_ranges = [[[0, 1, 23, 0], [0, 1, 37, 0]],
     [[0, 14, 22, 0], [0, 16, 14, 0]]]
-  actual_ranges = utils.GetDelimitersRanges(bold_regex, bold_regex)
+  actual_ranges = utils.GetDelimitersRanges(bold_dict, bold_dict)
   assert_equal(expected_ranges, actual_ranges)
 
   expected_ranges = [[[0, 12, 33, 0], [0, 12, 66, 0]],
   [[0, 20, 1, 0], [0, 20, 32, 0]],
   [[0, 21, 39, 0], [0, 21, 69, 0]]]
-  actual_ranges = utils.GetDelimitersRanges(strikethrough_regex, strikethrough_regex)
+  actual_ranges = utils.GetDelimitersRanges(strikethrough_dict, strikethrough_dict)
   assert_equal(expected_ranges, actual_ranges)
 
   :%bw!
@@ -168,35 +168,35 @@ def g:Test_IsInRange()
 
   cursor(5, 18)
   var expected_value = [[0, 4, 18, 0], [0, 5, 29, 0]]
-  var range = utils.IsInRange(italic_regex, italic_regex)
+  var range = utils.IsInRange(italic_dict, italic_dict)
   assert_equal(expected_value, range)
 
-  range = utils.IsInRange(bold_regex, bold_regex)
+  range = utils.IsInRange(bold_dict, bold_dict)
   assert_true(empty(range))
 
-  range = utils.IsInRange(code_regex, code_regex)
+  range = utils.IsInRange(code_dict, code_dict)
   assert_true(empty(range))
 
-  range = utils.IsInRange(strikethrough_regex, strikethrough_regex)
+  range = utils.IsInRange(strikethrough_dict, strikethrough_dict)
   assert_true(empty(range))
 
   # Test singularity: cursor on a delimiter
   cursor(14, 21)
-  range = utils.IsInRange(italic_regex, italic_regex)
+  range = utils.IsInRange(italic_dict, italic_dict)
   assert_true(empty(range))
 
-  range = utils.IsInRange(bold_regex, bold_regex)
+  range = utils.IsInRange(bold_dict, bold_dict)
   assert_true(empty(range))
 
-  range = utils.IsInRange(code_regex, code_regex)
+  range = utils.IsInRange(code_dict, code_dict)
   assert_true(empty(range))
 
-  range = utils.IsInRange(strikethrough_regex, strikethrough_regex)
+  range = utils.IsInRange(strikethrough_dict, strikethrough_dict)
   assert_true(empty(range))
 
   cursor(21, 43)
   expected_value = [[0, 21, 39, 0], [0, 21, 69, 0]]
-  range = utils.IsInRange(strikethrough_regex, strikethrough_regex)
+  range = utils.IsInRange(strikethrough_dict, strikethrough_dict)
   assert_equal(expected_value, range)
 
   :%bw!

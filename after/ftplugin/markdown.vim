@@ -7,24 +7,23 @@ import autoload '../../lib/utils.vim'
 
 links.GenerateLinksDict()
 
-export var code_regex = '\v(\\|`)@<!``@!'
+var code_regex = '\v(\\|`)@<!``@!'
 # var italic_regex = '\v(\\|\*)@<!\*\*@!'
 # The following picks standalone * and the last * of \**
 # It excludes escaped * (i.e. \*\*\*, and sequences like ****)
-export var italic_regex = '\v((\\|\*)@<!|(\\\*)@<=)\*\*@!'
-export var bold_regex = '\v(\\|\*)@<!\*\*\*@!'
-export var strikethrough_regex = '\v(\\|\~)@<!\~\~\~@!'
+var italic_regex = '\v((\\|\*)@<!|(\\\*)@<=)\*\*@!'
+var bold_regex = '\v(\\|\*)@<!\*\*\*@!'
+var strikethrough_regex = '\v(\\|\~)@<!\~\~\~@!'
 
 export var text_style_dict = {'`': code_regex,
-# g:text_style_dict = {'`': code_regex,
   '*': italic_regex,
   '**': bold_regex,
   '~~': strikethrough_regex}
 
-var code_dict = {'`': code_regex}
-var italic_dict = {'*': italic_regex}
-var bold_dict = {'**': bold_regex}
-var strikethrough_dict = {'~~': strikethrough_regex}
+export var code_dict = {'`': code_regex}
+export var italic_dict = {'*': italic_regex}
+export var bold_dict = {'**': bold_regex}
+export var strikethrough_dict = {'~~': strikethrough_regex}
 
 if exists('g:markdown_extras_config') != 0
     && has_key(g:markdown_extras_config, 'leader')

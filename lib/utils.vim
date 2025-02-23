@@ -105,11 +105,14 @@ export def Surround(open_delimiter: string,
   # Also, remember that a yank set the marks '[ and '].
 
   var open_string = open_delimiter
-  var open_regex = close_delimiters_dict[open_string]
+  var open_regex = open_delimiters_dict[open_string]
+  var open_delimiter_dict = {open_string: open_regex}
+
   var close_string = close_delimiter
   var close_regex = close_delimiters_dict[close_string]
+  var close_delimiter_dict = {close_string: close_regex}
 
-  if !empty(IsInRange(open_regex, close_regex))
+  if !empty(IsInRange(open_delimiter_dict, close_delimiter_dict))
     RemoveSurrounding(open_regex, close_regex)
   else
     # Set marks
@@ -135,7 +138,7 @@ export def Surround(open_delimiter: string,
       return
     endif
 
-    # -------- The search begins -------------
+    # -------- SMART DELIMITERS BEGIN ---------------------------
     # We check conditions like the following and we adjust the style
     # delimiters
     # We assume that the existing style ranges are (C,D) and (E,F) and we want
@@ -155,25 +158,33 @@ export def Surround(open_delimiter: string,
     #
     # so that all the styles are visible
 
-    # Check if the cursor is already in a range of another pair of delimiters
-    var open_delim_leftovers = keys(open_delimiters_dict)
-      ->filter($"v:val != '{open_string}'")
-    var close_delim_leftovers = keys(close_delimiters_dict)
-      ->filter($"v:val != '{close_string}'")
+    var open_delim_leftovers = copy(open_delimiters_dict)
+    var close_delim_leftovers = copy(close_delimiters_dict)
+    unlet open_delim_leftovers[open_string]
+    unlet close_delim_leftovers[close_string]
 
-    var found_delimiters_interval = []
+    # We need a list-of-dicts [{a: 'foo'}, {b: 'bar'}, {c: 'baz'}]
+    var open_delim_leftovers_list = []
+    for [k, v] in items(open_delim_leftovers)
+      add(open_delim_leftovers_list, {[k]: v})
+    endfor
+    var close_delim_leftovers_list = []
+    for [k, v] in items(close_delim_leftovers)
+      add(close_delim_leftovers_list, {[k]: v})
+    endfor
+    echom "close_delim_leftovers_list: " .. string(close_delim_leftovers_list)
+
     # Check if A falls in an existing interval
-    # TODO You can remove the target regex here in 'all_open_delim_regex'
+    var found_delimiters_interval = []
     cursor(lA, cA)
     var old_right_delimiter = ''
-    for delim in ZipLists(open_delim_leftovers, close_delim_leftovers)
+    for delim in ZipLists(open_delim_leftovers_list,
+        close_delim_leftovers_list)
 
-      found_delimiters_interval =
-        IsInRange(open_delimiters_dict[delim[0]],
-        close_delimiters_dict[delim[1]])
+      found_delimiters_interval = IsInRange(delim[0], delim[1])
 
       if !empty(found_delimiters_interval)
-        old_right_delimiter = delim[0]
+        old_right_delimiter = keys(delim[0])[0]
         # Existing blocks shall be disjoint,
         # so we can break as soon as we find a delimiter
         break
@@ -208,14 +219,15 @@ export def Surround(open_delimiter: string,
     cursor(lB, cB)
     var old_left_delimiter = ''
     found_delimiters_interval = []
-    for delim in ZipLists(close_delim_leftovers, close_delim_leftovers)
+    for delim in ZipLists(close_delim_leftovers_list,
+        close_delim_leftovers_list)
 
-      found_delimiters_interval =
-        IsInRange(close_delimiters_dict[delim[0]],
-        close_delimiters_dict[delim[1]])
+      found_delimiters_interval = IsInRange(delim[0], delim[0])
 
       if !empty(found_delimiters_interval)
-        old_left_delimiter = delim[0]
+        echom "delim: " .. string(delim)
+        old_left_delimiter = keys(delim[0])[0]
+        echom "foo: " .. old_left_delimiter
         # Existing blocks shall be disjoint,
         # so we can break as soon as we find a delimiter
         break
@@ -227,24 +239,27 @@ export def Surround(open_delimiter: string,
       fromB = $'{close_string} {old_left_delimiter}'
         .. strcharpart(getline(lB), cB)->substitute('^\s*', '', '')
     else
+      # TODO: Non-smart delimiters
       fromB = close_string .. strcharpart(getline(lB), cB)
     endif
 
+    # ------- SMART DELIMITERS PART END -----------
     # We have compute the partial strings until A and the partial string that
     # leaves B. Existing delimiters are set.
     # Next, we have to adjust the text between A and B, by removing all the
     # possible delimiters left between them.
 
-    var AAA = ''
+    var A_to_B = ''
     if lA == lB
       # Overwrite everything that is in the middle
       var junk_delimiters =
         RegexList2RegexOR(values(open_delimiters_dict), true)
 
-      AAA = strcharpart(getline(lA), cA - 1, cB - cA + 1)
+      # TODO: if smart delimiter, don't use substitute
+      A_to_B = strcharpart(getline(lA), cA - 1, cB - cA + 1)
         -> substitute(junk_delimiters, '', 'g')
 
-      setline(lA, toA .. AAA .. fromB)
+      setline(lA, toA .. A_to_B .. fromB)
 
     elseif lB - lA == 1
       echom "TBD"
@@ -280,83 +295,81 @@ export def GetTextBetweenMarks(A: string, B: string): list<string>
     endif
 enddef
 
-export def GetDelimitersRanges(open_delimiter: string,
-    close_delimiter: string,
-    open_delimiter_length_max: number = 2,
-    close_delimiter_length_max: number = 2
+export def GetDelimitersRanges(
+    open_delimiter_dict: dict<string>,
+    close_delimiter_dict: dict<string>,
     ): list<list<list<number>>>
-  # It returns open-intervals, i.e. the delimiters are excluded
-  # Passed delimiters are regex.
+  # It returns open-intervals, i.e. the delimiters are excluded.
+  # Passed delimiters are singleton dicts with key = the delimiter string,
+  # value = the regex to exactly capture such a delimiter string
   #
-  # TODO: It is assumed that the ranges have no intersections. Note that this
-  # won't happen if 'open_delimiter' = 'close_delimiter', as in many languages.
-  # TODO: the idea of 'guessing' the length of a delimiter is a bit flaky.
+  # It is assumed that the ranges have no intersections. This happens if
+  # open_delimiter = close_delimiter, as in many languages.
+  #
+  # By contradiction, say that open_delimiter = * and close_delimiter = /. You may
+  # have something like:
+  # ----*---*===/---/-----
+  # The part in === is an intersection between two ranges.
+  # In these cases, this function will not work.
+  # However, languages where open_delimiter = close_delimiter such intersections
+  # cannot happen and this function apply.
+  #
   var saved_cursor = getcursorcharpos()
   cursor(1, 1)
 
   var ranges = []
 
+  var open_regex = values(open_delimiter_dict)[0]
+  var open_string = keys(open_delimiter_dict)[0]
+  var close_regex = values(close_delimiter_dict)[0]
+  var close_string = keys(close_delimiter_dict)[0]
+
   # 2D format due to that searchpos() returns a 2D vector
-  var open_delimiter_pos_short = [-1, -1]
-  var close_delimiter_pos_short = [-1, -1]
-  var open_delimiter_pos_short_final = [-1, -1]
-  var close_delimiter_pos_short_final = [-1, -1]
+  var open_regex_pos_short = [-1, -1]
+  var close_regex_pos_short = [-1, -1]
+  var open_regex_pos_short_final = [-1, -1]
+  var close_regex_pos_short_final = [-1, -1]
 
   # 4D format due to that marks have 4-coordinates
-  var open_delimiter_pos = [0] + open_delimiter_pos_short + [0]
-  var open_delimiter_match = ''
-  var open_delimiter_length = 0
-  var close_delimiter_pos = [0] + close_delimiter_pos_short + [0]
-  var close_delimiter_length = 0
-  var close_delimiter_match = ''
+  var open_regex_pos = [0] + open_regex_pos_short + [0]
+  var open_regex_match = ''
+  var close_regex_pos = [0] + close_regex_pos_short + [0]
+  var close_regex_length = 0
+  var close_regex_match = ''
 
-  while open_delimiter_pos_short != [0, 0]
+  while open_regex_pos_short != [0, 0]
 
-    # A. ------------ open_delimiter -----------------
-    open_delimiter_pos_short = searchpos(open_delimiter, 'W')
-
-    # If you pass a regex, you don't know how long is the captured
-    # string. The captured string length is used as offset.
-    open_delimiter_match = strcharpart(
-      getline(open_delimiter_pos_short[0]),
-      open_delimiter_pos_short[1] - 1, open_delimiter_length_max)
-      ->matchstr(open_delimiter)
-    open_delimiter_length = len(open_delimiter_match)
+    # A. ------------ open_regex -----------------
+    open_regex_pos_short = searchpos(open_regex, 'W')
 
     # If the open delimiter is the tail of the line,
     # then the open-interval starts from the next line, column 1
-    if open_delimiter_pos_short[1] + open_delimiter_length == col('$')
-      open_delimiter_pos_short_final[0] = open_delimiter_pos_short[0] + 1
-      open_delimiter_pos_short_final[1] = 1
+    if open_regex_pos_short[1] + len(open_string) == col('$')
+      open_regex_pos_short_final[0] = open_regex_pos_short[0] + 1
+      open_regex_pos_short_final[1] = 1
     else
       # Pick the open-interval
-      open_delimiter_pos_short_final[0] = open_delimiter_pos_short[0]
-      open_delimiter_pos_short_final[1] = open_delimiter_pos_short[1]
-                                             + open_delimiter_length
+      open_regex_pos_short_final[0] = open_regex_pos_short[0]
+      open_regex_pos_short_final[1] = open_regex_pos_short[1]
+                                             + len(open_string)
     endif
-    open_delimiter_pos = [0] + open_delimiter_pos_short_final + [0]
+    open_regex_pos = [0] + open_regex_pos_short_final + [0]
 
     # B. ------ Close delimiter -------
-    close_delimiter_pos_short = searchpos(close_delimiter, 'W')
-    # If you pass a regex, you don't know how long is the captured string
-    close_delimiter_match = strcharpart(
-      getline(close_delimiter_pos_short[0]),
-      close_delimiter_pos_short[1] - 1, close_delimiter_length_max)
-      ->matchstr(close_delimiter)
-    close_delimiter_length = len(close_delimiter_match)
+    close_regex_pos_short = searchpos(close_regex, 'W')
 
     # If the closed delimiter is the lead of the line, then the open-interval
     # starts from the previous line, last column
-    if close_delimiter_pos_short[1] - 1 == 0
-      close_delimiter_pos_short_final[0] = close_delimiter_pos_short[0] - 1
-      close_delimiter_pos_short_final[1] = len(getline(close_delimiter_pos_short_final[0]))
+    if close_regex_pos_short[1] - 1 == 0
+      close_regex_pos_short_final[0] = close_regex_pos_short[0] - 1
+      close_regex_pos_short_final[1] = len(getline(close_regex_pos_short_final[0]))
     else
-      close_delimiter_pos_short_final[0] = close_delimiter_pos_short[0]
-      close_delimiter_pos_short_final[1] = close_delimiter_pos_short[1] - 1
+      close_regex_pos_short_final[0] = close_regex_pos_short[0]
+      close_regex_pos_short_final[1] = close_regex_pos_short[1] - 1
     endif
-    close_delimiter_pos = [0] + close_delimiter_pos_short_final + [0]
+    close_regex_pos = [0] + close_regex_pos_short_final + [0]
 
-    add(ranges, [open_delimiter_pos, close_delimiter_pos])
+    add(ranges, [open_regex_pos, close_regex_pos])
   endwhile
   setcursorcharpos(saved_cursor[1 : 2])
 
@@ -427,15 +440,17 @@ export def IsBetweenMarks(A: string, B: string): bool
     return result
 enddef
 
-export def IsInRange(open_delimiter: string,
-    close_delimiter: string): list<list<number>>
-  # Arguments must be regex.
+export def IsInRange(
+    open_delimiter_dict: dict<string>,
+    close_delimiter_dict: dict<string>,
+    ): list<list<number>>
+  # Arguments must be singleton dicts.
   # Return the range of the delimiters if the cursor is within such a range,
   # otherwise return an empty list.
   var interval = []
 
   # OBS! Ranges are open-intervals!
-  var ranges = GetDelimitersRanges(open_delimiter, close_delimiter)
+  var ranges = GetDelimitersRanges(open_delimiter_dict, close_delimiter_dict)
 
   var saved_mark_a = getcharpos("'a")
   var saved_mark_b = getcharpos("'b")
