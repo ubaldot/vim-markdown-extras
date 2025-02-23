@@ -21,7 +21,6 @@ export def DictToListOfDicts(d: dict<any>): list<dict<any>>
   return list_of_dicts
 enddef
 
-
 export def ZipLists(l1: list<any>, l2: list<any>): list<list<any>>
     # Zip function, like in Python
     var min_len = min([len(l1), len(l2)])
@@ -92,7 +91,163 @@ def RemoveSurrounding(a: any, b: any)
   echom "TBD"
 enddef
 
-export def Surround(open_delimiter: string,
+def SurroundSmart(open_delimiter: string,
+    close_delimiter: string,
+    open_delimiters_dict: dict<string>,
+    close_delimiters_dict: dict<string>,
+    text_object: string = '')
+
+  var open_string = open_delimiter
+  var open_regex = open_delimiters_dict[open_string]
+  var open_delimiter_dict = {open_string: open_regex}
+
+  var close_string = close_delimiter
+  var close_regex = close_delimiters_dict[close_string]
+  var close_delimiter_dict = {close_string: close_regex}
+  # Set marks
+  var A = getcharpos("'<")
+  var B = getcharpos("'>")
+  if !empty(text_object)
+    # GetTextObject is called for setting '[ and '] marks through a yank.
+    GetTextObject(text_object)
+    A = getcharpos("'[")
+    B = getcharpos("']")
+  endif
+
+  # marks -> (x,y) coordinates
+  # line and column
+  var lA = A[1]
+  var cA = A[2]
+
+  # line and column
+  var lB = B[1]
+  var cB = B[2]
+
+  if A == B
+    return
+  endif
+
+  # -------- SMART DELIMITERS BEGIN ---------------------------
+  # We check conditions like the following and we adjust the style
+  # delimiters
+  # We assume that the existing style ranges are (C,D) and (E,F) and we want
+  # to place (A,B) as in the picture
+  #
+  # -E-------A------------
+  # ------------F---------
+  # ------------C------B--
+  # --------D-------------
+  #
+  # We want to get:
+  #
+  # -E------FA------------
+  # ----------------------
+  # ------------------BC--
+  # --------D-------------
+  #
+  # so that all the styles are visible
+
+  # We need a list-of-dicts [{a: 'foo'}, {b: 'bar'}, {c: 'baz'}]
+  var open_delimiters_dict_list = DictToListOfDicts(open_delimiters_dict)
+  var close_delimiters_dict_list = DictToListOfDicts(close_delimiters_dict)
+
+  # Check if A falls in an existing interval
+  var found_delimiters_interval = []
+  cursor(lA, cA)
+  var old_right_delimiter = ''
+  for delim in ZipLists(open_delimiters_dict_list,
+      close_delimiters_dict_list)
+
+    found_delimiters_interval = IsInRange(delim[0], delim[1])
+
+    if !empty(found_delimiters_interval)
+      old_right_delimiter = keys(delim[0])[0]
+      # Existing blocks shall be disjoint,
+      # so we can break as soon as we find a delimiter
+      break
+    endif
+  endfor
+
+  # Try to preserve overlapping ranges by moving the delimiters.
+  # For example. If we have the pairs (C, D) and (E,F) as it follows:
+  # ------C-------D------E------F
+  #  and we want to add (A, B) as it follows
+  # ------C---A---D-----E--B---F
+  #  then the results becomes a mess. The idea is to move D before A and E
+  #  after E, thus obtaining:
+  # ------C--DA-----------BE----F
+  #
+  # TODO:
+  # If you don't want to try to automatically adjust existing ranges, then
+  # remove 'old_right_delimiter' and 'old_left_limiter' from what follows,
+  # AND don't remove anything between A and B
+  #
+  # TODO: the following is specifically designed for markdown, so if you use
+  # for other languages, you have to modify it!
+  var toA = ''
+  if !empty(found_delimiters_interval)
+    toA = strcharpart(getline(lA), 0, cA - 1)->substitute('\s*$', '', '')
+      .. $'{old_right_delimiter} {open_string}'
+  else
+    toA = strcharpart(getline(lA), 0, cA - 1) .. open_string
+  endif
+
+  # Check if B falls in an existing interval
+  cursor(lB, cB)
+  var old_left_delimiter = ''
+  found_delimiters_interval = []
+  for delim in ZipLists(close_delimiters_dict_list,
+      close_delimiters_dict_list)
+
+    found_delimiters_interval = IsInRange(delim[0], delim[0])
+
+    if !empty(found_delimiters_interval)
+      echom "delim: " .. string(delim)
+      old_left_delimiter = keys(delim[0])[0]
+      # Existing blocks shall be disjoint,
+      # so we can break as soon as we find a delimiter
+      break
+    endif
+  endfor
+
+  var fromB = ''
+  if !empty(found_delimiters_interval)
+    fromB = $'{close_string} {old_left_delimiter}'
+      .. strcharpart(getline(lB), cB)->substitute('^\s*', '', '')
+  else
+    # TODO: Non-smart delimiters
+    fromB = close_string .. strcharpart(getline(lB), cB)
+  endif
+
+  # ------- SMART DELIMITERS PART END -----------
+  # We have compute the partial strings until A and the partial string that
+  # leaves B. Existing delimiters are set.
+  # Next, we have to adjust the text between A and B, by removing all the
+  # possible delimiters left between them.
+
+  var A_to_B = ''
+  if lA == lB
+    # Overwrite everything that is in the middle
+    var all_delimiters_regex =
+      RegexList2RegexOR(values(open_delimiters_dict), true)
+
+    A_to_B = strcharpart(getline(lA), cA - 1, cB - cA + 1)
+      -> substitute(all_delimiters_regex, '', 'g')
+
+    setline(lA, toA .. A_to_B .. fromB)
+
+  elseif lB - lA == 1
+    echom "TBD"
+  else
+    echom "TBD"
+  endif
+
+  # echom 'toA: ' .. toA
+  # echom 'middle: ' .. AAA
+  # echom 'fromB: ' .. fromB
+enddef
+
+export def SurroundToggle(open_delimiter: string,
     close_delimiter: string,
     open_delimiters_dict: dict<string>,
     close_delimiters_dict: dict<string>,
@@ -118,166 +273,16 @@ export def Surround(open_delimiter: string,
   # Remember that Visual Selections and Text Objects are cousins.
   # Also, remember that a yank set the marks '[ and '].
 
-  var open_string = open_delimiter
-  var open_regex = open_delimiters_dict[open_string]
-  var open_delimiter_dict = {open_string: open_regex}
-
-  var close_string = close_delimiter
-  var close_regex = close_delimiters_dict[close_string]
-  var close_delimiter_dict = {close_string: close_regex}
 
   if !empty(IsInRange(open_delimiter_dict, close_delimiter_dict))
     RemoveSurrounding(open_regex, close_regex)
   else
-    # Set marks
-    var A = getcharpos("'<")
-    var B = getcharpos("'>")
-    if !empty(text_object)
-      # GetTextObject is called for setting '[ and '] marks through a yank.
-      GetTextObject(text_object)
-      A = getcharpos("'[")
-      B = getcharpos("']")
-    endif
-
-    # marks -> (x,y) coordinates
-    # line and column
-    var lA = A[1]
-    var cA = A[2]
-
-    # line and column
-    var lB = B[1]
-    var cB = B[2]
-
-    if A == B
-      return
-    endif
-
-    # -------- SMART DELIMITERS BEGIN ---------------------------
-    # We check conditions like the following and we adjust the style
-    # delimiters
-    # We assume that the existing style ranges are (C,D) and (E,F) and we want
-    # to place (A,B) as in the picture
-    #
-    # -E-------A------------
-    # ------------F---------
-    # ------------C------B--
-    # --------D-------------
-    #
-    # We want to get:
-    #
-    # -E------FA------------
-    # ----------------------
-    # ------------------BC--
-    # --------D-------------
-    #
-    # so that all the styles are visible
-
-    var open_delim_leftovers = copy(open_delimiters_dict)
-    var close_delim_leftovers = copy(close_delimiters_dict)
-    unlet open_delim_leftovers[open_string]
-    unlet close_delim_leftovers[close_string]
-
-    # We need a list-of-dicts [{a: 'foo'}, {b: 'bar'}, {c: 'baz'}]
-    var open_delim_leftovers_list = DictToListOfDicts(open_delim_leftovers)
-    var close_delim_leftovers_list = DictToListOfDicts(close_delim_leftovers)
-
-    # Check if A falls in an existing interval
-    var found_delimiters_interval = []
-    cursor(lA, cA)
-    var old_right_delimiter = ''
-    for delim in ZipLists(open_delim_leftovers_list,
-        close_delim_leftovers_list)
-
-      found_delimiters_interval = IsInRange(delim[0], delim[1])
-
-      if !empty(found_delimiters_interval)
-        old_right_delimiter = keys(delim[0])[0]
-        # Existing blocks shall be disjoint,
-        # so we can break as soon as we find a delimiter
-        break
-      endif
-    endfor
-
-    # Try to preserve overlapping ranges by moving the delimiters.
-    # For example. If we have the pairs (C, D) and (E,F) as it follows:
-    # ------C-------D------E------F
-    #  and we want to add (A, B) as it follows
-    # ------C---A---D-----E--B---F
-    #  then the results becomes a mess. The idea is to move D before A and E
-    #  after E, thus obtaining:
-    # ------C--DA-----------BE----F
-    #
-    # TODO:
-    # If you don't want to try to automatically adjust existing ranges, then
-    # remove 'old_right_delimiter' and 'old_left_limiter' from what follows,
-    # AND don't remove anything between A and B
-    #
-    # TODO: the following is specifically designed for markdown, so if you use
-    # for other languages, you have to modify it!
-    var toA = ''
-    if !empty(found_delimiters_interval)
-      toA = strcharpart(getline(lA), 0, cA - 1)->substitute('\s*$', '', '')
-        .. $'{old_right_delimiter} {open_string}'
-    else
-      toA = strcharpart(getline(lA), 0, cA - 1) .. open_string
-    endif
-
-    # Check if B falls in an existing interval
-    cursor(lB, cB)
-    var old_left_delimiter = ''
-    found_delimiters_interval = []
-    for delim in ZipLists(close_delim_leftovers_list,
-        close_delim_leftovers_list)
-
-      found_delimiters_interval = IsInRange(delim[0], delim[0])
-
-      if !empty(found_delimiters_interval)
-        echom "delim: " .. string(delim)
-        old_left_delimiter = keys(delim[0])[0]
-        echom "foo: " .. old_left_delimiter
-        # Existing blocks shall be disjoint,
-        # so we can break as soon as we find a delimiter
-        break
-      endif
-    endfor
-
-    var fromB = ''
-    if !empty(found_delimiters_interval)
-      fromB = $'{close_string} {old_left_delimiter}'
-        .. strcharpart(getline(lB), cB)->substitute('^\s*', '', '')
-    else
-      # TODO: Non-smart delimiters
-      fromB = close_string .. strcharpart(getline(lB), cB)
-    endif
-
-    # ------- SMART DELIMITERS PART END -----------
-    # We have compute the partial strings until A and the partial string that
-    # leaves B. Existing delimiters are set.
-    # Next, we have to adjust the text between A and B, by removing all the
-    # possible delimiters left between them.
-
-    var A_to_B = ''
-    if lA == lB
-      # Overwrite everything that is in the middle
-      var junk_delimiters =
-        RegexList2RegexOR(values(open_delimiters_dict), true)
-
-      # TODO: if smart delimiter, don't use substitute
-      A_to_B = strcharpart(getline(lA), cA - 1, cB - cA + 1)
-        -> substitute(junk_delimiters, '', 'g')
-
-      setline(lA, toA .. A_to_B .. fromB)
-
-    elseif lB - lA == 1
-      echom "TBD"
-    else
-      echom "TBD"
-    endif
-
-    # echom 'toA: ' .. toA
-    # echom 'middle: ' .. AAA
-    # echom 'fromB: ' .. fromB
-  endif
+    Surround(open_delimiter,
+    close_delimiter,
+    open_delimiters_dict,
+    close_delimiters_dict,
+    text_object
+    )
 enddef
 
 export def GetTextBetweenMarks(A: string, B: string): list<string>
@@ -495,3 +500,12 @@ export def DeleteTextBetweenMarks(A: string, B: string): string
   # This to get rid off E1186
   return ''
 enddef
+
+
+# TODO
+export var Surround = SurroundSmart
+if exists('g:markdown_extras_config')
+    && has_key(g:markdown_extras_config, 'smart_delimiters')
+    && g:markdown_extras_config['smart_delimiters']
+  Surround = SurroundSimple
+endif
