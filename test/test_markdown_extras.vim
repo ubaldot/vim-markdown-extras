@@ -33,11 +33,11 @@ def Generate_markdown_testfile()
         voluptas nulla pariatur?
 
         At vero eos et accusamus et iusto odio dignissimos ducimus, qui
-        blanditiis praesentium voluptatum deleniti atque corrupti, quos
+        blandit*iis pra(esent*ium `voluptatum` del*eniti atque) corrupti*, quos
         dolores et quas molestias excepturi sint, obcaecati cupiditate non
-        provident, similique sunt in culpa, qui officia deserunt mollitia
-        animi, id est laborum et dolorum fuga. Et harum quidem reru[d]um
-        facilis est e[r]t expedita distinctio.
+        pro**vident, (sim**ilique sunt *in* culpa, `qui` officia *deserunt*)
+        mollitia) animi, id est laborum et dolorum fuga.
+        Et harum quidem reru[d]um facilis est e[r]t expedita distinctio.
 
         Nam libero tempore, cum soluta nobis est eligendi optio, cumque nihil
         impedit, quo minus id, quod
@@ -199,6 +199,7 @@ def g:Test_Surround_one_line_smart_delimiters()
   vnew
   Generate_markdown_testfile()
   exe $"edit {src_name}"
+  set conceallevel=0
 
   # Smart delimiters
   var expected_value = [
@@ -210,6 +211,33 @@ def g:Test_Surround_one_line_smart_delimiters()
   exe "norm! va[\<esc>"
   utils.Surround('*', '*', text_style_dict, text_style_dict)
   var actual_value = getline(10, 12)
+  assert_equal(expected_value, actual_value)
+
+  # Test with junk between A and B. Overwrite everything and avoid consecutive
+  # delimiters of same type, like ** **
+  cursor(21, 41)
+  exe "norm! va(\<esc>"
+  expected_value = [
+    'dolores et quas molestias excepturi sint, obcaecati cupiditate non',
+    'pro**vident, (similique sunt in culpa, qui officia deserunt)**',
+    'mollitia) animi, id est laborum et dolorum fuga.'
+  ]
+  utils.Surround('**', '**', text_style_dict, text_style_dict)
+  actual_value = getline(20, 22)
+  assert_equal(expected_value, actual_value)
+
+
+  # Test with junk between A and B. Overwrite everything and avoid consecutive
+  # delimiters of same type, like ** **
+  cursor(19, 20)
+  exe "norm! va(\<esc>"
+  expected_value = [
+    'At vero eos et accusamus et iusto odio dignissimos ducimus, qui',
+    'blandit*iis pra(esentium voluptatum deleniti atque) corrupti*, quos',
+    'dolores et quas molestias excepturi sint, obcaecati cupiditate non',
+  ]
+  utils.Surround('*', '*', text_style_dict, text_style_dict)
+  actual_value = getline(18, 20)
   assert_equal(expected_value, actual_value)
 
   :%bw!

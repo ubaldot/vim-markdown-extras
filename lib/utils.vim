@@ -87,8 +87,36 @@ export def FormatWithoutMoving(a: number = 0, b: number = 0)
   winrestview(view)
 enddef
 
-def RemoveSurrounding(a: any, b: any)
-  echom "TBD"
+export def RemoveSurrounding(
+    open_delimiter_dict: dict<string>,
+    close_delimiter_dict: dict<string>)
+    # You may consider to add a loop to iterate among all the possible
+    # delimiters pair
+    var interval = IsInRange(open_delimiter_dict, close_delimiter_dict)
+    if !empty(interval)
+      # Remove left delimiter
+      var lA = interval[0][1]
+      var cA = interval[0][2]
+      var newline =
+        strcharpart(getline(lA), 0, cA - 1 - len(keys(open_delimiter_dict)[0]))
+        .. strcharpart(getline(lA), cA - 1)
+      setline(lA, newline)
+
+      # Remove right delimiter
+      var lB = interval[1][1]
+      var cB = interval[1][2]
+      # echom "cB: " .. cB
+      # The value of cB may no longer be valid since we shortened the line
+      if lA == lB
+        cB = cB - len(keys(open_delimiter_dict)[0])
+      endif
+
+      newline =
+        strcharpart(getline(lB), 0, cB)
+        .. strcharpart(getline(lB), cB + len(keys(close_delimiter_dict)[0]))
+      setline(lB, newline)
+      # echom "lB: " .. newline
+    endif
 enddef
 
 def SurroundSmart(open_delimiter: string,
@@ -185,9 +213,13 @@ def SurroundSmart(open_delimiter: string,
   # TODO: the following is specifically designed for markdown, so if you use
   # for other languages, you have to modify it!
   var toA = ''
-  if !empty(found_delimiters_interval)
+  if !empty(found_delimiters_interval) && old_right_delimiter != open_string
     toA = strcharpart(getline(lA), 0, cA - 1)->substitute('\s*$', '', '')
       .. $'{old_right_delimiter} {open_string}'
+  elseif !empty(found_delimiters_interval) && old_right_delimiter == open_string
+    # If the found interval is a text style equal to the one you want to set,
+    # i.e. you would end up in adjacent delimiters like ** ** => Remove both
+    toA = strcharpart(getline(lA), 0, cA - 1)
   else
     toA = strcharpart(getline(lA), 0, cA - 1) .. open_string
   endif
@@ -202,7 +234,6 @@ def SurroundSmart(open_delimiter: string,
     found_delimiters_interval = IsInRange(delim[0], delim[0])
 
     if !empty(found_delimiters_interval)
-      echom "delim: " .. string(delim)
       old_left_delimiter = keys(delim[0])[0]
       # Existing blocks shall be disjoint,
       # so we can break as soon as we find a delimiter
@@ -211,11 +242,12 @@ def SurroundSmart(open_delimiter: string,
   endfor
 
   var fromB = ''
-  if !empty(found_delimiters_interval)
+  if !empty(found_delimiters_interval) && old_left_delimiter != close_string
     fromB = $'{close_string} {old_left_delimiter}'
       .. strcharpart(getline(lB), cB)->substitute('^\s*', '', '')
+  elseif !empty(found_delimiters_interval) && old_left_delimiter == close_string
+      fromB = strcharpart(getline(lB), cB)
   else
-    # TODO: Non-smart delimiters
     fromB = close_string .. strcharpart(getline(lB), cB)
   endif
 
