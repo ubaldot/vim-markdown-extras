@@ -49,3 +49,11 @@ filling it with he various keys.
                           Default `true`.
         "use_nerd_fonts"  To set eye-candy check-boxes. Require some nerd-font
                           installed. Default false.
+        "smart_textstyle" Whenever possible, text styles are kept
+                          consistent. Default `true`
+        "empty_checkbox"  Glyphs to display for empty checkboxes. Requires
+                          "use_nerdfonts" set to `true` and 'concealevel'
+                          greater than 0.
+        "marked_checkbox" Glyphs to display for marked checkboxes. Requires
+                          "use_nerdfonts" set to `true` and 'concealevel'
+                          greater than 0.

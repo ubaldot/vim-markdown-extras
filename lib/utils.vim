@@ -547,7 +547,7 @@ enddef
 # TODO
 export var Surround = SurroundSmart
 if exists('g:markdown_extras_config')
-    && has_key(g:markdown_extras_config, 'smart_delimiters')
-    && g:markdown_extras_config['smart_delimiters']
+    && has_key(g:markdown_extras_config, 'smart_textstyle')
+    && g:markdown_extras_config['smart_textstyle']
   Surround = SurroundSimple
 endif
