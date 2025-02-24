@@ -257,26 +257,36 @@ def SurroundSmart(open_delimiter: string,
   # Next, we have to adjust the text between A and B, by removing all the
   # possible delimiters left between them.
 
-  var A_to_B = ''
+  var all_delimiters_regex =
+    RegexList2RegexOR(values(open_delimiters_dict), true)
+
+  # If on the same line
   if lA == lB
     # Overwrite everything that is in the middle
-    var all_delimiters_regex =
-      RegexList2RegexOR(values(open_delimiters_dict), true)
+    var A_to_B = ''
 
     A_to_B = strcharpart(getline(lA), cA - 1, cB - cA + 1)
-      -> substitute(all_delimiters_regex, '', 'g')
+      ->substitute(all_delimiters_regex, '', 'g')
 
     setline(lA, toA .. A_to_B .. fromB)
 
-  elseif lB - lA == 1
-    echom "TBD"
   else
-    echom "TBD"
+    var lineA = toA .. strcharpart(getline(lA), cA - 1)
+      ->substitute(all_delimiters_regex, '', 'g')
+    echom "lineA: " .. lineA
+    setline(lA, lineA)
+    var lineB = strcharpart(getline(lB), 0, cB - 1)
+      ->substitute(all_delimiters_regex, '', 'g') .. fromB
+    echom "lineB: " .. lineB
+    setline(lB, lineB)
+    var l = 1
+    # Fix intermediate lines
+    while lA + l < lB
+      setline(lA + l, getline(lA + l)->substitute(all_delimiters_regex, '', 'g') )
+      l += 1
+    endwhile
   endif
 
-  # echom 'toA: ' .. toA
-  # echom 'middle: ' .. AAA
-  # echom 'fromB: ' .. fromB
 enddef
 
 export def SurroundToggle(open_delimiter: string,

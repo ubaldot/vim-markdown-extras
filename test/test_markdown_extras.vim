@@ -45,12 +45,12 @@ def Generate_markdown_testfile()
         Nam libero tempore, cum soluta nobis est eligendi optio, cumque nihil
         impedit, quo minus id, quod
         maxime placeat facere possimus, omnis voluptas assumenda est, omnis
-        dolor repellend[a]us. Temporibus autem quibusdam et aut officiis
+        dolor repellend[a]us. `Temporibus autem quibusdam et aut officiis
         debitis aut rerum necessitatibus saepe eveniet, ut et voluptates
-        repudiandae sint et molestiae non recusandae.
+        repudiandae sint et molestiae non recusandae.`
 
-        Itaque earum rerum hic tenetur a sapiente delectus, ut aut reiciendis
-        voluptatibus maiores
+        Itaque earum rerum hic *tenetur a sapiente `delectus`, ut aut reiciendis
+        voluptatibus maiores*
         alias consequatur aut perferendis doloribus asperiores repellat.
   END
    writefile(lines, src_name)
@@ -65,7 +65,6 @@ def g:Test_markdown_lists()
   Generate_markdown_testfile()
 
   exe $"edit {src_name}"
-  exe "set filetype=markdown"
 
   # Basic "-" item
   var expected_line = '- '
@@ -149,10 +148,9 @@ enddef
 
 
 def g:Test_check_uncheck_todo_keybinding()
-  Generate_markdown_testfile()
 
+  Generate_markdown_testfile()
   exe $"edit {src_name}"
-  exe "set filetype=markdown"
 
   execute "silent norm! Go\<cr>-\<space>[\<space>]\<space>foo"
   echom assert_true(getline(line('.')) =~ '^- \[ \] ')
@@ -167,7 +165,7 @@ def g:Test_check_uncheck_todo_keybinding()
 enddef
 
 def g:Test_Surround_one_line()
-  vnew
+  # vnew
   Generate_markdown_testfile()
   exe $"edit {src_name}"
 
@@ -199,10 +197,10 @@ def g:Test_Surround_one_line()
 enddef
 
 def g:Test_Surround_one_line_smart_delimiters()
-  vnew
+  # vnew
   Generate_markdown_testfile()
   exe $"edit {src_name}"
-  set conceallevel=0
+  # setlocal conceallevel=0
 
   # Smart delimiters
   var expected_value = [
@@ -229,7 +227,6 @@ def g:Test_Surround_one_line_smart_delimiters()
   actual_value = getline(20, 22)
   assert_equal(expected_value, actual_value)
 
-
   # Test with junk between A and B. Overwrite everything and avoid consecutive
   # delimiters of same type, like ** **
   cursor(19, 20)
@@ -248,11 +245,10 @@ def g:Test_Surround_one_line_smart_delimiters()
 enddef
 
 def g:Test_RemoveSurrounding_one_line()
-  Generate_markdown_testfile()
 
-  vnew
+  Generate_markdown_testfile()
+  # vnew
   exe $"edit {src_name}"
-  exe "set filetype=markdown"
 
   cursor(10, 30)
   var expected_value =
@@ -285,6 +281,69 @@ def g:Test_RemoveSurrounding_one_line()
     'blanditiis pra(esentium voluptatum deleniti atque) corrupti, quos'
   actual_value = getline(19)
   assert_equal(expected_value, actual_value)
+
+  :%bw!
+  Cleanup_markdown_testfile()
+enddef
+
+def g:Test_Surround_multi_line_smart_delimiters()
+  # vnew
+  Generate_markdown_testfile()
+  exe $"edit {src_name}"
+  setlocal conceallevel=0
+
+  # Smart delimiters
+  var expected_value = [
+    'Nam libero tempore, *cum soluta nobis est eligendi optio, cumque nihil',
+    'impedit, quo minus id, quod',
+    'maxime placeat facere possimu*, omnis voluptas assumenda est, omnis',
+    ]
+  cursor(25, 21)
+  exe "norm! v27ggt,\<esc>"
+  utils.Surround('*', '*', text_style_dict, text_style_dict)
+  var actual_value = getline(25, 27)
+  echom assert_equal(expected_value, actual_value)
+
+  # Smart delimiters
+  expected_value = [
+    '~~At vero eos et accusamus et iusto odio dignissimos ducimus, qui',
+    'blanditiis pra(esentium voluptatum deleniti atque) corrupti, quos~~',
+    ]
+  cursor(18, 1)
+  exe "norm! 0vj$\<esc>"
+  utils.Surround('~~', '~~', text_style_dict, text_style_dict)
+  actual_value = getline(18, 19)
+  echom assert_equal(expected_value, actual_value)
+
+  :%bw!
+  Cleanup_markdown_testfile()
+enddef
+
+def g:Test_RemoveSurrounding_multi_line()
+  # vnew
+  Generate_markdown_testfile()
+  exe $"edit {src_name}"
+
+  # Test 1
+  var expected_value = [
+    'dolor repellend[a]us. Temporibus autem quibusdam et aut officiis',
+    'debitis aut rerum necessitatibus saepe eveniet, ut et voluptates',
+    'repudiandae sint et molestiae non recusandae.',
+    ]
+  cursor(28, 25)
+  utils.RemoveSurrounding(code_dict, code_dict)
+  var actual_value = getline(28, 30)
+  echom assert_equal(expected_value, actual_value)
+
+  # Test 2: preserve inner surrounding
+  expected_value = [
+    'Itaque earum rerum hic tenetur a sapiente `delectus`, ut aut reiciendis',
+    'voluptatibus maiores',
+    ]
+  cursor(32, 28)
+  utils.RemoveSurrounding(italic_dict, italic_dict)
+  actual_value = getline(32, 33)
+  echom assert_equal(expected_value, actual_value)
 
   :%bw!
   Cleanup_markdown_testfile()
