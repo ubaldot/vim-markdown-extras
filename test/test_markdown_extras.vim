@@ -9,7 +9,10 @@ import "./../lib/utils.vim"
 
 var WaitForAssert = common.WaitForAssert
 var text_style_dict = markdown.text_style_dict
-
+var code_dict = markdown.code_dict
+var italic_dict = markdown.italic_dict
+var bold_dict = markdown.bold_dict
+var strikethrough_dict = markdown.strikethrough_dict
 
 var src_name = 'testfile.md'
 
@@ -62,7 +65,7 @@ def g:Test_markdown_lists()
   Generate_markdown_testfile()
 
   exe $"edit {src_name}"
-  exe "set filetype=md"
+  exe "set filetype=markdown"
 
   # Basic "-" item
   var expected_line = '- '
@@ -149,7 +152,7 @@ def g:Test_check_uncheck_todo_keybinding()
   Generate_markdown_testfile()
 
   exe $"edit {src_name}"
-  exe "set filetype=md"
+  exe "set filetype=markdown"
 
   execute "silent norm! Go\<cr>-\<space>[\<space>]\<space>foo"
   echom assert_true(getline(line('.')) =~ '^- \[ \] ')
@@ -238,6 +241,49 @@ def g:Test_Surround_one_line_smart_delimiters()
   ]
   utils.Surround('*', '*', text_style_dict, text_style_dict)
   actual_value = getline(18, 20)
+  assert_equal(expected_value, actual_value)
+
+  :%bw!
+  Cleanup_markdown_testfile()
+enddef
+
+def g:Test_RemoveSurrounding_one_line()
+  Generate_markdown_testfile()
+
+  vnew
+  exe $"edit {src_name}"
+  exe "set filetype=markdown"
+
+  cursor(10, 30)
+  var expected_value =
+    'incidunt ut (labore et dolore magnam) aliquam quaerat voluptatem. Ut'
+  utils.RemoveSurrounding(strikethrough_dict, strikethrough_dict)
+  var actual_value = getline(10)
+  assert_equal(expected_value, actual_value)
+
+  cursor(11, 40)
+  expected_value =
+    'enim ad `minima [veniam`, quis nostrum] exercitationem ullam corporis'
+  utils.RemoveSurrounding(strikethrough_dict, strikethrough_dict)
+  actual_value = getline(11)
+  assert_equal(expected_value, actual_value)
+
+  cursor(14, 60)
+  expected_value =
+    'Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse'
+  utils.RemoveSurrounding(bold_dict, bold_dict)
+  actual_value = getline(14)
+  assert_equal(expected_value, actual_value)
+
+  cursor(19, 18)
+  utils.RemoveSurrounding(italic_dict, italic_dict)
+  cursor(19, 30)
+  utils.RemoveSurrounding(code_dict, code_dict)
+  cursor(19, 47)
+  utils.RemoveSurrounding(italic_dict, italic_dict)
+  expected_value =
+    'blanditiis pra(esentium voluptatum deleniti atque) corrupti, quos'
+  actual_value = getline(19)
   assert_equal(expected_value, actual_value)
 
   :%bw!
