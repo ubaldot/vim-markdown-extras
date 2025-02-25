@@ -11,7 +11,7 @@ enddef
 export def DictToListOfDicts(d: dict<any>): list<dict<any>>
   # Convert a dict in a list of dict.
   #
-  # Dor example, {a: 'foo', b: 'bar', c: 'baz'} becomes
+  # For example, {a: 'foo', b: 'bar', c: 'baz'} becomes
   # [{a: 'foo'}, {b: 'bar'}, {c: 'baz'}]
   #
   var list_of_dicts = []
@@ -29,11 +29,13 @@ enddef
 
 export def GetTextObject(textobject: string): dict<any>
   # You pass a text object like 'iw' and it returns the text
-  # associated to it along with the start and end positions
+  # associated to it along with the start and end positions.
   #
   # Note that when you yank some text, the registers '[' and ']' are set, so
   # after call this function, you can retrieve start and end position of the
   # text-object by looking at such marks.
+  #
+  # The function also work with motions.
 
   # Backup the content of register t (arbitrary choice, YMMV) and marks
   var oldreg = getreg("t")
@@ -127,7 +129,6 @@ export def SurroundSimple(open_delimiter: string,
   var A = getcharpos("'<")
   var B = getcharpos("'>")
   if !empty(text_object)
-    # GetTextObject is called for setting '[ and '] marks through a yank.
     var text_object_dict = GetTextObject(text_object)
     A = text_object_dict.start
     B = text_object_dict.end
@@ -158,11 +159,11 @@ export def SurroundSimple(open_delimiter: string,
     setline(lA, lineA)
     var lineB = strcharpart(getline(lB), 0, cB - 1) .. fromB
     setline(lB, lineB)
-    var l = 1
+    var ii = 1
     # Fix intermediate lines
-    while lA + l < lB
-      setline(lA + l, getline(lA + l))
-      l += 1
+    while lA + ii < lB
+      setline(lA + ii, getline(lA + ii))
+      ii += 1
     endwhile
   endif
 enddef
@@ -258,7 +259,7 @@ export def SurroundSmart(open_delimiter: string,
   # AND don't remove anything between A and B
   #
   # TODO: the following is specifically designed for markdown, so if you use
-  # for other languages, you have to modify it!
+  # for other languages, you may need to modify it!
   var toA = ''
   if !empty(found_delimiters_interval) && old_right_delimiter != open_string
     toA = strcharpart(getline(lA), 0, cA - 1)->substitute('\s*$', '', '')
@@ -304,13 +305,16 @@ export def SurroundSmart(open_delimiter: string,
   # Next, we have to adjust the text between A and B, by removing all the
   # possible delimiters left between them.
 
+  var delimiters_to_remove = values(
+    extend(open_delimiters_dict, close_delimiters_dict)
+  )
   # If on the same line
   if lA == lB
     # Overwrite everything that is in the middle
     var A_to_B = ''
 
     A_to_B = strcharpart(getline(lA), cA - 1, cB - cA + 1)
-    for regex in values(open_delimiters_dict)
+    for regex in delimiters_to_remove
       A_to_B = A_to_B->substitute(regex, '', 'g')
     endfor
 
@@ -319,7 +323,7 @@ export def SurroundSmart(open_delimiter: string,
   else
     # Set line A
     var afterA = strcharpart(getline(lA), cA - 1)
-    for regex in values(open_delimiters_dict)
+    for regex in delimiters_to_remove
       afterA = afterA->substitute(regex, '', 'g')
     endfor
     var lineA = toA .. afterA
@@ -327,7 +331,7 @@ export def SurroundSmart(open_delimiter: string,
 
     # Set line B
     var beforeB = strcharpart(getline(lB), 0, cB - 1)
-    for regex in values(open_delimiters_dict)
+    for regex in delimiters_to_remove
       beforeB = beforeB->substitute(regex, '', 'g')
     endfor
     var lineB = beforeB .. fromB
@@ -337,7 +341,7 @@ export def SurroundSmart(open_delimiter: string,
     var l = 1
     while lA + l < lB
       var middleline = getline(lA + l)
-      for regex in values(open_delimiters_dict)
+      for regex in delimiters_to_remove
         middleline = middleline-> substitute(regex, '', 'g')
       endfor
       setline(lA + l, middleline)
