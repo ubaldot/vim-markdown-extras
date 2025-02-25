@@ -42,24 +42,32 @@ export def RegexList2RegexOR(regex_list: list<string>,
   return result
 enddef
 
-export def GetTextObject(textobject: string): string
+export def GetTextObject(textobject: string): dict<any>
   # You pass a text object like 'iw' and it returns the text
-  # associated to it.
+  # associated to it along with the start and end positions
   #
   # Note that when you yank some text, the registers '[' and ']' are set, so
   # after call this function, you can retrieve start and end position of the
   # text-object by looking at such marks.
 
-  # Backup the content of register t (arbitrary choice, YMMV)
+  # Backup the content of register t (arbitrary choice, YMMV) and marks
   var oldreg = getreg("t")
+  var saved_A = getcharpos("'[")
+  var saved_B = getcharpos("']")
   # silently yank the text covered by whatever text object
-  # was given as argument into register t
+  # was given as argument into register t. Yank also set marks '[ and ']
   noautocmd execute 'silent normal "ty' .. textobject
-  # save the content of register t into a variable
+
   var text = getreg("t")
-  # restore register t
+  var start_pos = getcharpos("'[")
+  var end_pos = getcharpos("']")
+
+  # restore register t and marks
   setreg("t", oldreg)
-  return text
+  setcharpos("'[", saved_A)
+  setcharpos("']", saved_B)
+
+  return {text: text, start: start_pos, end: end_pos}
 enddef
 
 export def FormatWithoutMoving(a: number = 0, b: number = 0)
@@ -137,17 +145,17 @@ def SurroundSmart(open_delimiter: string,
   var B = getcharpos("'>")
   if !empty(text_object)
     # GetTextObject is called for setting '[ and '] marks through a yank.
-    GetTextObject(text_object)
-    A = getcharpos("'[")
-    B = getcharpos("']")
+    var text_object_dict = GetTextObject(text_object)
+    echom text_object
+    A = text_object_dict.start
+    B = text_object_dict.end
   endif
 
-  # marks -> (x,y) coordinates
-  # line and column
+  # line and column of point A
   var lA = A[1]
   var cA = A[2]
 
-  # line and column
+  # line and column of point B
   var lB = B[1]
   var cB = B[2]
 

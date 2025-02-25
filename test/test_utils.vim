@@ -204,12 +204,17 @@ def g:Test_IsInRange()
 enddef
 
 def g:Test_GetTextObject()
+  vnew
   Generate_markdown_testfile()
   exe $"edit {src_name}"
 
   # test 'iw'
   cursor(1, 8)
-  var expected_value = 'perspiciatis'
+  var expected_value = {text: 'perspiciatis',
+  start: [0, 1, 8, 0],
+  end: [0, 1, 19, 0],
+  }
+
   var actual_value = utils.GetTextObject('iw')
   assert_equal(expected_value, actual_value)
 
@@ -217,42 +222,57 @@ def g:Test_GetTextObject()
   actual_value = utils.GetTextObject('iW')
   assert_equal(expected_value, actual_value)
 
-  # test 'aw'
-  expected_value = 'perspiciatis '
+  # # test 'aw'
+  expected_value = {text: 'perspiciatis ',
+  start: [0, 1, 8, 0],
+  end: [0, 1, 20, 0],
+  }
   actual_value = utils.GetTextObject('aw')
   assert_equal(expected_value, actual_value)
 
-  # test 'aW'
+  # # test 'aW'
   actual_value = utils.GetTextObject('aW')
   assert_equal(expected_value, actual_value)
 
-  # Test 'i('
+  # # Test 'i('
   cursor(25, 33)
-  expected_value = 'eligendi optio cumque nihil'
+  expected_value = {text: 'eligendi optio cumque nihil',
+  start: [0, 25, 32, 0],
+  end: [0, 25, 58, 0],
+  }
   actual_value = utils.GetTextObject('i(')
   assert_equal(expected_value, actual_value)
 
-  # Test 'yib'
+  # # Test 'yib'
   actual_value = utils.GetTextObject('ib')
   assert_equal(expected_value, actual_value)
 
-  # Test 'a('
-  expected_value = '(eligendi optio cumque nihil)'
+  # # Test 'a('
+  expected_value = {text: '(eligendi optio cumque nihil)',
+  start: [0, 25, 31, 0],
+  end: [0, 25, 59, 0],
+  }
   actual_value = utils.GetTextObject('a(')
   assert_equal(expected_value, actual_value)
 
-  # Test 'ab'
+  # # Test 'ab'
   actual_value = utils.GetTextObject('ab')
   assert_equal(expected_value, actual_value)
 
-  # Test 'i{'
+  # # Test 'i{'
   cursor(28, 25)
-  expected_value = 'rerum necessitatibus'
+  expected_value = {text: 'rerum necessitatibus',
+  start: [0, 28, 23, 0],
+  end: [0, 28, 42, 0],
+  }
   actual_value = utils.GetTextObject('i{')
   assert_equal(expected_value, actual_value)
 
-  # Test 'a{'
-  expected_value = '{rerum necessitatibus}'
+  # # Test 'a{'
+  expected_value = {text: '{rerum necessitatibus}',
+  start: [0, 28, 22, 0],
+  end: [0, 28, 43, 0],
+  }
   actual_value = utils.GetTextObject('a{')
   assert_equal(expected_value, actual_value)
 
@@ -266,10 +286,9 @@ def g:Test_GetTextObject()
   # actual_value = utils.GetTextObject('i"')
   # AssertGetTextObject(expected_value, actual_value)
 
-  :%bw!
-  Cleanup_markdown_testfile()
+  # :%bw!
+  # Cleanup_markdown_testfile()
 enddef
-
 
 def g:Test_DeleteTextBetweenMarks()
   Generate_markdown_testfile()

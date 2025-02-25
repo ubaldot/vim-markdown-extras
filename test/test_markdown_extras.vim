@@ -165,7 +165,7 @@ def g:Test_check_uncheck_todo_keybinding()
 enddef
 
 def g:Test_Surround_one_line()
-  # vnew
+  vnew
   Generate_markdown_testfile()
   exe $"edit {src_name}"
 
