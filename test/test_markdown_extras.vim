@@ -14,57 +14,59 @@ var italic_dict = markdown.italic_dict
 var bold_dict = markdown.bold_dict
 var strikethrough_dict = markdown.strikethrough_dict
 
-var src_name = 'testfile.md'
+# Test file 1
+var src_name_1 = 'testfile.md'
+var lines_1 =<< trim END
+      Sed ut perspiciatis unde omnis iste natus error sit voluptatem
+      accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae
+      ab illo inventore veritatis et quasi architecto beatae vitae dicta
+      sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit
+      aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos
+      qui ratione voluptatem sequi nesciunt.
 
-def Generate_markdown_testfile()
-  var lines =<< trim END
-        Sed ut perspiciatis unde omnis iste natus error sit voluptatem
-        accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae
-        ab illo inventore veritatis et quasi architecto beatae vitae dicta
-        sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit
-        aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos
-        qui ratione voluptatem sequi nesciunt.
+      Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet,
+      consectetur, adipisci velit, sed quia non numquam eius modi tempora
+      incidunt ut (labore et ~~dolore magnam) aliquam quaerat~~ voluptatem. Ut
+      enim ad `minima [veniam`, quis no~~strum] exercitationem~~ ullam corporis
+      suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur?
 
-        Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet,
-        consectetur, adipisci velit, sed quia non numquam eius modi tempora
-        incidunt ut (labore et ~~dolore magnam) aliquam quaerat~~ voluptatem. Ut
-        enim ad `minima [veniam`, quis no~~strum] exercitationem~~ ullam corporis
-        suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur?
+      Quis autem vel eum iure reprehenderit qui in ea **voluptate velit esse**
+      quam nihil (molestiae consequatur), vel illum qui dolorem eum fugiat quo
+      voluptas nulla pariatur?
 
-        Quis autem vel eum iure reprehenderit qui in ea **voluptate velit esse**
-        quam nihil (molestiae consequatur), vel illum qui dolorem eum fugiat quo
-        voluptas nulla pariatur?
+      At vero eos et accusamus et iusto odio dignissimos ducimus, qui
+      blandit*iis pra(esent*ium `voluptatum` del*eniti atque) corrupti*, quos
+      dolores et quas molestias excepturi sint, obcaecati cupiditate non
+      pro**vident, (sim**ilique sunt *in* culpa, `qui` officia *deserunt*)
+      mollitia) animi, id est laborum et dolorum fuga.
+      Et harum quidem reru[d]um facilis est e[r]t expedita distinctio.
 
-        At vero eos et accusamus et iusto odio dignissimos ducimus, qui
-        blandit*iis pra(esent*ium `voluptatum` del*eniti atque) corrupti*, quos
-        dolores et quas molestias excepturi sint, obcaecati cupiditate non
-        pro**vident, (sim**ilique sunt *in* culpa, `qui` officia *deserunt*)
-        mollitia) animi, id est laborum et dolorum fuga.
-        Et harum quidem reru[d]um facilis est e[r]t expedita distinctio.
+      Nam libero tempore, cum soluta nobis est eligendi optio, cumque nihil
+      impedit, quo minus id, quod
+      maxime placeat facere possimus, omnis voluptas assumenda est, omnis
+      dolor repellend[a]us. `Temporibus autem quibusdam et aut officiis
+      debitis aut rerum necessitatibus saepe eveniet, ut et voluptates
+      repudiandae sint et molestiae non recusandae.`
 
-        Nam libero tempore, cum soluta nobis est eligendi optio, cumque nihil
-        impedit, quo minus id, quod
-        maxime placeat facere possimus, omnis voluptas assumenda est, omnis
-        dolor repellend[a]us. `Temporibus autem quibusdam et aut officiis
-        debitis aut rerum necessitatibus saepe eveniet, ut et voluptates
-        repudiandae sint et molestiae non recusandae.`
+      Itaque earum rerum hic *tenetur a sapiente `delectus`, ut aut reiciendis
+      voluptatibus maiores*
+      alias consequatur aut perferendis doloribus asperiores repellat.
+END
 
-        Itaque earum rerum hic *tenetur a sapiente `delectus`, ut aut reiciendis
-        voluptatibus maiores*
-        alias consequatur aut perferendis doloribus asperiores repellat.
-  END
+def Generate_testfile(lines: list<string>, src_name: string)
    writefile(lines, src_name)
 enddef
 
-def Cleanup_markdown_testfile()
+def Cleanup_testfile(src_name: string)
    delete(src_name)
 enddef
 
+
 # Tests start here
 def g:Test_markdown_lists()
-  Generate_markdown_testfile()
+  Generate_testfile(lines_1, src_name_1)
 
-  exe $"edit {src_name}"
+  exe $"edit {src_name_1}"
 
   # Basic "-" item
   var expected_line = '- '
@@ -143,14 +145,14 @@ def g:Test_markdown_lists()
   # redraw!
   # sleep 3
   :%bw!
-  Cleanup_markdown_testfile()
+  Cleanup_testfile(src_name_1)
 enddef
 
 
 def g:Test_check_uncheck_todo_keybinding()
 
-  Generate_markdown_testfile()
-  exe $"edit {src_name}"
+  Generate_testfile(lines_1, src_name_1)
+  exe $"edit {src_name_1}"
 
   execute "silent norm! Go\<cr>-\<space>[\<space>]\<space>foo"
   echom assert_true(getline(line('.')) =~ '^- \[ \] ')
@@ -160,6 +162,6 @@ def g:Test_check_uncheck_todo_keybinding()
   echom assert_true(getline('.') =~ '- \[ \] ')
 
   :%bw!
-  Cleanup_markdown_testfile()
+  Cleanup_testfile(src_name_1)
 
 enddef
