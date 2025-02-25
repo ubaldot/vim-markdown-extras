@@ -65,10 +65,10 @@ var lines_1 =<< trim END
       repellat.
 
       ```
-      Itaque earum
-      rerum hic tenetur 'a sapiente' delectus, ut aut reiciendis voluptatibus
-      maiores alias consequatur aut perferendis doloribus asperiores
-      repellat.
+        Itaque earum
+        rerum hic tenetur 'a sapiente' delectus, ut aut reiciendis voluptatibus
+        maiores alias consequatur aut perferendis doloribus asperiores
+        repellat.
       ```
 END
 
@@ -257,7 +257,7 @@ def g:Test_IsInRange()
   assert_equal(expected_value, range)
 
   cursor(36, 4)
-  expected_value = [[0, 35, 1, 0], [0, 38, 9, 0]]
+  expected_value = [[0, 35, 1, 0], [0, 38, 11, 0]]
   range = utils.IsInRange(codeblock_dict, codeblock_dict)
   assert_equal(expected_value, range)
 
@@ -642,7 +642,7 @@ def g:Test_SurroundSmart_multi_line()
 enddef
 
 def g:Test_RemoveSurrounding_multi_line()
-  # vnew
+  vnew
   Generate_testfile(lines_2, src_name_2)
   exe $"edit {src_name_2}"
 
@@ -672,7 +672,7 @@ def g:Test_RemoveSurrounding_multi_line()
 enddef
 
 
-def g:Test_code_block()
+def g:Test_set_code_block()
   vnew
   Generate_testfile(lines_2, src_name_2)
   exe $"edit {src_name_2}"
@@ -724,4 +724,24 @@ def g:Test_code_block()
 
   :%bw!
   Cleanup_testfile(src_name_2)
+enddef
+
+def g:Test_unset_code_block()
+  vnew
+  Generate_testfile(lines_1, src_name_1)
+  exe $"edit {src_name_1}"
+
+  var expected_value = [
+    'Itaque earum',
+    'rerum hic tenetur ''a sapiente'' delectus, ut aut reiciendis voluptatibus',
+    'maiores alias consequatur aut perferendis doloribus asperiores',
+    'repellat.'
+  ]
+  cursor(35, 1)
+  utils.UnsetBlock(codeblock_dict, codeblock_dict)
+  var actual_value = getline(34, 37)
+  assert_equal(expected_value, actual_value)
+
+  # :%bw!
+  # Cleanup_testfile(src_name_1)
 enddef

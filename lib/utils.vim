@@ -669,3 +669,17 @@ export def SetBlock(open_block: dict<string>,
   setline(lB, "  " .. strcharpart(lastline, 0, cB))
   append(lB, [$'{keys(close_block)[0]}', strcharpart(lastline, cB)])
 enddef
+
+export def UnsetBlock(open_block: dict<string>, close_block: dict<string>)
+   var interval = IsInRange(open_block, close_block)
+   var lA = interval[0][1]
+   var lB = interval[1][1]
+   if !empty(interval)
+     deletebufline('%', lA - 1)
+     deletebufline('%', lB)
+   endif
+
+   for line in range(lA - 1, lB - 1)
+     setline(line, getline(line)->substitute('^\s*', '', 'g'))
+   endfor
+enddef
