@@ -127,6 +127,64 @@ export def RemoveSurrounding(
     endif
 enddef
 
+export def SurroundSimple(open_delimiter: string,
+    close_delimiter: string,
+    open_delimiters_dict: dict<string>,
+    close_delimiters_dict: dict<string>,
+    text_object: string = '')
+
+  var open_string = open_delimiter
+  var open_regex = open_delimiters_dict[open_string]
+  var open_delimiter_dict = {open_string: open_regex}
+
+  var close_string = close_delimiter
+  var close_regex = close_delimiters_dict[close_string]
+  var close_delimiter_dict = {close_string: close_regex}
+  # Set marks
+  var A = getcharpos("'<")
+  var B = getcharpos("'>")
+  if !empty(text_object)
+    # GetTextObject is called for setting '[ and '] marks through a yank.
+    var text_object_dict = GetTextObject(text_object)
+    echom text_object
+    A = text_object_dict.start
+    B = text_object_dict.end
+  endif
+
+  # line and column of point A
+  var lA = A[1]
+  var cA = A[2]
+
+  # line and column of point B
+  var lB = B[1]
+  var cB = B[2]
+
+  if A == B
+    return
+  endif
+
+  var toA = strcharpart(getline(lA), 0, cA - 1) .. open_string
+  var fromB = close_string .. strcharpart(getline(lB), cB)
+
+  # If on the same line
+  if lA == lB
+    # Overwrite everything that is in the middle
+    var A_to_B = strcharpart(getline(lA), cA - 1, cB - cA + 1)
+    setline(lA, toA .. A_to_B .. fromB)
+  else
+    var lineA = toA .. strcharpart(getline(lA), cA - 1)
+    setline(lA, lineA)
+    var lineB = strcharpart(getline(lB), 0, cB - 1) .. fromB
+    setline(lB, lineB)
+    var l = 1
+    # Fix intermediate lines
+    while lA + l < lB
+      setline(lA + l, getline(lA + l))
+      l += 1
+    endwhile
+  endif
+enddef
+
 export def SurroundSmart(open_delimiter: string,
     close_delimiter: string,
     open_delimiters_dict: dict<string>,

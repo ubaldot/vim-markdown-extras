@@ -148,7 +148,6 @@ def g:Test_markdown_lists()
   Cleanup_testfile(src_name_1)
 enddef
 
-
 def g:Test_check_uncheck_todo_keybinding()
 
   Generate_testfile(lines_1, src_name_1)
