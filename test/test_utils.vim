@@ -742,6 +742,6 @@ def g:Test_unset_code_block()
   var actual_value = getline(34, 37)
   assert_equal(expected_value, actual_value)
 
-  # :%bw!
-  # Cleanup_testfile(src_name_1)
+  :%bw!
+  Cleanup_testfile(src_name_1)
 enddef
