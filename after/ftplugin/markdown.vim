@@ -18,18 +18,24 @@ var code_regex = '\v(\\|`)@<!``@!'
 # var italic_regex = '\v(\\|\*)@<!\*\*@!'
 # The following picks standalone * and the last * of \**
 # It excludes escaped * (i.e. \*\*\*, and sequences like ****)
-var italic_regex = '\v((\\|\*)@<!|(\\\*)@<=)\*\*@!'
+var italic_regex = '\v((\\|\*)@<!|(\\\*))@<=\*\*@!'
+var italic_regex_u = '\v((\\|_)@<!|(\\_))@<=_(_)@!'
 var bold_regex = '\v(\\|\*)@<!\*\*\*@!'
+var bold_regex_u = '\v(\\|_)@<!___@!'
 var strikethrough_regex = '\v(\\|\~)@<!\~\~\~@!'
 
 export var text_style_dict = {'`': code_regex,
   '*': italic_regex,
   '**': bold_regex,
+  '_': italic_regex_u,
+  '__': bold_regex_u,
   '~~': strikethrough_regex}
 
 export var code_dict = {'`': code_regex}
 export var italic_dict = {'*': italic_regex}
 export var bold_dict = {'**': bold_regex}
+export var italic_dict_u = {'_': italic_regex_u}
+export var bold_dict_u = {'__': bold_regex_u}
 export var strikethrough_dict = {'~~': strikethrough_regex}
 
 if exists('g:markdown_extras_config') != 0

@@ -27,21 +27,6 @@ export def ZipLists(l1: list<any>, l2: list<any>): list<list<any>>
     return map(range(min_len), $'[{l1}[v:val], {l2}[v:val]]')
 enddef
 
-export def RegexList2RegexOR(regex_list: list<string>,
-    very_magic: bool = false): string
-  # Convert a list of regex into an atom where each regex is separated by a OR
-  # condition
-
-  var result = ''
-  if very_magic
-    result =  regex_list->map((_, val) => substitute(val, '^\(\\v\)', '', ''))
-          ->join('|')->printf('\v(%s)')
-  else
-    result = regex_list->join('\|')->printf('\(%s\)')
-  endif
-  return result
-enddef
-
 export def GetTextObject(textobject: string): dict<any>
   # You pass a text object like 'iw' and it returns the text
   # associated to it along with the start and end positions
@@ -113,7 +98,6 @@ export def RemoveSurrounding(
       # Remove right delimiter
       var lB = interval[1][1]
       var cB = interval[1][2]
-      # echom "cB: " .. cB
       # The value of cB may no longer be valid since we shortened the line
       if lA == lB
         cB = cB - len(keys(open_delimiter_dict)[0])
@@ -123,7 +107,6 @@ export def RemoveSurrounding(
         strcharpart(getline(lB), 0, cB)
         .. strcharpart(getline(lB), cB + len(keys(close_delimiter_dict)[0]))
       setline(lB, newline)
-      # echom "lB: " .. newline
     endif
 enddef
 
@@ -146,7 +129,6 @@ export def SurroundSimple(open_delimiter: string,
   if !empty(text_object)
     # GetTextObject is called for setting '[ and '] marks through a yank.
     var text_object_dict = GetTextObject(text_object)
-    echom text_object
     A = text_object_dict.start
     B = text_object_dict.end
   endif
@@ -204,7 +186,6 @@ export def SurroundSmart(open_delimiter: string,
   if !empty(text_object)
     # GetTextObject is called for setting '[ and '] marks through a yank.
     var text_object_dict = GetTextObject(text_object)
-    echom text_object
     A = text_object_dict.start
     B = text_object_dict.end
   endif
@@ -323,32 +304,43 @@ export def SurroundSmart(open_delimiter: string,
   # Next, we have to adjust the text between A and B, by removing all the
   # possible delimiters left between them.
 
-  var all_delimiters_regex =
-    RegexList2RegexOR(values(open_delimiters_dict), true)
-
   # If on the same line
   if lA == lB
     # Overwrite everything that is in the middle
     var A_to_B = ''
 
     A_to_B = strcharpart(getline(lA), cA - 1, cB - cA + 1)
-      ->substitute(all_delimiters_regex, '', 'g')
+    for regex in values(open_delimiters_dict)
+      A_to_B = A_to_B->substitute(regex, '', 'g')
+    endfor
 
     setline(lA, toA .. A_to_B .. fromB)
 
   else
-    var lineA = toA .. strcharpart(getline(lA), cA - 1)
-      ->substitute(all_delimiters_regex, '', 'g')
-    echom "lineA: " .. lineA
+    # Set line A
+    var afterA = strcharpart(getline(lA), cA - 1)
+    for regex in values(open_delimiters_dict)
+      afterA = afterA->substitute(regex, '', 'g')
+    endfor
+    var lineA = toA .. afterA
     setline(lA, lineA)
-    var lineB = strcharpart(getline(lB), 0, cB - 1)
-      ->substitute(all_delimiters_regex, '', 'g') .. fromB
-    echom "lineB: " .. lineB
+
+    # Set line B
+    var beforeB = strcharpart(getline(lB), 0, cB - 1)
+    for regex in values(open_delimiters_dict)
+      beforeB = beforeB->substitute(regex, '', 'g')
+    endfor
+    var lineB = beforeB .. fromB
     setline(lB, lineB)
-    var l = 1
+
     # Fix intermediate lines
+    var l = 1
     while lA + l < lB
-      setline(lA + l, getline(lA + l)->substitute(all_delimiters_regex, '', 'g') )
+      var middleline = getline(lA + l)
+      for regex in values(open_delimiters_dict)
+        middleline = middleline-> substitute(regex, '', 'g')
+      endfor
+      setline(lA + l, middleline)
       l += 1
     endwhile
   endif
@@ -579,10 +571,6 @@ export def IsInRange(
     setcharpos("'a", range[0])
     setcharpos("'b", range[1])
     if IsBetweenMarks("'a", "'b")
-      # echom "cur_pos: " .. string(getcharpos('.'))
-      # echom "range[0]: " .. string(range[0])
-      # echom "range[1]: " .. string(range[1])
-      echom IsBetweenMarks("'a", "'b")
       interval = [range[0], range[1]]
       break
     endif

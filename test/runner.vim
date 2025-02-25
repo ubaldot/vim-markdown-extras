@@ -24,7 +24,7 @@ def RunTests(test_file: string)
 		->sort()
 
 	# Check is user defined some function name erroneously
-	var wrong_test_functions = copy(all_functions)->filter('v:val !~ "Test_"')
+	var wrong_test_functions = copy(all_functions)->filter('v:val !~ "^Test_"')
 	echom "wrong_functions: " .. string(wrong_test_functions)
   if !empty(wrong_test_functions)
 		writefile([$'WARNING: The following tests are skipped: {wrong_test_functions}'], 'results.txt', 'a')
@@ -32,7 +32,7 @@ def RunTests(test_file: string)
 	endif
 
 	# Pick the good functions
-	var test_functions = copy(all_functions)->filter('v:val =~ "Test_"')
+	var test_functions = copy(all_functions)->filter('v:val =~ "^Test_"')
 	echom "test_functions: " .. string(test_functions)
   if test_functions->empty()
     # No tests are found

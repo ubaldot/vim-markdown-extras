@@ -13,12 +13,16 @@ var text_style_dict = markdown.text_style_dict
 var code_dict = markdown.code_dict
 var italic_dict = markdown.italic_dict
 var bold_dict = markdown.bold_dict
+var italic_dict_u = markdown.italic_dict_u
+var bold_dict_u = markdown.bold_dict_u
 var strikethrough_dict = markdown.strikethrough_dict
 
 # see :help /\@<! and :help /\@!
 var code_regex = values(code_dict)
 var italic_regex = values(italic_dict)
 var bold_regex = values(bold_dict)
+var italic_regex_u = values(italic_dict_u)
+var bold_regex_u = values(bold_dict_u)
 var strikethrough_regex = values(strikethrough_dict)
 
 
@@ -329,8 +333,8 @@ def g:Test_GetTextObject()
   # actual_value = utils.GetTextObject('i"')
   # AssertGetTextObject(expected_value, actual_value)
 
-  # :%bw!
-  # Cleanup_testfile(src_name_1)
+  :%bw!
+  Cleanup_testfile(src_name_1)
 enddef
 
 def g:Test_DeleteTextBetweenMarks()
@@ -369,33 +373,82 @@ def g:Test_ZipList()
 
 enddef
 
-def g:Test_RegexList2RegexOR()
-    var A = '\v(\d+|\a)\s'
-    var B = '\v^\s*\w\d*\w'
-    var C = '\v\w*\d+\w'
-    var test_list = [A, B, C]
-
-    var expected_string = '\v((\d+|\a)\s|^\s*\w\d*\w|\w*\d+\w)'
-    var actual_string = utils.RegexList2RegexOR(test_list, true)
-    assert_equal(expected_string, actual_string)
-
-    A = '\(\d\+\|\a\)\s'
-    B = '^\s*\w\d*\w'
-    C = '\w*\d\+\w'
-    test_list = [A, B, C]
-
-    expected_string = '\(\(\d\+\|\a\)\s\|^\s*\w\d*\w\|\w*\d\+\w\)'
-    actual_string = utils.RegexList2RegexOR(test_list)
-    assert_equal(expected_string, actual_string)
-enddef
-
 def g:Test_Dict2ListOfDicts()
-
   var my_dict = {a: 'foo', b: 'bar', c: 'baz'}
   var expected_value = [{a: 'foo'}, {b: 'bar'}, {c: 'baz'}]
   var actual_value = utils.DictToListOfDicts(my_dict)
   assert_equal(expected_value, actual_value)
+enddef
 
+
+def g:Test_SurroundSimple_one_line()
+  vnew
+  Generate_testfile(lines_2, src_name_2)
+  exe $"edit {src_name_2}"
+  setlocal conceallevel=0
+
+  # Smart delimiters
+  var expected_value = [
+      'incidunt ut (labore et ~~dolore magnam) aliquam quaerat~~ voluptatem. Ut',
+      'enim ad `minima *[veniam`, quis no~~strum]* exercitationem~~ ullam corporis',
+      'suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur?'
+    ]
+  cursor(11, 29)
+  exe "norm! va[\<esc>"
+  utils.SurroundSimple('*', '*', text_style_dict, text_style_dict)
+  var actual_value = getline(10, 12)
+  assert_equal(expected_value, actual_value)
+
+  # # Test with junk between A and B. Overwrite everything and avoid consecutive
+  # # delimiters of same type, like ** **
+  # exe $"edit! {src_name_2}"
+  cursor(21, 41)
+  exe "norm! va(\<esc>"
+  expected_value = [
+    'dolores et quas molestias excepturi sint, obcaecati cupiditate non',
+    'pro**vident, **(sim**ilique sunt *in* culpa, `qui` officia *deserunt*)**',
+    'mollitia) animi, id est laborum et dolorum fuga.'
+  ]
+  utils.SurroundSimple('**', '**', text_style_dict, text_style_dict)
+  actual_value = getline(20, 22)
+  echom actual_value
+  echom assert_equal(expected_value, actual_value)
+
+  :%bw!
+  Cleanup_testfile(src_name_2)
+enddef
+
+def g:Test_SurroundSimple_multi_line()
+  # vnew
+  Generate_testfile(lines_2, src_name_2)
+  exe $"edit {src_name_2}"
+  setlocal conceallevel=0
+
+  # Simple delimiters
+  var expected_value = [
+    'Nam libero _tempore, cum soluta nobis est eligendi optio, cumque nihil',
+    'impedit, quo minus id, quod',
+    'maxime placeat facere possimus, omnis voluptas assumenda est, omnis_'
+    ]
+  cursor(25, 12)
+  exe "norm! vjj$\<esc>"
+  utils.SurroundSimple('_', '_', text_style_dict, text_style_dict)
+  var actual_value = getline(25, 27)
+  assert_equal(expected_value, actual_value)
+
+  expected_value = [
+    '__Itaque earum rerum hic *tenetur a sapiente `delectus`, ut aut reiciendis',
+    'voluptatibus maiores*',
+    'alias consequatur aut perferendis doloribus asperiores repellat.__',
+    ]
+  cursor(32, 12)
+  exe "norm! 0vG$\<esc>"
+  utils.SurroundSimple('__', '__', text_style_dict, text_style_dict)
+  actual_value = getline(32, 34)
+  assert_equal(expected_value, actual_value)
+
+  :%bw!
+  Cleanup_testfile(src_name_2)
 enddef
 
 def g:Test_SurroundSmart_one_line()
@@ -430,56 +483,7 @@ def g:Test_SurroundSmart_one_line()
   Cleanup_testfile(src_name_2)
 enddef
 
-def g:Test_SurroundSimple_one_line_smart_delimiters()
-  vnew
-  Generate_testfile(lines_2, src_name_2)
-  exe $"edit {src_name_2}"
-  setlocal conceallevel=0
-
-  # Smart delimiters
-  var expected_value = [
-      'incidunt ut (labore et ~~dolore magnam) aliquam quaerat~~ voluptatem. Ut',
-      'enim ad `minima *[veniam`, quis no~~strum]* exercitationem~~ ullam corporis',
-      'suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur?'
-    ]
-  cursor(11, 29)
-  exe "norm! va[\<esc>"
-  utils.SurroundSimple('*', '*', text_style_dict, text_style_dict)
-  var actual_value = getline(10, 12)
-  echom assert_equal(expected_value, actual_value)
-
-  # # Test with junk between A and B. Overwrite everything and avoid consecutive
-  # # delimiters of same type, like ** **
-  # cursor(21, 41)
-  # exe "norm! va(\<esc>"
-  # expected_value = [
-  #   'dolores et quas molestias excepturi sint, obcaecati cupiditate non',
-  #   'pro**vident, (similique sunt in culpa, qui officia deserunt)**',
-  #   'mollitia) animi, id est laborum et dolorum fuga.'
-  # ]
-  # utils.SurroundSimple('**', '**', text_style_dict, text_style_dict)
-  # actual_value = getline(20, 22)
-  # assert_equal(expected_value, actual_value)
-
-  # # Test with junk between A and B. Overwrite everything and avoid consecutive
-  # # delimiters of same type, like ** **
-  # cursor(19, 20)
-  # exe "norm! va(\<esc>"
-  # expected_value = [
-  #   'At vero eos et accusamus et iusto odio dignissimos ducimus, qui',
-  #   'blandit*iis pra(esentium voluptatum deleniti atque) corrupti*, quos',
-  #   'dolores et quas molestias excepturi sint, obcaecati cupiditate non',
-  # ]
-  # utils.SurroundSimple('*', '*', text_style_dict, text_style_dict)
-  # actual_value = getline(18, 20)
-  # assert_equal(expected_value, actual_value)
-
-  # :%bw!
-  # Cleanup_testfile(src_name_2)
-enddef
-
-
-def g:Test_SurroundSmart_one_line_smart_delimiters()
+def g:Test_SurroundSmart_one_line_1()
   # vnew
   Generate_testfile(lines_2, src_name_2)
   exe $"edit {src_name_2}"
@@ -527,7 +531,7 @@ def g:Test_SurroundSmart_one_line_smart_delimiters()
   Cleanup_testfile(src_name_2)
 enddef
 
-def g:Test_RemoveSurrounding_one_line_smart_delimiters()
+def g:Test_RemoveSurrounding_one_line()
 
   Generate_testfile(lines_2, src_name_2)
   # vnew
@@ -569,23 +573,23 @@ def g:Test_RemoveSurrounding_one_line_smart_delimiters()
   Cleanup_testfile(src_name_2)
 enddef
 
-def g:Test_Surround_multi_line_smart_delimiters()
-  # vnew
+def g:Test_SurroundSmart_multi_line()
+  vnew
   Generate_testfile(lines_2, src_name_2)
   exe $"edit {src_name_2}"
   setlocal conceallevel=0
 
   # Smart delimiters
   var expected_value = [
-    'Nam libero tempore, *cum soluta nobis est eligendi optio, cumque nihil',
+    'Nam libero tempore, _cum soluta nobis est eligendi optio, cumque nihil',
     'impedit, quo minus id, quod',
-    'maxime placeat facere possimu*, omnis voluptas assumenda est, omnis',
+    'maxime placeat facere possimu_, omnis voluptas assumenda est, omnis',
     ]
   cursor(25, 21)
   exe "norm! v27ggt,\<esc>"
-  utils.SurroundSmart('*', '*', text_style_dict, text_style_dict)
+  utils.SurroundSmart('_', '_', text_style_dict, text_style_dict)
   var actual_value = getline(25, 27)
-  echom assert_equal(expected_value, actual_value)
+  assert_equal(expected_value, actual_value)
 
   # Smart delimiters
   expected_value = [
@@ -596,10 +600,10 @@ def g:Test_Surround_multi_line_smart_delimiters()
   exe "norm! 0vj$\<esc>"
   utils.SurroundSmart('~~', '~~', text_style_dict, text_style_dict)
   actual_value = getline(18, 19)
-  echom assert_equal(expected_value, actual_value)
+  assert_equal(expected_value, actual_value)
 
-  :%bw!
-  Cleanup_testfile(src_name_2)
+  # :%bw!
+  # Cleanup_testfile(src_name_2)
 enddef
 
 def g:Test_RemoveSurrounding_multi_line()

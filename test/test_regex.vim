@@ -2,9 +2,11 @@ vim9script noclear
 
 import "../after/ftplugin/markdown.vim"
 
+var code_regex = markdown.code_dict['`']
 var italic_regex = markdown.italic_dict['*']
 var bold_regex = markdown.bold_dict['**']
-var code_regex = markdown.code_dict['`']
+var italic_regex_u = markdown.italic_dict_u['_']
+var bold_regex_u = markdown.bold_dict_u['__']
 var strikethrough_regex = markdown.strikethrough_dict['~~']
 
 var src_name = 'testfile.md'
@@ -27,6 +29,22 @@ def Generate_markdown_testfile()
         Quis autem ~vel eum iure reprehenderit qui in ea voluptate velit esse
         quam nihil molestiae consequatur,~ vel `illum qui \~ dolorem eum` fugiat quo
         voluptas nulla \` pariatur``?
+
+        At vero eos et _accusamus et iusto odio dignissimos ducimus qui blanditiis
+        praesentium voluptatum deleniti_ atque corrupti \_quos dolores et quas molestias
+        excepturi sint occaecati _cupiditate_ non \_provident, similique sunt in culpa qui
+        officia deserunt \__mollitia animi_, id est laborum et dolorum fuga. Et harum
+        quidem rerum facilis est et expedita distinctio.
+
+        Nam libero tempore, __cum soluta nobis est eligendi optio cumque nihil
+        impedit quo minus id quod maxime placeat facere possimus, omnis
+        voluptas assumenda est__, omnis dolor repellendus. Temporibus autem
+        quibusdam et aut officiis debitis aut rerum necessitatibus saepe
+        eveniet ut et voluptates repudiandae sint et molestiae non recusandae.
+
+        Itaque earum rerum hic tenetur a sapiente delectus, ut aut
+        reiciendis voluptatibus maiores alias consequatur aut perferendis doloribus
+        asperiores repellat
   END
    writefile(lines, src_name)
 enddef
@@ -37,6 +55,7 @@ enddef
 
 # Tests start here
 def g:Test_regex()
+  vnew
   Generate_markdown_testfile()
 
   exe $"edit {src_name}"
@@ -83,6 +102,29 @@ def g:Test_regex()
   cursor(1, 1)
   while tmp != [0, 0]
     tmp = searchpos(strikethrough_regex, 'W')
+    add(actual_pos, tmp)
+  endwhile
+  assert_equal(expected_pos, actual_pos)
+
+  # italic underscore
+  expected_pos = [[18, 16], [19, 32], [20, 26],
+    [20, 37], [21, 20], [21, 35], [0, 0]]
+  actual_pos = []
+  tmp = []
+  cursor(1, 1)
+  while tmp != [0, 0]
+    tmp = searchpos(italic_regex_u, 'W')
+    add(actual_pos, tmp)
+  endwhile
+  assert_equal(expected_pos, actual_pos)
+
+  # bold underscore
+  expected_pos = [[24, 21], [26, 23], [0, 0]]
+  actual_pos = []
+  tmp = []
+  cursor(1, 1)
+  while tmp != [0, 0]
+    tmp = searchpos(bold_regex_u, 'W')
     add(actual_pos, tmp)
   endwhile
   assert_equal(expected_pos, actual_pos)
