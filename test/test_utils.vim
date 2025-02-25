@@ -602,8 +602,8 @@ def g:Test_SurroundSmart_multi_line()
   actual_value = getline(18, 19)
   assert_equal(expected_value, actual_value)
 
-  # :%bw!
-  # Cleanup_testfile(src_name_2)
+  :%bw!
+  Cleanup_testfile(src_name_2)
 enddef
 
 def g:Test_RemoveSurrounding_multi_line()
