@@ -23,6 +23,9 @@ var italic_regex_u = '\v((\\|_)@<!|(\\_))@<=_(_)@!'
 var bold_regex = '\v(\\|\*)@<!\*\*\*@!'
 var bold_regex_u = '\v(\\|_)@<!___@!'
 var strikethrough_regex = '\v(\\|\~)@<!\~\~\~@!'
+# TODO: codeblock regex could be improved
+var codeblock_regex = '```'
+# var codeblock_regex = '\v````@!'
 
 export var text_style_dict = {'`': code_regex,
   '*': italic_regex,
@@ -32,6 +35,7 @@ export var text_style_dict = {'`': code_regex,
   '~~': strikethrough_regex}
 
 export var code_dict = {'`': code_regex}
+export var codeblock_dict = {'```': codeblock_regex}
 export var italic_dict = {'*': italic_regex}
 export var bold_dict = {'**': bold_regex}
 export var italic_dict_u = {'_': italic_regex_u}

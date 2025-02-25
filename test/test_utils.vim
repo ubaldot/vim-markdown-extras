@@ -11,6 +11,7 @@ var WaitForAssert = common.WaitForAssert
 var text_style_dict = markdown.text_style_dict
 
 var code_dict = markdown.code_dict
+var codeblock_dict = markdown.codeblock_dict
 var italic_dict = markdown.italic_dict
 var bold_dict = markdown.bold_dict
 var italic_dict_u = markdown.italic_dict_u
@@ -19,6 +20,7 @@ var strikethrough_dict = markdown.strikethrough_dict
 
 # see :help /\@<! and :help /\@!
 var code_regex = values(code_dict)
+var codeblock_regex = values(codeblock_dict)
 var italic_regex = values(italic_dict)
 var bold_regex = values(bold_dict)
 var italic_regex_u = values(italic_dict_u)
@@ -61,6 +63,13 @@ var lines_1 =<< trim END
       rerum hic tenetur 'a sapiente' delectus, ut aut reiciendis voluptatibus
       maiores alias consequatur aut perferendis doloribus asperiores
       repellat.
+
+      ```
+      Itaque earum
+      rerum hic tenetur 'a sapiente' delectus, ut aut reiciendis voluptatibus
+      maiores alias consequatur aut perferendis doloribus asperiores
+      repellat.
+      ```
 END
 
 # Test file 2
@@ -210,6 +219,7 @@ def g:Test_IsBetweenMarks()
 enddef
 
 def g:Test_IsInRange()
+  vnew
   Generate_testfile(lines_1, src_name_1)
   exe $"edit {src_name_1}"
 
@@ -244,6 +254,16 @@ def g:Test_IsInRange()
   cursor(21, 43)
   expected_value = [[0, 21, 39, 0], [0, 21, 69, 0]]
   range = utils.IsInRange(strikethrough_dict, strikethrough_dict)
+  assert_equal(expected_value, range)
+
+  cursor(36, 4)
+  expected_value = [[0, 35, 1, 0], [0, 38, 9, 0]]
+  range = utils.IsInRange(codeblock_dict, codeblock_dict)
+  assert_equal(expected_value, range)
+
+  cursor(24, 10)
+  expected_value = []
+  range = utils.IsInRange(codeblock_dict, codeblock_dict)
   assert_equal(expected_value, range)
 
   :%bw!

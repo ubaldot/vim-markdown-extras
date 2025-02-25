@@ -312,12 +312,12 @@ export def SurroundSmart(open_delimiter: string,
   if lA == lB
     # Overwrite everything that is in the middle
     var A_to_B = ''
-
     A_to_B = strcharpart(getline(lA), cA - 1, cB - cA + 1)
     for regex in delimiters_to_remove
       A_to_B = A_to_B->substitute(regex, '', 'g')
     endfor
 
+    # Set the whole line
     setline(lA, toA .. A_to_B .. fromB)
 
   else
@@ -338,19 +338,20 @@ export def SurroundSmart(open_delimiter: string,
     setline(lB, lineB)
 
     # Fix intermediate lines
-    var l = 1
-    while lA + l < lB
-      var middleline = getline(lA + l)
+    var ii = 1
+    while lA + ii < lB
+      var middleline = getline(lA + ii)
       for regex in delimiters_to_remove
         middleline = middleline-> substitute(regex, '', 'g')
       endfor
-      setline(lA + l, middleline)
-      l += 1
+      setline(lA + ii, middleline)
+      ii += 1
     endwhile
   endif
 
 enddef
 
+# TODO: Not used in markdown
 export def SurroundToggle(open_delimiter: string,
     close_delimiter: string,
     open_delimiters_dict: dict<string>,
@@ -390,7 +391,7 @@ export def SurroundToggle(open_delimiter: string,
 enddef
 
 export def GetTextBetweenMarks(A: string, B: string): list<string>
-    # Usage: GetTextBetweenPoints("`[", "`]").
+    # Usage: GetTextBetweenMarks("'A", "'B").
     #
     # Arguments must be marks called with the back ticks to get the exact
     # position ('a jump to the marker but places the cursor
@@ -416,6 +417,7 @@ export def GetDelimitersRanges(
     close_delimiter_dict: dict<string>,
     ): list<list<list<number>>>
   # It returns open-intervals, i.e. the delimiters are excluded.
+  #
   # Passed delimiters are singleton dicts with key = the delimiter string,
   # value = the regex to exactly capture such a delimiter string
   #
@@ -471,7 +473,7 @@ export def GetDelimitersRanges(
     endif
     open_regex_pos = [0] + open_regex_pos_short_final + [0]
 
-    # B. ------ Close delimiter -------
+    # B. ------ Close regex -------
     close_regex_pos_short = searchpos(close_regex, 'W')
 
     # If the closed delimiter is the lead of the line, then the open-interval
@@ -490,6 +492,7 @@ export def GetDelimitersRanges(
   setcursorcharpos(saved_cursor[1 : 2])
 
   # Remove the last element junky [[0,0,len(open_delimiter),0], [0,0,-1,0]]
+  # TODO it does not seems to remove anything...
   remove(ranges, -1)
 
   return ranges
@@ -567,6 +570,8 @@ export def IsInRange(
 
   # OBS! Ranges are open-intervals!
   var ranges = GetDelimitersRanges(open_delimiter_dict, close_delimiter_dict)
+  echom open_delimiter_dict
+  echom ranges
 
   var saved_mark_a = getcharpos("'a")
   var saved_mark_b = getcharpos("'b")
@@ -587,6 +592,7 @@ export def IsInRange(
   return interval
 enddef
 
+# Not used in markdown
 export def DeleteTextBetweenMarks(A: string, B: string): string
   # To jump to the exact position (and not at the beginning of a line) you
   # have to call the marker with the backtick ` rather than with ', e.g. `a

@@ -2,6 +2,8 @@ vim9script
 
 
 export def ToggleMark()
+  # Toggle checkbox marks in todo lists
+  #
   var line = getline('.')
   if match(line, '\[\s*\]') != -1
     setline('.', substitute(line, '\[\s*\]', '[x]', ''))
@@ -9,12 +11,14 @@ export def ToggleMark()
     setline('.', substitute(line, '\[x\]', '[ ]', ''))
   endif
 enddef
-# lkashbdcqlkbdcq #XXX
+
 export def ContinueList()
+  # Needed for hacking <CR> when you are writing a list
+  #
+  # Check if the current line starts with '- [ ]' or '- '
   # OBS! If there are issues, check 'formatlistpat' value for markdown
   # filetype
-  # For continuing items list and enumerations
-  # Check if the current line starts with '- [ ]' or '- '
+
   var variant_1 = '-\s\[\(\s*\|x\)*\]\s\+' # - [ ] bla bla bla
   var variant_2 = '-\s\+\(\[\)\@!' # - bla bla bla
   var variant_3 = '\*\s\+' # * bla bla bla
@@ -208,8 +212,6 @@ def IsInsideBlock(tag: string): bool
 enddef
 
 
-#
-#    XXX#
 export def ToggleBlock(tag: string, line_start: number = -1,
       \  line_end: number = -1, fence: string = '')
   # Set or unset
