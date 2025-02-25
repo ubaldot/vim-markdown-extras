@@ -7,6 +7,13 @@ import autoload '../../lib/utils.vim'
 
 links.GenerateLinksDict()
 
+var Surround = utils.SurroundSmart
+if exists('g:markdown_extras_config')
+    && has_key(g:markdown_extras_config, 'smart_textstyle')
+    && g:markdown_extras_config['smart_textstyle']
+  Surround = utils.SurroundSimple
+endif
+
 var code_regex = '\v(\\|`)@<!``@!'
 # var italic_regex = '\v(\\|\*)@<!\*\*@!'
 # The following picks standalone * and the last * of \**
