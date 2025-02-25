@@ -431,9 +431,10 @@ def g:Test_SurroundSimple_one_line()
   ]
   utils.SurroundSimple('**', '**', text_style_dict, text_style_dict)
   actual_value = getline(20, 22)
-  echom actual_value
-  echom assert_equal(expected_value, actual_value)
+  assert_equal(expected_value, actual_value)
 
+  cursor(19, 53)
+  utils.SurroundSimple('*', '*', text_style_dict, text_style_dict, 'iw')
   :%bw!
   Cleanup_testfile(src_name_2)
 enddef
@@ -496,6 +497,20 @@ def g:Test_SurroundSmart_one_line()
     ]
   cursor(15, 13)
   utils.SurroundSmart('**', '**', text_style_dict, text_style_dict, 'a(')
+  # Do the same operation, nothing should change
+  utils.SurroundSmart('**', '**', text_style_dict, text_style_dict, 'a(')
+  actual_value = getline(14, 16)
+  assert_equal(expected_value, actual_value)
+
+  # Prolong delimiter
+  expected_value = [
+    'Quis autem vel eum iure reprehenderit qui in ea **voluptate velit esse**',
+    'quam nihil **(molestiae consequatur), vel** illum qui dolorem eum fugiat quo',
+    'voluptas nulla pariatur?',
+    ]
+  cursor(15, 32)
+  exe "norm! veee\<esc>"
+  utils.SurroundSmart('**', '**', text_style_dict, text_style_dict)
   actual_value = getline(14, 16)
   assert_equal(expected_value, actual_value)
 
@@ -640,7 +655,7 @@ def g:Test_RemoveSurrounding_multi_line()
   cursor(28, 25)
   utils.RemoveSurrounding(code_dict, code_dict)
   var actual_value = getline(28, 30)
-  echom assert_equal(expected_value, actual_value)
+  assert_equal(expected_value, actual_value)
 
   # Test 2: preserve inner surrounding
   expected_value = [
@@ -650,7 +665,62 @@ def g:Test_RemoveSurrounding_multi_line()
   cursor(32, 28)
   utils.RemoveSurrounding(italic_dict, italic_dict)
   actual_value = getline(32, 33)
-  echom assert_equal(expected_value, actual_value)
+  assert_equal(expected_value, actual_value)
+
+  :%bw!
+  Cleanup_testfile(src_name_2)
+enddef
+
+
+def g:Test_code_block()
+  vnew
+  Generate_testfile(lines_2, src_name_2)
+  exe $"edit {src_name_2}"
+
+  g:markdown_extras_config = {}
+  g:markdown_extras_config['block_label'] = ''
+
+  var expected_value = [
+    'ab illo inventore veritatis ',
+    '```',
+    '  et quasi architecto beatae vitae dicta',
+    '  sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit',
+    '  aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos',
+    '  qui ratione voluptatem sequi ',
+    '```',
+    'nesciunt.',
+    ]
+  cursor(3, 29)
+  exe "norm! v3j\<esc>"
+  utils.SetBlock(codeblock_dict, codeblock_dict)
+  var actual_value = getline(3, 10)
+  assert_equal(expected_value, actual_value)
+
+  # Check that it won't undo
+  cursor(6, 10)
+  utils.SetBlock(codeblock_dict, codeblock_dict)
+  assert_equal(expected_value, actual_value)
+
+  # Check that it won't undo when on the border
+  cursor(4, 2)
+  utils.SetBlock(codeblock_dict, codeblock_dict)
+  assert_equal(expected_value, actual_value)
+
+  # check with motion
+  expected_value = [
+    '```',
+    '  Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet,',
+    '  consectetur, adipisci velit, sed quia non numquam eius modi tempora',
+    '  incidunt ut (labore et ~~dolore magnam) aliquam quaerat~~ voluptatem. Ut',
+    '  enim ad `minima [veniam`, quis no~~strum] exercitationem~~ ullam corporis',
+    '```',
+    ]
+  cursor(12, 1)
+  utils.SetBlock(codeblock_dict, codeblock_dict, '3j')
+  actual_value = getline(13, 18)
+  assert_equal(expected_value, actual_value)
+
+  unlet g:markdown_extras_config
 
   :%bw!
   Cleanup_testfile(src_name_2)

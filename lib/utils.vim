@@ -570,8 +570,6 @@ export def IsInRange(
 
   # OBS! Ranges are open-intervals!
   var ranges = GetDelimitersRanges(open_delimiter_dict, close_delimiter_dict)
-  echom open_delimiter_dict
-  echom ranges
 
   var saved_mark_a = getcharpos("'a")
   var saved_mark_b = getcharpos("'b")
@@ -605,4 +603,69 @@ export def DeleteTextBetweenMarks(A: string, B: string): string
   execute $'norm! {exact_A}v{exact_B}"_d'
   # This to get rid off E1186
   return ''
+enddef
+
+
+export def SetBlock(open_block: dict<string>,
+    close_block: dict<string>,
+    motion: string = '')
+  # Put the selected text between open_block and close_block.
+  var label = ''
+  if exists('g:markdown_extras_config') != 0
+      && has_key(g:markdown_extras_config, 'block_label')
+    label = g:markdown_extras_config['block_label']
+  else
+    label = input('Enter code-block language: ')
+  endif
+  echom label
+
+  # TODO return or remove surrounding?
+  if !empty(IsInRange(open_block, close_block))
+      || getline('.') == $'{keys(open_block)[0] .. label}'
+      || getline('.') == $'{keys(close_block)[0]}'
+    return
+  endif
+
+  # Set marks
+  var A = getcharpos("'<")
+  var B = getcharpos("'>")
+  if !empty(motion)
+    # GetTextObject is called for setting '[ and '] marks through a yank.
+    var motion_dict = GetTextObject(motion)
+    A = motion_dict.start
+    B = motion_dict.end
+  endif
+
+  # line and column of point A
+  var lA = A[1]
+  var cA = A[2]
+
+  # line and column of point B
+  var lB = B[1]
+  var cB = B[2]
+
+  # TODO: may be not needed
+  if A == B
+    return
+  endif
+
+  var firstline = getline(lA)
+  var lastline = getline(lB)
+  # Set first part
+  setline(lA, strcharpart(getline(lA), 0, cA - 1))
+  append(lA, [$'{keys(open_block)[0] .. label}',
+    "  " .. strcharpart(firstline, cA - 1)])
+  lA += 2
+  lB += 2
+
+  # Set intermediate part
+  var ii = 1
+  while lA + ii <= lB
+    setline(lA + ii, "  " .. getline(lA + ii)->substitute('^\s*', '', ''))
+    ii += 1
+  endwhile
+
+  # Set last part
+  setline(lB, "  " .. strcharpart(lastline, 0, cB))
+  append(lB, [$'{keys(close_block)[0]}', strcharpart(lastline, cB)])
 enddef
