@@ -1,8 +1,5 @@
 vim9script
 
-export const URL_PREFIXES = [ 'https://', 'http://', 'ftp://', 'ftps://',
-    'sftp://', 'telnet://', 'file://']
-
 export def Echoerr(msg: string)
   echohl ErrorMsg | echom $'[markdown_extras] {msg}' | echohl None
 enddef

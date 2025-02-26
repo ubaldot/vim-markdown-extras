@@ -4,6 +4,8 @@ import autoload './utils.vim'
 import autoload '../after/ftplugin/markdown.vim'
 
 export var links_dict = {}
+export const URL_PREFIXES = [ 'https://', 'http://', 'ftp://', 'ftps://',
+    'sftp://', 'telnet://', 'file://']
 
 export def IsLink(): bool
   # Check if the word under the cursor is a link

@@ -25,7 +25,7 @@ const CODEBLOCK_REGEX = '```'
 #
 # TODO: I had to remove the :// at the end of each prefix because otherwise
 # the regex won't work.
-const URL_PREFIXES = utils.URL_PREFIXES
+const URL_PREFIXES = links.URL_PREFIXES
   ->mapnew((_, val) => substitute(val, '\v(\w+):.*', '\1', ''))
   ->join("\|")
 const LINK_OPEN_REGEX = '\v(\\|])@<!\zs\[\ze[^]]+\]'
