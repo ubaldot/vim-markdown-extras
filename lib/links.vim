@@ -61,26 +61,24 @@ def g:IsLinkNew()
   echom range
 enddef
 
-
-
 def OpenLink()
     norm! f[l
+    # Only work for [blabla][]
     var link_id = utils.GetTextObject('i[').text
     var link = links_dict[link_id]
     if filereadable(link)
-      exe $'edit {link}'
-    elseif exists(':Open') != 0
-      exe $'Open {link}'
+      norm! gf
     elseif IsURL(link)
-      # TODO: I have :Open everywhere but on macos
-      silent exe $'!{g:start_cmd} -a safari.app "{link}"'
+      norm! gx
     else
-      echoerr $"File {link} does not exists!"
+      utils.Echoerr($"File {link} does not exists!")
     endif
 enddef
 
-
 export def GetLinkID(): number
+  # When user add a new link, it either create a new ID and return it or it
+  # just return an existing ID if the link already exists
+  #
   var link = input('Insert link: ', '', 'customlist,Foo')
   if empty(link)
     return 0
@@ -90,6 +88,10 @@ export def GetLinkID(): number
   if !IsURL(link)
     link = fnamemodify(link, ':p')
   endif
+  var reference_line = search('\s*#\+\s\+References', 'nw')
+  if reference_line == 0
+      append(line('$'), ['', '## References', ''])
+  endif
   var link_line = search(link, 'nw')
   var link_id = 0
   if link_line == 0
@@ -97,10 +99,8 @@ export def GetLinkID(): number
     link_id = keys(links_dict)->map('str2nr(v:val)')->max() + 1
     links_dict[$'{link_id}'] = link
     # If it is the first link ever, leave a blank line
-    if link_id == 1 && search('\s*#\+\s\+References', 'nw') != 0
-      append(line('$'), '' )
-    elseif link_id == 1 && search('\s*#\+\s\+References', 'nw') == 0
-      append(line('$'), ['', '## References', ''])
+    if link_id == 1
+      append(line('$'), '')
     endif
     append(line('$'), $'[{link_id}]: {link}' )
   else
@@ -123,7 +123,10 @@ export def IsURL(link: string): bool
 enddef
 
 export def GenerateLinksDict()
+  # Generate the links_dict but it requires that there is a
+  # Reference section at the end
   var ref_start_line = search('\s*#\+\s\+References', 'nw')
+  # TODO: error message if not found!
   var refs = getline(ref_start_line + 1, '$')
     ->filter('v:val =~ "^\\[\\d\\+\\]:\\s"')
   for item in refs
@@ -149,6 +152,28 @@ export def RemoveLink()
   endif
 enddef
 
+def CreateLink(textobject: string = '')
+
+  var link_id = GetLinkID()
+  if link_id == 0
+    return
+  endif
+
+  utils.SurroundSmart("[",
+    "]",
+    markdown.link_open_dict,
+    markdown.link_close_dict,
+    textobject)
+  # add link value
+  execute $'norm! a[{link_id}]'
+  norm! F]h
+  if !IsURL(links_dict[link_id]) && !filereadable(links_dict[link_id])
+    exe $'edit {links_dict[link_id]}'
+    # write
+  endif
+enddef
+
+
 # TODO
 def CleanupReferences()
   echoerr Not Implemented!
@@ -162,21 +187,11 @@ export def HandleLink()
   if IsLink()
     OpenLink()
   else
-    var link_id = GetLinkID()
-    if link_id == 0
-      return
-    endif
-    # Surround stuff
-    norm! lbi[
-    norm! ea]
-    execute $'norm! a[{link_id}]'
-    norm! F]h
-    if !IsURL(links_dict[link_id]) && !filereadable(links_dict[link_id])
-      exe $'edit {links_dict[link_id]}'
-      # write
-    endif
+    CreateLink()
   endif
 enddef
+
+# --------------------- Popups --------------------------------------------
 
 def OpenLinkPopup(links_list: list<string>, popup_id: number, choice: number)
     var link = links_list[choice - 1]

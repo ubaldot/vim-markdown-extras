@@ -8,6 +8,11 @@ export def Echowarn(msg: string)
   echohl WarningMsg | echom $'[markdown_extras] {msg}' | echohl None
 enddef
 
+def KeysFromValue(dict: dict<any>, target_value: string)
+    # Given a value, return all the keys associated to it
+    return keys(filter(copy(dict), 'v:val == target_value'))
+enddef
+
 export def DictToListOfDicts(d: dict<any>): list<dict<any>>
   # Convert a dict in a list of dict.
   #
