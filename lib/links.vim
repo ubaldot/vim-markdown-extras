@@ -1,6 +1,7 @@
 vim9script
 
 import autoload './utils.vim'
+import autoload '../after/ftplugin/markdown.vim'
 
 export var links_dict = {}
 
@@ -51,6 +52,16 @@ export def IsLink(): bool
   setpos('.', saved_curpos)
   return is_link
 enddef
+
+def g:IsLinkNew()
+  var range = utils.IsInRange(
+    markdown.link_open_dict,
+    markdown.link_close_dict
+  )
+  echom range
+enddef
+
+
 
 def OpenLink()
     norm! f[l

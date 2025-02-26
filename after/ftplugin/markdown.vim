@@ -14,6 +14,7 @@ if exists('g:markdown_extras_config')
   Surround = utils.SurroundSimple
 endif
 
+
 var code_regex = '\v(\\|`)@<!``@!'
 # var italic_regex = '\v(\\|\*)@<!\*\*@!'
 # The following picks standalone * and the last * of \**
@@ -25,7 +26,12 @@ var bold_regex_u = '\v(\\|_)@<!___@!'
 var strikethrough_regex = '\v(\\|\~)@<!\~\~\~@!'
 # TODO: codeblock regex could be improved
 var codeblock_regex = '```'
-# var codeblock_regex = '\v````@!'
+
+# Of the form '[bla bla](https://example.com)' or '[bla bla][12]'
+# TODO: if you only want numbers as reference, line [my page][11], then you
+# have to replace the last part '\[[^]]+\]' with '\[\d+\]'
+var link_open_regex = '\v(\\|])@<!\zs\[\ze[^]]+\](\((http|https):[^)]+\)|\[[^]]+\])'
+var link_close_regex = '\v(\\|])@<!\[[^]]+\zs\]\ze(\((http|https):[^)]+\)|\[[^]]+\])'
 
 export var text_style_dict = {'`': code_regex,
   '*': italic_regex,
@@ -34,6 +40,8 @@ export var text_style_dict = {'`': code_regex,
   '__': bold_regex_u,
   '~~': strikethrough_regex}
 
+export var link_open_dict = {'[': link_open_regex}
+export var link_close_dict = {']': link_close_regex}
 export var code_dict = {'`': code_regex}
 export var codeblock_dict = {'```': codeblock_regex}
 export var italic_dict = {'*': italic_regex}
