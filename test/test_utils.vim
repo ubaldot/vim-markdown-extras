@@ -17,6 +17,8 @@ const BOLD_DICT = markdown.BOLD_DICT
 const ITALIC_DICT_U = markdown.ITALIC_DICT_U
 const BOLD_DICT_U = markdown.BOLD_DICT_U
 const STRIKETHROUGH_DICT = markdown.STRIKETHROUGH_DICT
+const LINK_OPEN_DICT = markdown.LINK_OPEN_DICT
+const LINK_CLOSE_DICT = markdown.LINK_CLOSE_DICT
 
 # SEE :HELP /\@<! AND :HELP /\@!
 const CODE_REGEX = values(CODE_DICT)
@@ -26,6 +28,8 @@ const BOLD_REGEX = values(BOLD_DICT)
 const ITALIC_REGEX_U = values(ITALIC_DICT_U)
 const BOLD_REGEX_U = values(BOLD_DICT_U)
 const STRIKETHROUGH_REGEX = values(STRIKETHROUGH_DICT)
+const LINK_OPEN_REGEX = values(LINK_OPEN_DICT)
+const LINK_CLOSE_REGEX = values(LINK_CLOSE_DICT)
 
 
 # Test file 1
@@ -61,7 +65,7 @@ const lines_1 =<< trim END
       officiis debitis aut {rerum necessitatibus} saepe eveniet ut et
       voluptates repudiandae sint et molestiae non recusandae. Itaque earum
       rerum hic tenetur 'a sapiente' delectus, ut aut reiciendis voluptatibus
-      maiores alias consequatur aut perferendis doloribus asperiores
+      maiores alias [consequatur][33] aut perferendis doloribus asperiores
       repellat.
 
       ```
@@ -273,6 +277,16 @@ def g:Test_IsInRange()
   cursor(24, 10)
   expected_value = []
   range = utils.IsInRange(CODEBLOCK_DICT, CODEBLOCK_DICT)
+  assert_equal(expected_value, range)
+
+  cursor(31, 18)
+  expected_value = [[0, 31, 16, 0], [0, 31, 26, 0]]
+  range = utils.IsInRange(LINK_OPEN_DICT, LINK_CLOSE_DICT)
+  assert_equal(expected_value, range)
+
+  cursor(22, 18)
+  expected_value = []
+  range = utils.IsInRange(LINK_OPEN_DICT, LINK_CLOSE_DICT)
   assert_equal(expected_value, range)
 
   :%bw!
