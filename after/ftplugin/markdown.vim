@@ -17,12 +17,21 @@ const STRIKETHROUGH_REGEX = '\v(\\|\~)@<!\~\~\~@!'
 # TODO: CODEBLOCK REGEX COULD BE IMPROVED
 const CODEBLOCK_REGEX = '```'
 
-# OF THE FORM '[BLA BLA](HTTPS://EXAMPLE.COM)' OR '[BLA BLA][12]'
-# TODO: IF YOU ONLY WANT NUMBERS AS REFERENCE, LINE [MY PAGE][11], THEN YOU
-# HAVE TO REPLACE THE LAST PART '\[[^]]+\]' WITH '\[\D+\]'
-const LINK_OPEN_REGEX = '\v(\\|])@<!\zs\[\ze[^]]+\](\((http|https):[^)]+\)|\[[^]]+\])'
-const LINK_CLOSE_REGEX = '\v(\\|])@<!\[[^]]+\zs\]\ze(\((http|https):[^)]+\)|\[[^]]+\])'
-
+# Of the form '[bla bla](https://example.com)' or '[bla bla][12]'
+# TODO: if you only want numbers as reference, line [my page][11], then you
+# have to replace the last part '\[[^]]+\]' with '\[\d+\]'
+# const LINK_OPEN_REGEX = '\v(\\|])@<!\zs\[\ze[^]]+\](\((http|https):[^)]+\)|\[[^]]+\])'
+# const LINK_CLOSE_REGEX = '\v(\\|])@<!\[[^]]+\zs\]\ze(\((http|https):[^)]+\)|\[[^]]+\])'
+#
+# TODO: I had to remove the :// at the end of each prefix because otherwise
+# the regex won't work.
+const URL_PREFIXES = utils.URL_PREFIXES
+  ->mapnew((_, val) => substitute(val, '\v(\w+):.*', '\1', ''))
+  ->join("\|")
+const LINK_OPEN_REGEX = '\v(\\|])@<!\zs\[\ze[^]]+\]'
+  .. $'(\(({URL_PREFIXES}):[^)]+\)|\[[^]]+\])'
+const LINK_CLOSE_REGEX = '\v(\\|])@<!\[[^]]+\zs\]\ze'
+  .. $'(\(({URL_PREFIXES}):[^)]+\)|\[[^]]+\])'
 export const TEXT_STYLE_DICT = {'`': CODE_REGEX,
   '*': ITALIC_REGEX,
   '**': BOLD_REGEX,
