@@ -28,10 +28,12 @@ const CODEBLOCK_REGEX = '```'
 const URL_PREFIXES = links.URL_PREFIXES
   ->mapnew((_, val) => substitute(val, '\v(\w+):.*', '\1', ''))
   ->join("\|")
-const LINK_OPEN_REGEX = '\v(\\|])@<!\zs\[\ze[^]]+\]'
+
+const LINK_OPEN_REGEX = '\v\zs\[\ze[^]]+\]'
   .. $'(\(({URL_PREFIXES}):[^)]+\)|\[[^]]+\])'
-const LINK_CLOSE_REGEX = '\v(\\|])@<!\[[^]]+\zs\]\ze'
+const LINK_CLOSE_REGEX = '\v\[[^]]+\zs\]\ze'
   .. $'(\(({URL_PREFIXES}):[^)]+\)|\[[^]]+\])'
+
 export const TEXT_STYLE_DICT = {'`': CODE_REGEX,
   '*': ITALIC_REGEX,
   '**': BOLD_REGEX,

@@ -80,7 +80,7 @@ const lines_2 =<< trim END
     [Another Example](http://www.example.com) is another valid link to a real
     website.
     [blabla] baz [ciao ciao] <- No valid links here, just text.
-    [Invalid URL](http://malformedurl) <- This might look like a link but it’s
+    [Invalid URL](http://malformedurl) <- This ][ciao](ftp://foo.com)might look like a link but it’s
     malformed.
 END
 
@@ -192,7 +192,6 @@ def g:Test_links_regex()
     tmp = searchpos(LINK_OPEN_REGEX, 'W')
     add(actual_pos, tmp)
   endwhile
-  echom actual_pos
   assert_equal(expected_pos, actual_pos)
 
   expected_pos = [[6, 16], [10, 8], [12, 10], [12, 47],
@@ -204,7 +203,6 @@ def g:Test_links_regex()
     tmp = searchpos(LINK_CLOSE_REGEX, 'W')
     add(actual_pos, tmp)
   endwhile
-  echom actual_pos
   # assert_equal(expected_pos, actual_pos)
 
   :%bw!
