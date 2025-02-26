@@ -8,11 +8,11 @@ import "./../after/ftplugin/markdown.vim"
 import "./../lib/utils.vim"
 
 var WaitForAssert = common.WaitForAssert
-var text_style_dict = markdown.text_style_dict
-var code_dict = markdown.code_dict
-var italic_dict = markdown.italic_dict
-var bold_dict = markdown.bold_dict
-var strikethrough_dict = markdown.strikethrough_dict
+var TEXT_STYLE_DICT = markdown.TEXT_STYLE_DICT
+var CODE_DICT = markdown.CODE_DICT
+var ITALIC_DICT = markdown.ITALIC_DICT
+var BOLD_DICT = markdown.BOLD_DICT
+var STRIKETHROUGH_DICT = markdown.STRIKETHROUGH_DICT
 
 # Test file 1
 var src_name_1 = 'testfile.md'

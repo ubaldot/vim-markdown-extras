@@ -5,6 +5,41 @@ import autoload "../../lib/preview.vim"
 import autoload "../../lib/links.vim"
 import autoload '../../lib/utils.vim'
 
+const CODE_REGEX = '\v(\\|`)@<!``@!'
+# var italic_regex = '\v(\\|\*)@<!\*\*@!'
+# The following picks standalone * and the last * of \**
+# It excludes escaped * (i.e. \*\*\*, and sequences like ****)
+const ITALIC_REGEX = '\v((\\|\*)@<!|(\\\*))@<=\*\*@!'
+const ITALIC_REGEX_U = '\v((\\|_)@<!|(\\_))@<=_(_)@!'
+const BOLD_REGEX = '\v(\\|\*)@<!\*\*\*@!'
+const BOLD_REGEX_U = '\v(\\|_)@<!___@!'
+const STRIKETHROUGH_REGEX = '\v(\\|\~)@<!\~\~\~@!'
+# TODO: CODEBLOCK REGEX COULD BE IMPROVED
+const CODEBLOCK_REGEX = '```'
+
+# OF THE FORM '[BLA BLA](HTTPS://EXAMPLE.COM)' OR '[BLA BLA][12]'
+# TODO: IF YOU ONLY WANT NUMBERS AS REFERENCE, LINE [MY PAGE][11], THEN YOU
+# HAVE TO REPLACE THE LAST PART '\[[^]]+\]' WITH '\[\D+\]'
+const LINK_OPEN_REGEX = '\v(\\|])@<!\zs\[\ze[^]]+\](\((http|https):[^)]+\)|\[[^]]+\])'
+const LINK_CLOSE_REGEX = '\v(\\|])@<!\[[^]]+\zs\]\ze(\((http|https):[^)]+\)|\[[^]]+\])'
+
+export const TEXT_STYLE_DICT = {'`': CODE_REGEX,
+  '*': ITALIC_REGEX,
+  '**': BOLD_REGEX,
+  '_': ITALIC_REGEX_U,
+  '__': BOLD_REGEX_U,
+  '~~': STRIKETHROUGH_REGEX}
+
+export const LINK_OPEN_DICT = {'[': LINK_OPEN_REGEX}
+export const LINK_CLOSE_DICT = {']': LINK_CLOSE_REGEX}
+export const CODE_DICT = {'`': CODE_REGEX}
+export const CODEBLOCK_DICT = {'```': CODEBLOCK_REGEX}
+export const ITALIC_DICT = {'*': ITALIC_REGEX}
+export const BOLD_DICT = {'**': BOLD_REGEX}
+export const ITALIC_DICT_U = {'_': ITALIC_REGEX_U}
+export const BOLD_DICT_U = {'__': BOLD_REGEX_U}
+export const STRIKETHROUGH_DICT = {'~~': STRIKETHROUGH_REGEX}
+
 links.GenerateLinksDict()
 
 var Surround = utils.SurroundSmart
@@ -13,42 +48,6 @@ if exists('g:markdown_extras_config')
     && g:markdown_extras_config['smart_textstyle']
   Surround = utils.SurroundSimple
 endif
-
-
-var code_regex = '\v(\\|`)@<!``@!'
-# var italic_regex = '\v(\\|\*)@<!\*\*@!'
-# The following picks standalone * and the last * of \**
-# It excludes escaped * (i.e. \*\*\*, and sequences like ****)
-var italic_regex = '\v((\\|\*)@<!|(\\\*))@<=\*\*@!'
-var italic_regex_u = '\v((\\|_)@<!|(\\_))@<=_(_)@!'
-var bold_regex = '\v(\\|\*)@<!\*\*\*@!'
-var bold_regex_u = '\v(\\|_)@<!___@!'
-var strikethrough_regex = '\v(\\|\~)@<!\~\~\~@!'
-# TODO: codeblock regex could be improved
-var codeblock_regex = '```'
-
-# Of the form '[bla bla](https://example.com)' or '[bla bla][12]'
-# TODO: if you only want numbers as reference, line [my page][11], then you
-# have to replace the last part '\[[^]]+\]' with '\[\d+\]'
-var link_open_regex = '\v(\\|])@<!\zs\[\ze[^]]+\](\((http|https):[^)]+\)|\[[^]]+\])'
-var link_close_regex = '\v(\\|])@<!\[[^]]+\zs\]\ze(\((http|https):[^)]+\)|\[[^]]+\])'
-
-export var text_style_dict = {'`': code_regex,
-  '*': italic_regex,
-  '**': bold_regex,
-  '_': italic_regex_u,
-  '__': bold_regex_u,
-  '~~': strikethrough_regex}
-
-export var link_open_dict = {'[': link_open_regex}
-export var link_close_dict = {']': link_close_regex}
-export var code_dict = {'`': code_regex}
-export var codeblock_dict = {'```': codeblock_regex}
-export var italic_dict = {'*': italic_regex}
-export var bold_dict = {'**': bold_regex}
-export var italic_dict_u = {'_': italic_regex_u}
-export var bold_dict_u = {'__': bold_regex_u}
-export var strikethrough_dict = {'~~': strikethrough_regex}
 
 if exists('g:markdown_extras_config') != 0
     && has_key(g:markdown_extras_config, 'leader')

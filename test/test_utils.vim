@@ -6,31 +6,31 @@ vim9script
 import "./common.vim"
 import "../lib/utils.vim"
 import "../after/ftplugin/markdown.vim"
-var WaitForAssert = common.WaitForAssert
+const WaitForAssert = common.WaitForAssert
 
-var text_style_dict = markdown.text_style_dict
+const TEXT_STYLE_DICT = markdown.TEXT_STYLE_DICT
 
-var code_dict = markdown.code_dict
-var codeblock_dict = markdown.codeblock_dict
-var italic_dict = markdown.italic_dict
-var bold_dict = markdown.bold_dict
-var italic_dict_u = markdown.italic_dict_u
-var bold_dict_u = markdown.bold_dict_u
-var strikethrough_dict = markdown.strikethrough_dict
+const CODE_DICT = markdown.CODE_DICT
+const CODEBLOCK_DICT = markdown.CODEBLOCK_DICT
+const ITALIC_DICT = markdown.ITALIC_DICT
+const BOLD_DICT = markdown.BOLD_DICT
+const ITALIC_DICT_U = markdown.ITALIC_DICT_U
+const BOLD_DICT_U = markdown.BOLD_DICT_U
+const STRIKETHROUGH_DICT = markdown.STRIKETHROUGH_DICT
 
-# see :help /\@<! and :help /\@!
-var code_regex = values(code_dict)
-var codeblock_regex = values(codeblock_dict)
-var italic_regex = values(italic_dict)
-var bold_regex = values(bold_dict)
-var italic_regex_u = values(italic_dict_u)
-var bold_regex_u = values(bold_dict_u)
-var strikethrough_regex = values(strikethrough_dict)
+# SEE :HELP /\@<! AND :HELP /\@!
+const CODE_REGEX = values(CODE_DICT)
+const CODEBLOCK_REGEX = values(CODEBLOCK_DICT)
+const ITALIC_REGEX = values(ITALIC_DICT)
+const BOLD_REGEX = values(BOLD_DICT)
+const ITALIC_REGEX_U = values(ITALIC_DICT_U)
+const BOLD_REGEX_U = values(BOLD_DICT_U)
+const STRIKETHROUGH_REGEX = values(STRIKETHROUGH_DICT)
 
 
 # Test file 1
-var src_name_1 = 'testfile_1.md'
-var lines_1 =<< trim END
+const src_name_1 = 'testfile_1.md'
+const lines_1 =<< trim END
       Sed ut perspiciatis **unde omnis iste** natus error sit voluptatem
       accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae
       ab illo inventore *veritatis* et quasi architecto beatae vitae dicta
@@ -73,8 +73,8 @@ var lines_1 =<< trim END
 END
 
 # Test file 2
-var src_name_2 = 'testfile_2.md'
-var lines_2 =<< trim END
+const src_name_2 = 'testfile_2.md'
+const lines_2 =<< trim END
       Sed ut perspiciatis unde omnis iste natus error sit voluptatem
       accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae
       ab illo inventore veritatis et quasi architecto beatae vitae dicta
@@ -125,15 +125,15 @@ def g:Test_GetTextBetweenMarks()
 
   exe $"edit {src_name_1}"
 
-  var A = setcharpos("'A", [0, 4, 32, 0])
-  var B = setcharpos("'B", [0, 10, 1, 0])
-  var expected_text = ['m voluptatem quia voluptas sit',
+  const A = setcharpos("'A", [0, 4, 32, 0])
+  const B = setcharpos("'B", [0, 10, 1, 0])
+  const expected_text = ['m voluptatem quia voluptas sit',
     'aspernatur aut odit aut fugit*, sed quia consequuntur magni dolores eos',
     'qui ratione voluptatem sequi nesciunt.', '',
     'Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet,',
     'consectetur, adipisci velit, `sed quia non numquam eius modi tempora', 'i']
 
-  var actual_text = utils.GetTextBetweenMarks("'A", "'B")
+  const actual_text = utils.GetTextBetweenMarks("'A", "'B")
   assert_true(expected_text == actual_text)
 
   :%bw!
@@ -141,32 +141,41 @@ def g:Test_GetTextBetweenMarks()
 enddef
 
 def g:Test_GetDelimitersRanges()
+  vnew
   Generate_testfile(lines_1, src_name_1)
 
   exe $"edit {src_name_1}"
 
   var expected_ranges = [[[0, 9, 31, 0], [0, 12, 19, 0]]]
-  var actual_ranges = utils.GetDelimitersRanges(code_dict, code_dict)
+  var actual_ranges = utils.GetDelimitersRanges(CODE_DICT, CODE_DICT)
   assert_equal(expected_ranges, actual_ranges)
 
   expected_ranges = [[[0, 3, 20, 0], [0, 3, 28, 0]],
     [[0, 4, 18, 0], [0, 5, 29, 0]]]
-  actual_ranges = utils.GetDelimitersRanges(italic_dict, italic_dict)
+  actual_ranges = utils.GetDelimitersRanges(ITALIC_DICT, ITALIC_DICT)
   assert_equal(expected_ranges, actual_ranges)
 
   expected_ranges = [[[0, 1, 23, 0], [0, 1, 37, 0]],
     [[0, 14, 22, 0], [0, 16, 14, 0]]]
-  actual_ranges = utils.GetDelimitersRanges(bold_dict, bold_dict)
+  actual_ranges = utils.GetDelimitersRanges(BOLD_DICT, BOLD_DICT)
   assert_equal(expected_ranges, actual_ranges)
 
   expected_ranges = [[[0, 12, 33, 0], [0, 12, 66, 0]],
   [[0, 20, 1, 0], [0, 20, 32, 0]],
   [[0, 21, 39, 0], [0, 21, 69, 0]]]
-  actual_ranges = utils.GetDelimitersRanges(strikethrough_dict, strikethrough_dict)
+  actual_ranges = utils.GetDelimitersRanges(STRIKETHROUGH_DICT, STRIKETHROUGH_DICT)
   assert_equal(expected_ranges, actual_ranges)
 
   :%bw!
   Cleanup_testfile(src_name_1)
+enddef
+
+def g:Test_KeysFromValue()
+  const dict = {a: 'foo', b: 'bar', c: 'foo'}
+  const expected_value = ['a', 'c']
+  const target_value = 'foo'
+  const actual_value = utils.KeysFromValue(dict, target_value)
+  assert_equal(expected_value, actual_value)
 enddef
 
 def g:Test_ListComparison()
@@ -200,19 +209,19 @@ def g:Test_IsBetweenMarks()
 
   # Test 1
   cursor(2, 15)
-  echom assert_false(utils.IsBetweenMarks("'p", "'q"))
+  assert_false(utils.IsBetweenMarks("'p", "'q"))
   cursor(8, 3)
-  echom assert_true(utils.IsBetweenMarks("'p", "'q"))
+  assert_true(utils.IsBetweenMarks("'p", "'q"))
 
   # Test 2
   cursor(8, 3)
   setcharpos("'p", [0, 3, 20, 0])
   setcharpos("'q", [0, 3, 28, 0])
-  echom assert_false(utils.IsBetweenMarks("'p", "'q"))
+  assert_false(utils.IsBetweenMarks("'p", "'q"))
 
   setcharpos("'p", [0, 4, 18, 0])
   setcharpos("'q", [0, 5, 29, 0])
-  echom assert_false(utils.IsBetweenMarks("'p", "'q"))
+  assert_false(utils.IsBetweenMarks("'p", "'q"))
 
   :%bw!
   Cleanup_testfile(src_name_1)
@@ -225,45 +234,45 @@ def g:Test_IsInRange()
 
   cursor(5, 18)
   var expected_value = [[0, 4, 18, 0], [0, 5, 29, 0]]
-  var range = utils.IsInRange(italic_dict, italic_dict)
+  var range = utils.IsInRange(ITALIC_DICT, ITALIC_DICT)
   assert_equal(expected_value, range)
 
-  range = utils.IsInRange(bold_dict, bold_dict)
+  range = utils.IsInRange(BOLD_DICT, BOLD_DICT)
   assert_true(empty(range))
 
-  range = utils.IsInRange(code_dict, code_dict)
+  range = utils.IsInRange(CODE_DICT, CODE_DICT)
   assert_true(empty(range))
 
-  range = utils.IsInRange(strikethrough_dict, strikethrough_dict)
+  range = utils.IsInRange(STRIKETHROUGH_DICT, STRIKETHROUGH_DICT)
   assert_true(empty(range))
 
   # Test singularity: cursor on a delimiter
   cursor(14, 21)
-  range = utils.IsInRange(italic_dict, italic_dict)
+  range = utils.IsInRange(ITALIC_DICT, ITALIC_DICT)
   assert_true(empty(range))
 
-  range = utils.IsInRange(bold_dict, bold_dict)
+  range = utils.IsInRange(BOLD_DICT, BOLD_DICT)
   assert_true(empty(range))
 
-  range = utils.IsInRange(code_dict, code_dict)
+  range = utils.IsInRange(CODE_DICT, CODE_DICT)
   assert_true(empty(range))
 
-  range = utils.IsInRange(strikethrough_dict, strikethrough_dict)
+  range = utils.IsInRange(STRIKETHROUGH_DICT, STRIKETHROUGH_DICT)
   assert_true(empty(range))
 
   cursor(21, 43)
   expected_value = [[0, 21, 39, 0], [0, 21, 69, 0]]
-  range = utils.IsInRange(strikethrough_dict, strikethrough_dict)
+  range = utils.IsInRange(STRIKETHROUGH_DICT, STRIKETHROUGH_DICT)
   assert_equal(expected_value, range)
 
   cursor(36, 4)
   expected_value = [[0, 35, 1, 0], [0, 38, 11, 0]]
-  range = utils.IsInRange(codeblock_dict, codeblock_dict)
+  range = utils.IsInRange(CODEBLOCK_DICT, CODEBLOCK_DICT)
   assert_equal(expected_value, range)
 
   cursor(24, 10)
   expected_value = []
-  range = utils.IsInRange(codeblock_dict, codeblock_dict)
+  range = utils.IsInRange(CODEBLOCK_DICT, CODEBLOCK_DICT)
   assert_equal(expected_value, range)
 
   :%bw!
@@ -394,9 +403,9 @@ def g:Test_ZipList()
 enddef
 
 def g:Test_Dict2ListOfDicts()
-  var my_dict = {a: 'foo', b: 'bar', c: 'baz'}
+  var MY_DICT = {a: 'foo', b: 'bar', c: 'baz'}
   var expected_value = [{a: 'foo'}, {b: 'bar'}, {c: 'baz'}]
-  var actual_value = utils.DictToListOfDicts(my_dict)
+  var actual_value = utils.DictToListOfDicts(MY_DICT)
   assert_equal(expected_value, actual_value)
 enddef
 
@@ -415,7 +424,7 @@ def g:Test_SurroundSimple_one_line()
     ]
   cursor(11, 29)
   exe "norm! va[\<esc>"
-  utils.SurroundSimple('*', '*', text_style_dict, text_style_dict)
+  utils.SurroundSimple('*', '*', TEXT_STYLE_DICT, TEXT_STYLE_DICT)
   var actual_value = getline(10, 12)
   assert_equal(expected_value, actual_value)
 
@@ -429,12 +438,12 @@ def g:Test_SurroundSimple_one_line()
     'pro**vident, **(sim**ilique sunt *in* culpa, `qui` officia *deserunt*)**',
     'mollitia) animi, id est laborum et dolorum fuga.'
   ]
-  utils.SurroundSimple('**', '**', text_style_dict, text_style_dict)
+  utils.SurroundSimple('**', '**', TEXT_STYLE_DICT, TEXT_STYLE_DICT)
   actual_value = getline(20, 22)
   assert_equal(expected_value, actual_value)
 
   cursor(19, 53)
-  utils.SurroundSimple('*', '*', text_style_dict, text_style_dict, 'iw')
+  utils.SurroundSimple('*', '*', TEXT_STYLE_DICT, TEXT_STYLE_DICT, 'iw')
   :%bw!
   Cleanup_testfile(src_name_2)
 enddef
@@ -453,7 +462,7 @@ def g:Test_SurroundSimple_multi_line()
     ]
   cursor(25, 12)
   exe "norm! vjj$\<esc>"
-  utils.SurroundSimple('_', '_', text_style_dict, text_style_dict)
+  utils.SurroundSimple('_', '_', TEXT_STYLE_DICT, TEXT_STYLE_DICT)
   var actual_value = getline(25, 27)
   assert_equal(expected_value, actual_value)
 
@@ -464,7 +473,7 @@ def g:Test_SurroundSimple_multi_line()
     ]
   cursor(32, 12)
   exe "norm! 0vG$\<esc>"
-  utils.SurroundSimple('__', '__', text_style_dict, text_style_dict)
+  utils.SurroundSimple('__', '__', TEXT_STYLE_DICT, TEXT_STYLE_DICT)
   actual_value = getline(32, 34)
   assert_equal(expected_value, actual_value)
 
@@ -485,7 +494,7 @@ def g:Test_SurroundSmart_one_line()
     ]
   cursor(3, 38)
   exe "norm! veee\<esc>"
-  utils.SurroundSmart('`', '`', text_style_dict, text_style_dict)
+  utils.SurroundSmart('`', '`', TEXT_STYLE_DICT, TEXT_STYLE_DICT)
   var actual_value = getline(2, 4)
   assert_equal(expected_value, actual_value)
 
@@ -496,9 +505,9 @@ def g:Test_SurroundSmart_one_line()
     'voluptas nulla pariatur?',
     ]
   cursor(15, 13)
-  utils.SurroundSmart('**', '**', text_style_dict, text_style_dict, 'a(')
+  utils.SurroundSmart('**', '**', TEXT_STYLE_DICT, TEXT_STYLE_DICT, 'a(')
   # Do the same operation, nothing should change
-  utils.SurroundSmart('**', '**', text_style_dict, text_style_dict, 'a(')
+  utils.SurroundSmart('**', '**', TEXT_STYLE_DICT, TEXT_STYLE_DICT, 'a(')
   actual_value = getline(14, 16)
   assert_equal(expected_value, actual_value)
 
@@ -510,7 +519,7 @@ def g:Test_SurroundSmart_one_line()
     ]
   cursor(15, 32)
   exe "norm! veee\<esc>"
-  utils.SurroundSmart('**', '**', text_style_dict, text_style_dict)
+  utils.SurroundSmart('**', '**', TEXT_STYLE_DICT, TEXT_STYLE_DICT)
   actual_value = getline(14, 16)
   assert_equal(expected_value, actual_value)
 
@@ -532,7 +541,7 @@ def g:Test_SurroundSmart_one_line_1()
     ]
   cursor(11, 29)
   exe "norm! va[\<esc>"
-  utils.SurroundSmart('*', '*', text_style_dict, text_style_dict)
+  utils.SurroundSmart('*', '*', TEXT_STYLE_DICT, TEXT_STYLE_DICT)
   var actual_value = getline(10, 12)
   assert_equal(expected_value, actual_value)
 
@@ -545,7 +554,7 @@ def g:Test_SurroundSmart_one_line_1()
     'pro**vident, (similique sunt in culpa, qui officia deserunt)**',
     'mollitia) animi, id est laborum et dolorum fuga.'
   ]
-  utils.SurroundSmart('**', '**', text_style_dict, text_style_dict)
+  utils.SurroundSmart('**', '**', TEXT_STYLE_DICT, TEXT_STYLE_DICT)
   actual_value = getline(20, 22)
   assert_equal(expected_value, actual_value)
 
@@ -558,7 +567,7 @@ def g:Test_SurroundSmart_one_line_1()
     'blandit*iis pra(esentium voluptatum deleniti atque) corrupti*, quos',
     'dolores et quas molestias excepturi sint, obcaecati cupiditate non',
   ]
-  utils.SurroundSmart('*', '*', text_style_dict, text_style_dict)
+  utils.SurroundSmart('*', '*', TEXT_STYLE_DICT, TEXT_STYLE_DICT)
   actual_value = getline(18, 20)
   assert_equal(expected_value, actual_value)
 
@@ -575,30 +584,30 @@ def g:Test_RemoveSurrounding_one_line()
   cursor(10, 30)
   var expected_value =
     'incidunt ut (labore et dolore magnam) aliquam quaerat voluptatem. Ut'
-  utils.RemoveSurrounding(strikethrough_dict, strikethrough_dict)
+  utils.RemoveSurrounding(STRIKETHROUGH_DICT, STRIKETHROUGH_DICT)
   var actual_value = getline(10)
   assert_equal(expected_value, actual_value)
 
   cursor(11, 40)
   expected_value =
     'enim ad `minima [veniam`, quis nostrum] exercitationem ullam corporis'
-  utils.RemoveSurrounding(strikethrough_dict, strikethrough_dict)
+  utils.RemoveSurrounding(STRIKETHROUGH_DICT, STRIKETHROUGH_DICT)
   actual_value = getline(11)
   assert_equal(expected_value, actual_value)
 
   cursor(14, 60)
   expected_value =
     'Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse'
-  utils.RemoveSurrounding(bold_dict, bold_dict)
+  utils.RemoveSurrounding(BOLD_DICT, BOLD_DICT)
   actual_value = getline(14)
   assert_equal(expected_value, actual_value)
 
   cursor(19, 18)
-  utils.RemoveSurrounding(italic_dict, italic_dict)
+  utils.RemoveSurrounding(ITALIC_DICT, ITALIC_DICT)
   cursor(19, 30)
-  utils.RemoveSurrounding(code_dict, code_dict)
+  utils.RemoveSurrounding(CODE_DICT, CODE_DICT)
   cursor(19, 47)
-  utils.RemoveSurrounding(italic_dict, italic_dict)
+  utils.RemoveSurrounding(ITALIC_DICT, ITALIC_DICT)
   expected_value =
     'blanditiis pra(esentium voluptatum deleniti atque) corrupti, quos'
   actual_value = getline(19)
@@ -622,7 +631,7 @@ def g:Test_SurroundSmart_multi_line()
     ]
   cursor(25, 21)
   exe "norm! v27ggt,\<esc>"
-  utils.SurroundSmart('_', '_', text_style_dict, text_style_dict)
+  utils.SurroundSmart('_', '_', TEXT_STYLE_DICT, TEXT_STYLE_DICT)
   var actual_value = getline(25, 27)
   assert_equal(expected_value, actual_value)
 
@@ -633,7 +642,7 @@ def g:Test_SurroundSmart_multi_line()
     ]
   cursor(18, 1)
   exe "norm! 0vj$\<esc>"
-  utils.SurroundSmart('~~', '~~', text_style_dict, text_style_dict)
+  utils.SurroundSmart('~~', '~~', TEXT_STYLE_DICT, TEXT_STYLE_DICT)
   actual_value = getline(18, 19)
   assert_equal(expected_value, actual_value)
 
@@ -653,7 +662,7 @@ def g:Test_RemoveSurrounding_multi_line()
     'repudiandae sint et molestiae non recusandae.',
     ]
   cursor(28, 25)
-  utils.RemoveSurrounding(code_dict, code_dict)
+  utils.RemoveSurrounding(CODE_DICT, CODE_DICT)
   var actual_value = getline(28, 30)
   assert_equal(expected_value, actual_value)
 
@@ -663,7 +672,7 @@ def g:Test_RemoveSurrounding_multi_line()
     'voluptatibus maiores',
     ]
   cursor(32, 28)
-  utils.RemoveSurrounding(italic_dict, italic_dict)
+  utils.RemoveSurrounding(ITALIC_DICT, ITALIC_DICT)
   actual_value = getline(32, 33)
   assert_equal(expected_value, actual_value)
 
@@ -692,18 +701,18 @@ def g:Test_set_code_block()
     ]
   cursor(3, 29)
   exe "norm! v3j\<esc>"
-  utils.SetBlock(codeblock_dict, codeblock_dict)
+  utils.SetBlock(CODEBLOCK_DICT, CODEBLOCK_DICT)
   var actual_value = getline(3, 10)
   assert_equal(expected_value, actual_value)
 
   # Check that it won't undo
   cursor(6, 10)
-  utils.SetBlock(codeblock_dict, codeblock_dict)
+  utils.SetBlock(CODEBLOCK_DICT, CODEBLOCK_DICT)
   assert_equal(expected_value, actual_value)
 
   # Check that it won't undo when on the border
   cursor(4, 2)
-  utils.SetBlock(codeblock_dict, codeblock_dict)
+  utils.SetBlock(CODEBLOCK_DICT, CODEBLOCK_DICT)
   assert_equal(expected_value, actual_value)
 
   # check with motion
@@ -716,7 +725,7 @@ def g:Test_set_code_block()
     '```',
     ]
   cursor(12, 1)
-  utils.SetBlock(codeblock_dict, codeblock_dict, '3j')
+  utils.SetBlock(CODEBLOCK_DICT, CODEBLOCK_DICT, '3j')
   actual_value = getline(13, 18)
   assert_equal(expected_value, actual_value)
 
@@ -738,7 +747,7 @@ def g:Test_unset_code_block()
     'repellat.'
   ]
   cursor(35, 1)
-  utils.UnsetBlock(codeblock_dict, codeblock_dict)
+  utils.UnsetBlock(CODEBLOCK_DICT, CODEBLOCK_DICT)
   var actual_value = getline(34, 37)
   assert_equal(expected_value, actual_value)
 

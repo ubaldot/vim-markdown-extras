@@ -1,5 +1,8 @@
 vim9script
 
+export const URL_PREFIXES = [ 'https://', 'http://', 'ftp://', 'ftps://',
+    'sftp://', 'telnet://', 'file://']
+
 export def Echoerr(msg: string)
   echohl ErrorMsg | echom $'[markdown_extras] {msg}' | echohl None
 enddef
@@ -8,9 +11,10 @@ export def Echowarn(msg: string)
   echohl WarningMsg | echom $'[markdown_extras] {msg}' | echohl None
 enddef
 
-def KeysFromValue(dict: dict<any>, target_value: string)
+# TODO it may be limiting to have 'string' only
+export def KeysFromValue(dict: dict<string>, target_value: string): list<string>
     # Given a value, return all the keys associated to it
-    return keys(filter(copy(dict), 'v:val == target_value'))
+    return keys(filter(copy(dict), $'v:val == "{target_value}"'))
 enddef
 
 export def DictToListOfDicts(d: dict<any>): list<dict<any>>
@@ -311,7 +315,7 @@ export def SurroundSmart(open_delimiter: string,
   # possible delimiters left between them.
 
   var delimiters_to_remove = values(
-    extend(open_delimiters_dict, close_delimiters_dict)
+    extendnew(open_delimiters_dict, close_delimiters_dict)
   )
   # If on the same line
   if lA == lB
@@ -622,7 +626,6 @@ export def SetBlock(open_block: dict<string>,
   else
     label = input('Enter code-block language: ')
   endif
-  echom label
 
   # TODO return or remove surrounding?
   if !empty(IsInRange(open_block, close_block))
