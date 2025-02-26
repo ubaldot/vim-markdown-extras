@@ -20,9 +20,6 @@ const CODEBLOCK_REGEX = '```'
 # Of the form '[bla bla](https://example.com)' or '[bla bla][12]'
 # TODO: if you only want numbers as reference, line [my page][11], then you
 # have to replace the last part '\[[^]]+\]' with '\[\d+\]'
-# const LINK_OPEN_REGEX = '\v(\\|])@<!\zs\[\ze[^]]+\](\((http|https):[^)]+\)|\[[^]]+\])'
-# const LINK_CLOSE_REGEX = '\v(\\|])@<!\[[^]]+\zs\]\ze(\((http|https):[^)]+\)|\[[^]]+\])'
-#
 # TODO: I had to remove the :// at the end of each prefix because otherwise
 # the regex won't work.
 const URL_PREFIXES = links.URL_PREFIXES

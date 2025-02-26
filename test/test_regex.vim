@@ -184,7 +184,7 @@ def g:Test_links_regex()
   setlocal conceallevel=0
 
   var expected_pos = [[6, 3], [10, 3], [12, 3],
-    [12, 40], [27, 6], [29, 3], [32, 3], [0, 0]]
+    [12, 40], [27, 6], [29, 3], [32, 3], [32, 47], [0, 0]]
   var actual_pos = []
   var tmp = []
   cursor(1, 1)
@@ -195,7 +195,7 @@ def g:Test_links_regex()
   assert_equal(expected_pos, actual_pos)
 
   expected_pos = [[6, 16], [10, 8], [12, 10], [12, 47],
-      [27, 16], [29, 19], [32, 15], [0, 0]]
+      [27, 16], [29, 19], [32, 15], [32, 52], [0, 0]]
   actual_pos = []
   tmp = []
   cursor(1, 1)
@@ -203,7 +203,7 @@ def g:Test_links_regex()
     tmp = searchpos(LINK_CLOSE_REGEX, 'W')
     add(actual_pos, tmp)
   endwhile
-  # assert_equal(expected_pos, actual_pos)
+  assert_equal(expected_pos, actual_pos)
 
   :%bw!
   Cleanup_testfile(src_name_2)
