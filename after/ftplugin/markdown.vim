@@ -5,8 +5,8 @@ import autoload "../../lib/preview.vim"
 import autoload "../../lib/links.vim"
 import autoload '../../lib/utils.vim'
 
+# --------- Constants ---------------------------------
 const CODE_REGEX = '\v(\\|`)@<!``@!'
-# var italic_regex = '\v(\\|\*)@<!\*\*@!'
 # The following picks standalone * and the last * of \**
 # It excludes escaped * (i.e. \*\*\*, and sequences like ****)
 const ITALIC_REGEX = '\v((\\|\*)@<!|(\\\*))@<=\*\*@!'
@@ -47,21 +47,12 @@ export const BOLD_DICT = {'**': BOLD_REGEX}
 export const ITALIC_DICT_U = {'_': ITALIC_REGEX_U}
 export const BOLD_DICT_U = {'__': BOLD_REGEX_U}
 export const STRIKETHROUGH_DICT = {'~~': STRIKETHROUGH_REGEX}
+# --------- End Constants ---------------------------------
 
+# TODO put this in an autocmd?
 links.GenerateLinksDict()
 
-var Surround = utils.SurroundSmart
-if exists('g:markdown_extras_config')
-    && has_key(g:markdown_extras_config, 'smart_textstyle')
-    && g:markdown_extras_config['smart_textstyle']
-  Surround = utils.SurroundSimple
-endif
-
-if exists('g:markdown_extras_config') != 0
-    && has_key(g:markdown_extras_config, 'leader')
-    b:mapleader = g:markdown_extras_config['leader']
-endif
-
+# -------------- prettier ------------------------
 var use_prettier = true
 if exists('g:markdown_extras_config') != 0
     && has_key(g:markdown_extras_config, 'use_prettier')
@@ -90,8 +81,9 @@ if use_prettier && executable('prettier')
 else
   utils.Echowarn("'prettier' not installed!'")
 endif
+# --------------End prettier ------------------------
 
-# pandoc
+# -------------------- pandoc -----------------------
 var use_pandoc = true
 if exists('g:markdown_extras_config') != 0
     && has_key(g:markdown_extras_config, 'use_pandoc')
@@ -139,22 +131,26 @@ if use_pandoc && executable('pandoc')
 else
   utils.Echowarn("'pandoc' is not installed.")
 endif
+# ------------------- End pandoc ------------------------------------
+
 
 # -------- Mappings ------------
 # This is very ugly: you add a - [ ] by pasting the content of register 'o'
 setreg("o", "- [ ] ")
 
+# Redefinition of <cr>
+inoremap <buffer> <silent> <CR> <ScriptCmd>funcs.ContinueList()<CR>
+
 if exists(':OutlineToggle') != 0
   nnoremap <buffer> <silent> <leader>o <Cmd>OutlineToggle ^- [ <cr>
 endif
-
-# Redefinition of <cr>
-inoremap <buffer> <silent> <CR> <ScriptCmd>funcs.ContinueList()<CR>
 
 if empty(maparg('<Plug>MarkdownToggleCheck'))
   noremap <script> <buffer> <Plug>MarkdownToggleCheck
         \ <ScriptCmd>funcs.ToggleMark()<cr>
 endif
+#
+# TODO: to be reviewed
 if empty(maparg('<Plug>MarkdownAddLink'))
   noremap <script> <buffer> <Plug>MarkdownAddLink
         \ <ScriptCmd>links.HandleLink()<cr>
@@ -163,6 +159,58 @@ if empty(maparg('<Plug>MarkdownRemoveLink'))
   noremap <script> <buffer> <Plug>MarkdownRemoveLink
         \ <ScriptCmd>links.RemoveLink()<cr>
 endif
+# -------------------------------------------
+
+if empty(maparg('<Plug>MarkdownReferencePreview'))
+  noremap <script> <buffer> <Plug>MarkdownReferencePreview
+        \  <ScriptCmd>preview.PreviewPopup()<cr>
+endif
+
+# Text styles
+#
+var Surround = utils.SurroundSmart
+if exists('g:markdown_extras_config')
+    && has_key(g:markdown_extras_config, 'smart_textstyle')
+    && !g:markdown_extras_config['smart_textstyle']
+  Surround = utils.SurroundSimple
+endif
+
+def SetSurroundOpFunc(open_string: string,
+    close_string: string,
+    all_open_styles: dict<string>,
+    all_close_styles: dict<string>)
+
+  # TODO: you may want to restore
+  &l:opfunc = function(
+    Surround, [open_string, close_string, all_open_styles, all_close_styles]
+  )
+enddef
+
+if empty(maparg('<Plug>MarkdownBold'))
+  noremap <script> <buffer> <Plug>MarkdownBold
+        \ <ScriptCmd>SetSurroundOpFunc('**', '**',
+        \ TEXT_STYLE_DICT, TEXT_STYLE_DICT)<cr>g@
+endif
+
+if empty(maparg('<Plug>MarkdownItalic'))
+  noremap <script> <buffer> <Plug>MarkdownItalic
+        \ <ScriptCmd>SetSurroundOpFunc('*', '*',
+        \ TEXT_STYLE_DICT, TEXT_STYLE_DICT)<cr>g@
+endif
+
+if empty(maparg('<Plug>MarkdownStrikethrough'))
+  noremap <script> <buffer> <Plug>MarkdownStrikethrough
+        \ <ScriptCmd>SetSurroundOpFunc('~~', '~~',
+        \ TEXT_STYLE_DICT, TEXT_STYLE_DICT)<cr>g@
+endif
+
+if empty(maparg('<Plug>MarkdownCode'))
+  noremap <script> <buffer> <Plug>MarkdownCode
+        \ <ScriptCmd>SetSurroundOpFunc('`', '`',
+        \ TEXT_STYLE_DICT, TEXT_STYLE_DICT)<cr>g@
+endif
+
+# ----------- TODO:TO BE REVIEWED ----------------------
 if empty(maparg('<Plug>MarkdownToggleCodeBock'))
   noremap <script> <buffer> <Plug>MarkdownToggleCodeBlock
         \  <ScriptCmd>funcs.ToggleBlock('```')<cr>
@@ -171,10 +219,7 @@ if empty(maparg('<Plug>MarkdownToggleCodeBockVisual'))
   noremap <script> <buffer> <Plug>MarkdownToggleCodeBlockVisual
   \ <esc><ScriptCmd>funcs.ToggleBlock('```', line("'<") - 1, line("'>") + 1)<cr>
 endif
-if empty(maparg('<Plug>MarkdownReferencePreview'))
-  noremap <script> <buffer> <Plug>MarkdownReferencePreview
-        \  <ScriptCmd>preview.PreviewPopup()<cr>
-endif
+# ------------------------------------------------------------
 
 
 # use_default_mappings
@@ -184,78 +229,35 @@ if exists('g:markdown_extras_config') != 0
       && g:markdown_extras_config['use_default_mappings']
   use_default_mappings = g:markdown_extras_config['use_default_mappings']
 endif
+# -----------------------------------------------------------------
 
 if use_default_mappings
   # ------------ Text style mappings ------------------
-  #
-  # TEXT-OBJECTS text-style mappings
-  # Text-obects i` and a` are removed since they refer to code
-  # 'aw', 'aW', 'as, 'is' are removed as it generate a non-valid markdown
-  var all_Vim_text_objects = ['aw', 'iw', 'iW', 'as', 'is', 'ap', 'ip',
-    'a]', 'a[', 'i]', 'i[', 'a)', 'a(', 'ab', 'i)', 'i(', 'ib', 'a>', 'a<',
-    'i>', 'i<', 'at', 'it', 'a}', 'a{', 'aB', 'i}', 'i{', 'iB', 'a\"', 'a''',
-    'i\"', 'i''']
-
-  for text_object in all_Vim_text_objects
-    # Italic
-    if maparg($"<leader>i{text_object}", "n") == ""
-      exe $'nnoremap <buffer> <leader>i{text_object} '
-      .. $'<ScriptCmd>utils.SurroundNew("*", "{text_object}")<cr>'
-    endif
-
-    # Bold
-    if maparg($"<leader>b{text_object}", "n") == ""
-      exe $'nnoremap <buffer> <leader>b{text_object} '
-      .. $'<ScriptCmd>utils.SurroundNew("\*\*", "{text_object}")<cr>'
-    endif
-
-    # Strikethrough
-    if maparg($"<leader>s{text_object}", "n") == ""
-      exe $'nnoremap <buffer> <leader>s{text_object} '
-      .. $'<ScriptCmd>utils.SurroundNew("~~", "{text_object}")<cr>'
-    endif
-
-    # Code
-    if maparg($"<leader>c{text_object}", "n") == ""
-      exe $'nnoremap <buffer> <leader>c{text_object} '
-      .. $'<ScriptCmd>utils.SurroundNew("`", "{text_object}")<cr>'
-    endif
-  endfor
-
-  # VISUAL text-style mapping
-  # Italic
-  if maparg($"<leader>i", "x") == ""
-     xnoremap <buffer> <leader>i
-          \ <esc><ScriptCmd>utils.SurroundNew('*')<cr>
+  if !hasmapto('<Plug>MarkdownBold')
+    nnoremap <buffer> <leader>b <Plug>MarkdownBold
+    xnoremap <buffer> <leader>b <Plug>MarkdownBold
   endif
 
-  # Bold
-  if maparg($"<leader>b", "x") == ""
-     xnoremap <buffer> <leader>b
-          \ <esc><ScriptCmd>utils.SurroundNew('**')<cr>
+  if !hasmapto('<Plug>MarkdownItalic')
+    nnoremap <buffer> <leader>i <Plug>MarkdownItalic
+    xnoremap <buffer> <leader>i <Plug>MarkdownItalic
   endif
 
-  # Strikethrough
-  if maparg($"<leader>s", "x") == ""
-     xnoremap <buffer> <leader>s
-          \ <esc><ScriptCmd>utils.SurroundNew('~~')<cr>
+  if !hasmapto('<Plug>MarkdownStrikethrough')
+    nnoremap <buffer> <leader>s <Plug>MarkdownStrikethrough
+    xnoremap <buffer> <leader>s <Plug>MarkdownStrikethrough
   endif
 
-  # Code
-  if maparg($"<leader>c", "x") == ""
-     xnoremap <buffer> <leader>c
-          \ <esc><ScriptCmd>utils.SurroundNew('`')<cr>
-  endif
-
-  # ----------------- Other mappings ------------------------
   if !hasmapto('<Plug>MarkdownCode')
-    xnoremap <buffer> <silent> <leader>c <Plug>MarkdownCode
+    nnoremap <buffer> <leader>c <Plug>MarkdownCode
+    xnoremap <buffer> <leader>c <Plug>MarkdownCode
   endif
-# Toggle checkboxes
+
+  # Toggle checkboxes
   if !hasmapto('<Plug>MarkdownToggleCheck')
     nnoremap <buffer> <silent> <leader>x <Plug>MarkdownToggleCheck
   endif
-# Handle links
+  # ---------- TODO: to be reviewed ------------------
   if !hasmapto('<Plug>MarkdownAddLink')
     nnoremap <buffer> <silent> <enter> <Plug>MarkdownAddLink
   endif
@@ -268,6 +270,7 @@ if use_default_mappings
   if !hasmapto('<Plug>MarkdownToggleCodeBlockVisual')
     xnoremap <buffer> <silent> <leader>cc <Plug>MarkdownToggleCodeBlockVisual
   endif
+  # ------------------------------------------------------
   if !hasmapto('<Plug>MarkdownReferencePreview')
     nnoremap <buffer> <silent> K <Plug>MarkdownReferencePreview
   endif

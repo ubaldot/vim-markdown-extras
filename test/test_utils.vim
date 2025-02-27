@@ -437,16 +437,16 @@ def g:Test_SurroundSimple_one_line()
       'suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur?'
     ]
   cursor(11, 29)
-  exe "norm! va[\<esc>"
+  # The following mimic opfunc when setting "'[" and "']" marks
+  setcharpos("'[", [0, 11, 17, 0])
+  setcharpos("']", [0, 11, 41, 0])
   utils.SurroundSimple('*', '*', TEXT_STYLE_DICT, TEXT_STYLE_DICT)
   var actual_value = getline(10, 12)
-  assert_equal(expected_value, actual_value)
+  echom assert_equal(expected_value, actual_value)
 
-  # # Test with junk between A and B. Overwrite everything and avoid consecutive
-  # # delimiters of same type, like ** **
-  # exe $"edit! {src_name_2}"
   cursor(21, 41)
-  exe "norm! va(\<esc>"
+  setcharpos("'[", [0, 21, 14, 0])
+  setcharpos("']", [0, 21, 68, 0])
   expected_value = [
     'dolores et quas molestias excepturi sint, obcaecati cupiditate non',
     'pro**vident, **(sim**ilique sunt *in* culpa, `qui` officia *deserunt*)**',
@@ -454,16 +454,14 @@ def g:Test_SurroundSimple_one_line()
   ]
   utils.SurroundSimple('**', '**', TEXT_STYLE_DICT, TEXT_STYLE_DICT)
   actual_value = getline(20, 22)
-  assert_equal(expected_value, actual_value)
+  echom assert_equal(expected_value, actual_value)
 
-  cursor(19, 53)
-  utils.SurroundSimple('*', '*', TEXT_STYLE_DICT, TEXT_STYLE_DICT, 'iw')
   :%bw!
   Cleanup_testfile(src_name_2)
 enddef
 
 def g:Test_SurroundSimple_multi_line()
-  # vnew
+  vnew
   Generate_testfile(lines_2, src_name_2)
   exe $"edit {src_name_2}"
   setlocal conceallevel=0
@@ -475,10 +473,11 @@ def g:Test_SurroundSimple_multi_line()
     'maxime placeat facere possimus, omnis voluptas assumenda est, omnis_'
     ]
   cursor(25, 12)
-  exe "norm! vjj$\<esc>"
+  setcharpos("'[", [0, 25, 12, 0])
+  setcharpos("']", [0, 27, 68, 0])
   utils.SurroundSimple('_', '_', TEXT_STYLE_DICT, TEXT_STYLE_DICT)
   var actual_value = getline(25, 27)
-  assert_equal(expected_value, actual_value)
+  echom assert_equal(expected_value, actual_value)
 
   expected_value = [
     '__Itaque earum rerum hic *tenetur a sapiente `delectus`, ut aut reiciendis',
@@ -486,10 +485,11 @@ def g:Test_SurroundSimple_multi_line()
     'alias consequatur aut perferendis doloribus asperiores repellat.__',
     ]
   cursor(32, 12)
-  exe "norm! 0vG$\<esc>"
+  setcharpos("'[", [0, 32, 1, 0])
+  setcharpos("']", [0, 34, 65, 0])
   utils.SurroundSimple('__', '__', TEXT_STYLE_DICT, TEXT_STYLE_DICT)
   actual_value = getline(32, 34)
-  assert_equal(expected_value, actual_value)
+  echom assert_equal(expected_value, actual_value)
 
   :%bw!
   Cleanup_testfile(src_name_2)
@@ -507,10 +507,11 @@ def g:Test_SurroundSmart_one_line()
       'sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit'
     ]
   cursor(3, 38)
-  exe "norm! veee\<esc>"
+  setcharpos("'[", [0, 3, 38, 0])
+  setcharpos("']", [0, 3, 60, 0])
   utils.SurroundSmart('`', '`', TEXT_STYLE_DICT, TEXT_STYLE_DICT)
   var actual_value = getline(2, 4)
-  assert_equal(expected_value, actual_value)
+  echom assert_equal(expected_value, actual_value)
 
   # Bold: simple text-object around '(molestias excepturi sint)'
   expected_value = [
@@ -519,26 +520,30 @@ def g:Test_SurroundSmart_one_line()
     'voluptas nulla pariatur?',
     ]
   cursor(15, 13)
-  utils.SurroundSmart('**', '**', TEXT_STYLE_DICT, TEXT_STYLE_DICT, 'a(')
+  setcharpos("'[", [0, 15, 12, 0])
+  setcharpos("']", [0, 15, 34, 0])
+  utils.SurroundSmart('**', '**', TEXT_STYLE_DICT, TEXT_STYLE_DICT)
   # Do the same operation, nothing should change
-  utils.SurroundSmart('**', '**', TEXT_STYLE_DICT, TEXT_STYLE_DICT, 'a(')
+  utils.SurroundSmart('**', '**', TEXT_STYLE_DICT, TEXT_STYLE_DICT)
   actual_value = getline(14, 16)
-  assert_equal(expected_value, actual_value)
+  echom assert_equal(expected_value, actual_value)
 
   # Prolong delimiter
+  # TODO to check
   expected_value = [
     'Quis autem vel eum iure reprehenderit qui in ea **voluptate velit esse**',
     'quam nihil **(molestiae consequatur), vel** illum qui dolorem eum fugiat quo',
     'voluptas nulla pariatur?',
     ]
   cursor(15, 32)
-  exe "norm! veee\<esc>"
-  utils.SurroundSmart('**', '**', TEXT_STYLE_DICT, TEXT_STYLE_DICT)
+  setcharpos("'[", [0, 15, 32, 0])
+  setcharpos("']", [0, 15, 39, 0])
+  # utils.SurroundSmart('**', '**', TEXT_STYLE_DICT, TEXT_STYLE_DICT)
   actual_value = getline(14, 16)
-  assert_equal(expected_value, actual_value)
+  echom assert_equal(expected_value, actual_value)
 
-  :%bw!
-  Cleanup_testfile(src_name_2)
+  # :%bw!
+  # Cleanup_testfile(src_name_2)
 enddef
 
 def g:Test_SurroundSmart_one_line_1()

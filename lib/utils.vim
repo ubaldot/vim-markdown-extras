@@ -122,7 +122,11 @@ export def SurroundSimple(open_delimiter: string,
     close_delimiter: string,
     open_delimiters_dict: dict<string>,
     close_delimiters_dict: dict<string>,
-    text_object: string = '')
+    type: string = '')
+
+  if getcharpos("'[") == getcharpos("']")
+    return
+  endif
 
   var open_string = open_delimiter
   var open_regex = open_delimiters_dict[open_string]
@@ -131,26 +135,15 @@ export def SurroundSimple(open_delimiter: string,
   var close_string = close_delimiter
   var close_regex = close_delimiters_dict[close_string]
   var close_delimiter_dict = {close_string: close_regex}
-  # Set marks
-  var A = getcharpos("'<")
-  var B = getcharpos("'>")
-  if !empty(text_object)
-    var text_object_dict = GetTextObject(text_object)
-    A = text_object_dict.start
-    B = text_object_dict.end
-  endif
 
   # line and column of point A
-  var lA = A[1]
-  var cA = A[2]
+  var lA = line("'[")
+  var cA = col("'[")
 
   # line and column of point B
-  var lB = B[1]
-  var cB = B[2]
+  var lB = line("']")
+  var cB = col("']")
 
-  if A == B
-    return
-  endif
 
   var toA = strcharpart(getline(lA), 0, cA - 1) .. open_string
   var fromB = close_string .. strcharpart(getline(lB), cB)
@@ -178,7 +171,11 @@ export def SurroundSmart(open_delimiter: string,
     close_delimiter: string,
     open_delimiters_dict: dict<string>,
     close_delimiters_dict: dict<string>,
-    text_object: string = '')
+    type: string = '')
+
+  if getcharpos("'[") == getcharpos("']")
+    return
+  endif
 
   var open_string = open_delimiter
   var open_regex = open_delimiters_dict[open_string]
@@ -187,28 +184,16 @@ export def SurroundSmart(open_delimiter: string,
   var close_string = close_delimiter
   var close_regex = close_delimiters_dict[close_string]
   var close_delimiter_dict = {close_string: close_regex}
-  # Set marks
-  var A = getcharpos("'<")
-  var B = getcharpos("'>")
-  if !empty(text_object)
-    # GetTextObject is called for setting '[ and '] marks through a yank.
-    var text_object_dict = GetTextObject(text_object)
-    A = text_object_dict.start
-    B = text_object_dict.end
-  endif
-
+  #
   # line and column of point A
-  var lA = A[1]
-  var cA = A[2]
+  var lA = line("'[")
+  var cA = col("'[")
 
   # line and column of point B
-  var lB = B[1]
-  var cB = B[2]
-
-  if A == B
-    return
-  endif
-
+  var lB = line("']")
+  var cB = col("']")
+  echom getcharpos("']")
+  echom cB
   # -------- SMART DELIMITERS BEGIN ---------------------------
   # We check conditions like the following and we adjust the style
   # delimiters
