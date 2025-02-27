@@ -142,7 +142,7 @@ setreg("o", "- [ ] ")
 inoremap <buffer> <silent> <CR> <ScriptCmd>funcs.ContinueList()<CR>
 
 if exists(':OutlineToggle') != 0
-  nnoremap <buffer> <silent> <leader>o <Cmd>OutlineToggle ^- [ <cr>
+  nnoremap <buffer> <silent> <localleader>o <Cmd>OutlineToggle ^- [ <cr>
 endif
 
 if empty(maparg('<Plug>MarkdownToggleCheck'))
@@ -167,7 +167,6 @@ if empty(maparg('<Plug>MarkdownReferencePreview'))
 endif
 
 # Text styles
-#
 var Surround = utils.SurroundSmart
 if exists('g:markdown_extras_config')
     && has_key(g:markdown_extras_config, 'smart_textstyle')
@@ -197,6 +196,18 @@ if empty(maparg('<Plug>MarkdownItalic'))
         \ TEXT_STYLES_DICT, TEXT_STYLES_DICT)<cr>g@
 endif
 
+if empty(maparg('<Plug>MarkdownBoldUnderscore'))
+  noremap <script> <buffer> <Plug>MarkdownBoldUnderscore
+        \ <ScriptCmd>SetSurroundOpFunc('__', '__',
+        \ TEXT_STYLES_DICT, TEXT_STYLES_DICT)<cr>g@
+endif
+
+if empty(maparg('<Plug>MarkdownItalicUnderscore'))
+  noremap <script> <buffer> <Plug>MarkdownItalicUnderscore
+        \ <ScriptCmd>SetSurroundOpFunc('_', '_',
+        \ TEXT_STYLES_DICT, TEXT_STYLES_DICT)<cr>g@
+endif
+
 if empty(maparg('<Plug>MarkdownStrikethrough'))
   noremap <script> <buffer> <Plug>MarkdownStrikethrough
         \ <ScriptCmd>SetSurroundOpFunc('~~', '~~',
@@ -220,7 +231,6 @@ if empty(maparg('<Plug>MarkdownToggleCodeBockVisual'))
 endif
 # ------------------------------------------------------------
 
-
 # use_default_mappings
 var use_default_mappings = true
 if exists('g:markdown_extras_config') != 0
@@ -233,28 +243,38 @@ endif
 if use_default_mappings
   # ------------ Text style mappings ------------------
   if !hasmapto('<Plug>MarkdownBold')
-    nnoremap <buffer> <leader>b <Plug>MarkdownBold
-    xnoremap <buffer> <leader>b <Plug>MarkdownBold
+    nnoremap <buffer> <localleader>b <Plug>MarkdownBold
+    xnoremap <buffer> <localleader>b <Plug>MarkdownBold
+  endif
+
+  if !hasmapto('<Plug>MarkdownBoldUnderscore')
+    nnoremap <buffer> <localleader>b <Plug>MarkdownBoldUnderscore
+    xnoremap <buffer> <localleader>b <Plug>MarkdownBoldUnderscore
   endif
 
   if !hasmapto('<Plug>MarkdownItalic')
-    nnoremap <buffer> <leader>i <Plug>MarkdownItalic
-    xnoremap <buffer> <leader>i <Plug>MarkdownItalic
+    nnoremap <buffer> <localleader>i <Plug>MarkdownItalic
+    xnoremap <buffer> <localleader>i <Plug>MarkdownItalic
+  endif
+
+  if !hasmapto('<Plug>MarkdownItalic')
+    nnoremap <buffer> <localleader>i_ <Plug>MarkdownItalicUnderscore
+    xnoremap <buffer> <localleader>i_ <Plug>MarkdownItalicUnderscore
   endif
 
   if !hasmapto('<Plug>MarkdownStrikethrough')
-    nnoremap <buffer> <leader>s <Plug>MarkdownStrikethrough
-    xnoremap <buffer> <leader>s <Plug>MarkdownStrikethrough
+    nnoremap <buffer> <localleader>s <Plug>MarkdownStrikethrough
+    xnoremap <buffer> <localleader>s <Plug>MarkdownStrikethrough
   endif
 
   if !hasmapto('<Plug>MarkdownCode')
-    nnoremap <buffer> <leader>c <Plug>MarkdownCode
-    xnoremap <buffer> <leader>c <Plug>MarkdownCode
+    nnoremap <buffer> <localleader>c <Plug>MarkdownCode
+    xnoremap <buffer> <localleader>c <Plug>MarkdownCode
   endif
 
   # Toggle checkboxes
   if !hasmapto('<Plug>MarkdownToggleCheck')
-    nnoremap <buffer> <silent> <leader>x <Plug>MarkdownToggleCheck
+    nnoremap <buffer> <silent> <localleader>x <Plug>MarkdownToggleCheck
   endif
   # ---------- TODO: to be reviewed ------------------
   if !hasmapto('<Plug>MarkdownAddLink')
@@ -264,10 +284,10 @@ if use_default_mappings
     nnoremap <buffer> <silent> <backspace> <Plug>MarkdownRemoveLink
   endif
   if !hasmapto('<Plug>MarkdownToggleCodeBlock')
-    nnoremap <buffer> <silent> <leader>cc <Plug>MarkdownToggleCodeBlock
+    nnoremap <buffer> <silent> <localleader>cc <Plug>MarkdownToggleCodeBlock
   endif
   if !hasmapto('<Plug>MarkdownToggleCodeBlockVisual')
-    xnoremap <buffer> <silent> <leader>cc <Plug>MarkdownToggleCodeBlockVisual
+    xnoremap <buffer> <silent> <localleader>cc <Plug>MarkdownToggleCodeBlockVisual
   endif
   # ------------------------------------------------------
   if !hasmapto('<Plug>MarkdownReferencePreview')
