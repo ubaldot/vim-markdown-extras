@@ -221,13 +221,18 @@ if empty(maparg('<Plug>MarkdownCode'))
 endif
 
 # ----------- TODO:TO BE REVIEWED ----------------------
-if empty(maparg('<Plug>MarkdownToggleCodeBock'))
-  noremap <script> <buffer> <Plug>MarkdownToggleCodeBlock
-        \  <ScriptCmd>funcs.ToggleBlock('```')<cr>
-endif
-if empty(maparg('<Plug>MarkdownToggleCodeBockVisual'))
-  noremap <script> <buffer> <Plug>MarkdownToggleCodeBlockVisual
-  \ <esc><ScriptCmd>funcs.ToggleBlock('```', line("'<") - 1, line("'>") + 1)<cr>
+
+def SetCodeBlock(open_block: dict<string>,
+    close_block: dict<string>)
+
+  &l:opfunc = function(
+    utils.SetBlock, [open_block, close_block]
+  )
+enddef
+
+if empty(maparg('<Plug>MarkdownCodeBlock'))
+  noremap <script> <buffer> <Plug>MarkdownCodeBlock
+        \ <ScriptCmd>SetCodeBlock(CODEBLOCK_DICT, CODEBLOCK_DICT)<cr>g@
 endif
 # ------------------------------------------------------------
 
@@ -272,6 +277,11 @@ if use_default_mappings
     xnoremap <buffer> <localleader>c <Plug>MarkdownCode
   endif
 
+  if !hasmapto('<Plug>MarkdownCodeBlock')
+    nnoremap <buffer> <localleader>f <Plug>MarkdownCodeBlock
+    xnoremap <buffer> <localleader>f <Plug>MarkdownCodeBlock
+  endif
+
   # Toggle checkboxes
   if !hasmapto('<Plug>MarkdownToggleCheck')
     nnoremap <buffer> <silent> <localleader>x <Plug>MarkdownToggleCheck
@@ -282,12 +292,6 @@ if use_default_mappings
   endif
   if !hasmapto('<Plug>MarkdownRemoveLink')
     nnoremap <buffer> <silent> <backspace> <Plug>MarkdownRemoveLink
-  endif
-  if !hasmapto('<Plug>MarkdownToggleCodeBlock')
-    nnoremap <buffer> <silent> <localleader>cc <Plug>MarkdownToggleCodeBlock
-  endif
-  if !hasmapto('<Plug>MarkdownToggleCodeBlockVisual')
-    xnoremap <buffer> <silent> <localleader>cc <Plug>MarkdownToggleCodeBlockVisual
   endif
   # ------------------------------------------------------
   if !hasmapto('<Plug>MarkdownReferencePreview')

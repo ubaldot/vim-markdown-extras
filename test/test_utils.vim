@@ -715,44 +715,35 @@ def g:Test_set_code_block()
   g:markdown_extras_config['block_label'] = ''
 
   var expected_value = [
-    'ab illo inventore veritatis ',
+    '',
     '```',
-    '  et quasi architecto beatae vitae dicta',
+    '  ab illo inventore veritatis et quasi architecto beatae vitae dicta',
     '  sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit',
     '  aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos',
-    '  qui ratione voluptatem sequi ',
+    '  qui ratione voluptatem sequi nesciunt.',
     '```',
-    'nesciunt.',
+    ''
     ]
   cursor(3, 29)
-  exe "norm! v3j\<esc>"
+  setcharpos("'[", [0, 3, 33, 0])
+  setcharpos("']", [0, 6, 22, 0])
   utils.SetBlock(CODEBLOCK_DICT, CODEBLOCK_DICT)
   var actual_value = getline(3, 10)
-  assert_equal(expected_value, actual_value)
+  echom assert_equal(expected_value, actual_value)
 
   # Check that it won't undo
   cursor(6, 10)
+  setcharpos("'[", [0, 5, 21, 0])
+  setcharpos("']", [0, 8, 10, 0])
   utils.SetBlock(CODEBLOCK_DICT, CODEBLOCK_DICT)
-  assert_equal(expected_value, actual_value)
+  echom assert_equal(expected_value, actual_value)
 
   # Check that it won't undo when on the border
   cursor(4, 2)
+  setcharpos("'[", [0, 4, 2, 0])
+  setcharpos("']", [0, 5, 10, 0])
   utils.SetBlock(CODEBLOCK_DICT, CODEBLOCK_DICT)
-  assert_equal(expected_value, actual_value)
-
-  # check with motion
-  expected_value = [
-    '```',
-    '  Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet,',
-    '  consectetur, adipisci velit, sed quia non numquam eius modi tempora',
-    '  incidunt ut (labore et ~~dolore magnam) aliquam quaerat~~ voluptatem. Ut',
-    '  enim ad `minima [veniam`, quis no~~strum] exercitationem~~ ullam corporis',
-    '```',
-    ]
-  cursor(12, 1)
-  utils.SetBlock(CODEBLOCK_DICT, CODEBLOCK_DICT, '3j')
-  actual_value = getline(13, 18)
-  assert_equal(expected_value, actual_value)
+  echom assert_equal(expected_value, actual_value)
 
   unlet g:markdown_extras_config
 

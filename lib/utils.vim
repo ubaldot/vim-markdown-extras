@@ -28,7 +28,7 @@ export def DictToListOfDicts(d: dict<any>): list<dict<any>>
 enddef
 
 export def ZipLists(l1: list<any>, l2: list<any>): list<list<any>>
-    # Zip function, like in Python
+    # Zip-like function, like in Python
     var min_len = min([len(l1), len(l2)])
     return map(range(min_len), $'[{l1}[v:val], {l2}[v:val]]')
 enddef
@@ -75,7 +75,7 @@ export def FormatWithoutMoving(a: number = 0, b: number = 0)
 
   if v:shell_error != 0
     undo
-    echoerr $"'{&l:formatprg->matchstr('^\s*\S*')}' returned errors."
+    Echoerr($"'{&l:formatprg->matchstr('^\s*\S*')}' returned errors.")
   else
     # Display format command
     redraw
@@ -91,8 +91,6 @@ enddef
 export def RemoveSurrounding(
     open_delimiter_dict: dict<string>,
     close_delimiter_dict: dict<string>)
-    # You may consider to add a loop to iterate among all the possible
-    # delimiters pair
     var interval = IsInRange(open_delimiter_dict, close_delimiter_dict)
     if !empty(interval)
       # Remove left delimiter
@@ -143,7 +141,6 @@ export def SurroundSimple(open_delimiter: string,
   # line and column of point B
   var lB = line("']")
   var cB = col("']")
-
 
   var toA = strcharpart(getline(lA), 0, cA - 1) .. open_string
   var fromB = close_string .. strcharpart(getline(lB), cB)
@@ -594,10 +591,9 @@ export def DeleteTextBetweenMarks(A: string, B: string): string
   return ''
 enddef
 
-
 export def SetBlock(open_block: dict<string>,
     close_block: dict<string>,
-    motion: string = '')
+    type: string = '')
   # Put the selected text between open_block and close_block.
   var label = ''
   if exists('g:markdown_extras_config') != 0
@@ -614,48 +610,43 @@ export def SetBlock(open_block: dict<string>,
     return
   endif
 
-  # Set marks
-  var A = getcharpos("'<")
-  var B = getcharpos("'>")
-  if !empty(motion)
-    # GetTextObject is called for setting '[ and '] marks through a yank.
-    var motion_dict = GetTextObject(motion)
-    A = motion_dict.start
-    B = motion_dict.end
-  endif
 
-  # line and column of point A
-  var lA = A[1]
-  var cA = A[2]
+  # We set cA=1 and cB = len(geline(B)) so we pretend that we are working
+  # always line-wise
+  var lA = line("'[")
+  var cA = 1
 
-  # line and column of point B
-  var lB = B[1]
-  var cB = B[2]
-
-  # TODO: may be not needed
-  if A == B
-    return
-  endif
+  var lB = line("']")
+  var cB = len(getline(lB))
 
   var firstline = getline(lA)
   var lastline = getline(lB)
-  # Set first part
-  setline(lA, strcharpart(getline(lA), 0, cA - 1))
-  append(lA, [$'{keys(open_block)[0] .. label}',
-    "  " .. strcharpart(firstline, cA - 1)])
-  lA += 2
-  lB += 2
 
-  # Set intermediate part
-  var ii = 1
-  while lA + ii <= lB
-    setline(lA + ii, "  " .. getline(lA + ii)->substitute('^\s*', '', ''))
-    ii += 1
-  endwhile
+  if firstline == lastline
+    append(lA - 1, $'{keys(open_block)[0] .. label}')
+    lA += 1
+    lB += 1
+    setline(lA, "  " .. getline(lA)->substitute('^\s*', '', ''))
+    append(lA, $'{keys(open_block)[0] .. label}')
+  else
+    # Set first part
+    setline(lA, strcharpart(getline(lA), 0, cA - 1))
+    append(lA, [$'{keys(open_block)[0] .. label}',
+      "  " .. strcharpart(firstline, cA - 1)])
+    lA += 2
+    lB += 2
 
-  # Set last part
-  setline(lB, "  " .. strcharpart(lastline, 0, cB))
-  append(lB, [$'{keys(close_block)[0]}', strcharpart(lastline, cB)])
+    # Set intermediate part
+    var ii = 1
+    while lA + ii <= lB
+      setline(lA + ii, "  " .. getline(lA + ii)->substitute('^\s*', '', ''))
+      ii += 1
+    endwhile
+
+    # Set last part
+    setline(lB, "  " .. strcharpart(lastline, 0, cB))
+    append(lB, [$'{keys(close_block)[0]}', strcharpart(lastline, cB)])
+  endif
 enddef
 
 export def UnsetBlock(open_block: dict<string>, close_block: dict<string>)
