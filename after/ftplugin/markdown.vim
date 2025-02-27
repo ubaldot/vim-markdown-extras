@@ -180,7 +180,6 @@ def SetSurroundOpFunc(open_string: string,
     all_open_styles: dict<string>,
     all_close_styles: dict<string>)
 
-  # TODO: you may want to restore
   &l:opfunc = function(
     Surround, [open_string, close_string, all_open_styles, all_close_styles]
   )

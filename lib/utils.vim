@@ -192,8 +192,6 @@ export def SurroundSmart(open_delimiter: string,
   # line and column of point B
   var lB = line("']")
   var cB = col("']")
-  echom getcharpos("']")
-  echom cB
   # -------- SMART DELIMITERS BEGIN ---------------------------
   # We check conditions like the following and we adjust the style
   # delimiters
@@ -321,7 +319,7 @@ export def SurroundSmart(open_delimiter: string,
     setline(lA, lineA)
 
     # Set line B
-    var beforeB = strcharpart(getline(lB), 0, cB - 1)
+    var beforeB = strcharpart(getline(lB), 0, cB)
     for regex in delimiters_to_remove
       beforeB = beforeB->substitute(regex, '', 'g')
     endfor

@@ -537,17 +537,17 @@ def g:Test_SurroundSmart_one_line()
     ]
   cursor(15, 32)
   setcharpos("'[", [0, 15, 32, 0])
-  setcharpos("']", [0, 15, 39, 0])
-  # utils.SurroundSmart('**', '**', TEXT_STYLE_DICT, TEXT_STYLE_DICT)
+  setcharpos("']", [0, 15, 43, 0])
+  utils.SurroundSmart('**', '**', TEXT_STYLE_DICT, TEXT_STYLE_DICT)
   actual_value = getline(14, 16)
   echom assert_equal(expected_value, actual_value)
 
-  # :%bw!
-  # Cleanup_testfile(src_name_2)
+  :%bw!
+  Cleanup_testfile(src_name_2)
 enddef
 
 def g:Test_SurroundSmart_one_line_1()
-  # vnew
+  vnew
   Generate_testfile(lines_2, src_name_2)
   exe $"edit {src_name_2}"
   # setlocal conceallevel=0
@@ -559,15 +559,17 @@ def g:Test_SurroundSmart_one_line_1()
       'suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur?'
     ]
   cursor(11, 29)
-  exe "norm! va[\<esc>"
+  setcharpos("'[", [0, 11, 17, 0])
+  setcharpos("']", [0, 11, 41, 0])
   utils.SurroundSmart('*', '*', TEXT_STYLE_DICT, TEXT_STYLE_DICT)
   var actual_value = getline(10, 12)
-  assert_equal(expected_value, actual_value)
+  echom assert_equal(expected_value, actual_value)
 
   # Test with junk between A and B. Overwrite everything and avoid consecutive
   # delimiters of same type, like ** **
   cursor(21, 41)
-  exe "norm! va(\<esc>"
+  setcharpos("'[", [0, 21, 14, 0])
+  setcharpos("']", [0, 21, 68, 0])
   expected_value = [
     'dolores et quas molestias excepturi sint, obcaecati cupiditate non',
     'pro**vident, (similique sunt in culpa, qui officia deserunt)**',
@@ -575,12 +577,13 @@ def g:Test_SurroundSmart_one_line_1()
   ]
   utils.SurroundSmart('**', '**', TEXT_STYLE_DICT, TEXT_STYLE_DICT)
   actual_value = getline(20, 22)
-  assert_equal(expected_value, actual_value)
+  echom assert_equal(expected_value, actual_value)
 
   # Test with junk between A and B. Overwrite everything and avoid consecutive
   # delimiters of same type, like ** **
   cursor(19, 20)
-  exe "norm! va(\<esc>"
+  setcharpos("'[", [0, 19, 16, 0])
+  setcharpos("']", [0, 19, 55, 0])
   expected_value = [
     'At vero eos et accusamus et iusto odio dignissimos ducimus, qui',
     'blandit*iis pra(esentium voluptatum deleniti atque) corrupti*, quos',
@@ -588,7 +591,7 @@ def g:Test_SurroundSmart_one_line_1()
   ]
   utils.SurroundSmart('*', '*', TEXT_STYLE_DICT, TEXT_STYLE_DICT)
   actual_value = getline(18, 20)
-  assert_equal(expected_value, actual_value)
+  echom assert_equal(expected_value, actual_value)
 
   :%bw!
   Cleanup_testfile(src_name_2)
