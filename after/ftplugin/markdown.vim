@@ -31,7 +31,7 @@ const LINK_OPEN_REGEX = '\v\zs\[\ze[^]]+\]'
 const LINK_CLOSE_REGEX = '\v\[[^]]+\zs\]\ze'
   .. $'(\(({URL_PREFIXES}):[^)]+\)|\[[^]]+\])'
 
-export const TEXT_STYLE_DICT = {'`': CODE_REGEX,
+export const TEXT_STYLES_DICT = {'`': CODE_REGEX,
   '*': ITALIC_REGEX,
   '**': BOLD_REGEX,
   '_': ITALIC_REGEX_U,
@@ -188,25 +188,25 @@ enddef
 if empty(maparg('<Plug>MarkdownBold'))
   noremap <script> <buffer> <Plug>MarkdownBold
         \ <ScriptCmd>SetSurroundOpFunc('**', '**',
-        \ TEXT_STYLE_DICT, TEXT_STYLE_DICT)<cr>g@
+        \ TEXT_STYLES_DICT, TEXT_STYLES_DICT)<cr>g@
 endif
 
 if empty(maparg('<Plug>MarkdownItalic'))
   noremap <script> <buffer> <Plug>MarkdownItalic
         \ <ScriptCmd>SetSurroundOpFunc('*', '*',
-        \ TEXT_STYLE_DICT, TEXT_STYLE_DICT)<cr>g@
+        \ TEXT_STYLES_DICT, TEXT_STYLES_DICT)<cr>g@
 endif
 
 if empty(maparg('<Plug>MarkdownStrikethrough'))
   noremap <script> <buffer> <Plug>MarkdownStrikethrough
         \ <ScriptCmd>SetSurroundOpFunc('~~', '~~',
-        \ TEXT_STYLE_DICT, TEXT_STYLE_DICT)<cr>g@
+        \ TEXT_STYLES_DICT, TEXT_STYLES_DICT)<cr>g@
 endif
 
 if empty(maparg('<Plug>MarkdownCode'))
   noremap <script> <buffer> <Plug>MarkdownCode
         \ <ScriptCmd>SetSurroundOpFunc('`', '`',
-        \ TEXT_STYLE_DICT, TEXT_STYLE_DICT)<cr>g@
+        \ TEXT_STYLES_DICT, TEXT_STYLES_DICT)<cr>g@
 endif
 
 # ----------- TODO:TO BE REVIEWED ----------------------

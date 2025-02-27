@@ -8,7 +8,7 @@ import "./../after/ftplugin/markdown.vim"
 import "./../lib/utils.vim"
 
 var WaitForAssert = common.WaitForAssert
-var TEXT_STYLE_DICT = markdown.TEXT_STYLE_DICT
+var TEXT_STYLES_DICT = markdown.TEXT_STYLES_DICT
 var CODE_DICT = markdown.CODE_DICT
 var ITALIC_DICT = markdown.ITALIC_DICT
 var BOLD_DICT = markdown.BOLD_DICT

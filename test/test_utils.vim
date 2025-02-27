@@ -8,7 +8,7 @@ import "../lib/utils.vim"
 import "../after/ftplugin/markdown.vim"
 const WaitForAssert = common.WaitForAssert
 
-const TEXT_STYLE_DICT = markdown.TEXT_STYLE_DICT
+const TEXT_STYLES_DICT = markdown.TEXT_STYLES_DICT
 
 const CODE_DICT = markdown.CODE_DICT
 const CODEBLOCK_DICT = markdown.CODEBLOCK_DICT
@@ -440,7 +440,7 @@ def g:Test_SurroundSimple_one_line()
   # The following mimic opfunc when setting "'[" and "']" marks
   setcharpos("'[", [0, 11, 17, 0])
   setcharpos("']", [0, 11, 41, 0])
-  utils.SurroundSimple('*', '*', TEXT_STYLE_DICT, TEXT_STYLE_DICT)
+  utils.SurroundSimple('*', '*', TEXT_STYLES_DICT, TEXT_STYLES_DICT)
   var actual_value = getline(10, 12)
   echom assert_equal(expected_value, actual_value)
 
@@ -452,7 +452,7 @@ def g:Test_SurroundSimple_one_line()
     'pro**vident, **(sim**ilique sunt *in* culpa, `qui` officia *deserunt*)**',
     'mollitia) animi, id est laborum et dolorum fuga.'
   ]
-  utils.SurroundSimple('**', '**', TEXT_STYLE_DICT, TEXT_STYLE_DICT)
+  utils.SurroundSimple('**', '**', TEXT_STYLES_DICT, TEXT_STYLES_DICT)
   actual_value = getline(20, 22)
   echom assert_equal(expected_value, actual_value)
 
@@ -475,7 +475,7 @@ def g:Test_SurroundSimple_multi_line()
   cursor(25, 12)
   setcharpos("'[", [0, 25, 12, 0])
   setcharpos("']", [0, 27, 68, 0])
-  utils.SurroundSimple('_', '_', TEXT_STYLE_DICT, TEXT_STYLE_DICT)
+  utils.SurroundSimple('_', '_', TEXT_STYLES_DICT, TEXT_STYLES_DICT)
   var actual_value = getline(25, 27)
   echom assert_equal(expected_value, actual_value)
 
@@ -487,7 +487,7 @@ def g:Test_SurroundSimple_multi_line()
   cursor(32, 12)
   setcharpos("'[", [0, 32, 1, 0])
   setcharpos("']", [0, 34, 65, 0])
-  utils.SurroundSimple('__', '__', TEXT_STYLE_DICT, TEXT_STYLE_DICT)
+  utils.SurroundSimple('__', '__', TEXT_STYLES_DICT, TEXT_STYLES_DICT)
   actual_value = getline(32, 34)
   echom assert_equal(expected_value, actual_value)
 
@@ -509,7 +509,7 @@ def g:Test_SurroundSmart_one_line()
   cursor(3, 38)
   setcharpos("'[", [0, 3, 38, 0])
   setcharpos("']", [0, 3, 60, 0])
-  utils.SurroundSmart('`', '`', TEXT_STYLE_DICT, TEXT_STYLE_DICT)
+  utils.SurroundSmart('`', '`', TEXT_STYLES_DICT, TEXT_STYLES_DICT)
   var actual_value = getline(2, 4)
   echom assert_equal(expected_value, actual_value)
 
@@ -522,9 +522,9 @@ def g:Test_SurroundSmart_one_line()
   cursor(15, 13)
   setcharpos("'[", [0, 15, 12, 0])
   setcharpos("']", [0, 15, 34, 0])
-  utils.SurroundSmart('**', '**', TEXT_STYLE_DICT, TEXT_STYLE_DICT)
+  utils.SurroundSmart('**', '**', TEXT_STYLES_DICT, TEXT_STYLES_DICT)
   # Do the same operation, nothing should change
-  utils.SurroundSmart('**', '**', TEXT_STYLE_DICT, TEXT_STYLE_DICT)
+  utils.SurroundSmart('**', '**', TEXT_STYLES_DICT, TEXT_STYLES_DICT)
   actual_value = getline(14, 16)
   echom assert_equal(expected_value, actual_value)
 
@@ -538,7 +538,7 @@ def g:Test_SurroundSmart_one_line()
   cursor(15, 32)
   setcharpos("'[", [0, 15, 32, 0])
   setcharpos("']", [0, 15, 43, 0])
-  utils.SurroundSmart('**', '**', TEXT_STYLE_DICT, TEXT_STYLE_DICT)
+  utils.SurroundSmart('**', '**', TEXT_STYLES_DICT, TEXT_STYLES_DICT)
   actual_value = getline(14, 16)
   echom assert_equal(expected_value, actual_value)
 
@@ -561,7 +561,7 @@ def g:Test_SurroundSmart_one_line_1()
   cursor(11, 29)
   setcharpos("'[", [0, 11, 17, 0])
   setcharpos("']", [0, 11, 41, 0])
-  utils.SurroundSmart('*', '*', TEXT_STYLE_DICT, TEXT_STYLE_DICT)
+  utils.SurroundSmart('*', '*', TEXT_STYLES_DICT, TEXT_STYLES_DICT)
   var actual_value = getline(10, 12)
   echom assert_equal(expected_value, actual_value)
 
@@ -575,7 +575,7 @@ def g:Test_SurroundSmart_one_line_1()
     'pro**vident, (similique sunt in culpa, qui officia deserunt)**',
     'mollitia) animi, id est laborum et dolorum fuga.'
   ]
-  utils.SurroundSmart('**', '**', TEXT_STYLE_DICT, TEXT_STYLE_DICT)
+  utils.SurroundSmart('**', '**', TEXT_STYLES_DICT, TEXT_STYLES_DICT)
   actual_value = getline(20, 22)
   echom assert_equal(expected_value, actual_value)
 
@@ -589,7 +589,7 @@ def g:Test_SurroundSmart_one_line_1()
     'blandit*iis pra(esentium voluptatum deleniti atque) corrupti*, quos',
     'dolores et quas molestias excepturi sint, obcaecati cupiditate non',
   ]
-  utils.SurroundSmart('*', '*', TEXT_STYLE_DICT, TEXT_STYLE_DICT)
+  utils.SurroundSmart('*', '*', TEXT_STYLES_DICT, TEXT_STYLES_DICT)
   actual_value = getline(18, 20)
   echom assert_equal(expected_value, actual_value)
 
@@ -649,13 +649,15 @@ def g:Test_SurroundSmart_multi_line()
   var expected_value = [
     'Nam libero tempore, _cum soluta nobis est eligendi optio, cumque nihil',
     'impedit, quo minus id, quod',
-    'maxime placeat facere possimu_, omnis voluptas assumenda est, omnis',
+    'maxime placeat facere possimus_, omnis voluptas assumenda est, omnis',
     ]
   cursor(25, 21)
-  exe "norm! v27ggt,\<esc>"
-  utils.SurroundSmart('_', '_', TEXT_STYLE_DICT, TEXT_STYLE_DICT)
+  setcharpos("'[", [0, 25, 21, 0])
+  setcharpos("']", [0, 27, 30, 0])
+  # exe "norm! v27ggt,\<esc>"
+  utils.SurroundSmart('_', '_', TEXT_STYLES_DICT, TEXT_STYLES_DICT)
   var actual_value = getline(25, 27)
-  assert_equal(expected_value, actual_value)
+  echom assert_equal(expected_value, actual_value)
 
   # Smart delimiters
   expected_value = [
@@ -663,10 +665,11 @@ def g:Test_SurroundSmart_multi_line()
     'blanditiis pra(esentium voluptatum deleniti atque) corrupti, quos~~',
     ]
   cursor(18, 1)
-  exe "norm! 0vj$\<esc>"
-  utils.SurroundSmart('~~', '~~', TEXT_STYLE_DICT, TEXT_STYLE_DICT)
+  setcharpos("'[", [0, 18, 1, 0])
+  setcharpos("']", [0, 19, 71, 0])
+  utils.SurroundSmart('~~', '~~', TEXT_STYLES_DICT, TEXT_STYLES_DICT)
   actual_value = getline(18, 19)
-  assert_equal(expected_value, actual_value)
+  echom assert_equal(expected_value, actual_value)
 
   :%bw!
   Cleanup_testfile(src_name_2)
