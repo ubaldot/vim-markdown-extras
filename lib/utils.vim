@@ -461,6 +461,8 @@ export def GetDelimitersRanges(
 
     # B. ------ Close regex -------
     close_regex_pos_short = searchpos(close_regex, 'W')
+    # TODO: if close_regex_pos_short = [0, 0] => anomaly! One tag has been
+    # opened and never closed!
 
     # If the closed delimiter is the lead of the line, then the open-interval
     # starts from the previous line, last column

@@ -11,6 +11,7 @@ const CODE_REGEX = '\v(\\|`)@<!``@!'
 # It excludes escaped * (i.e. \*\*\*, and sequences like ****)
 const ITALIC_REGEX = '\v((\\|\*)@<!|(\\\*))@<=\*\*@!'
 const ITALIC_REGEX_U = '\v((\\|_)@<!|(\\_))@<=_(_)@!'
+
 const BOLD_REGEX = '\v(\\|\*)@<!\*\*\*@!'
 const BOLD_REGEX_U = '\v(\\|_)@<!___@!'
 const STRIKETHROUGH_REGEX = '\v(\\|\~)@<!\~\~\~@!'
