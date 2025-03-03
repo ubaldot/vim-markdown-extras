@@ -2,12 +2,18 @@ vim9script
 
 import "../after/ftplugin/markdown.vim"
 
-const CODE_REGEX = markdown.CODE_DICT['`']
-const ITALIC_REGEX = markdown.ITALIC_DICT['*']
-const BOLD_REGEX = markdown.BOLD_DICT['**']
-const ITALIC_REGEX_U = markdown.ITALIC_DICT_U['_']
-const BOLD_REGEX_U = markdown.BOLD_DICT_U['__']
-const STRIKETHROUGH_REGEX = markdown.STRIKETHROUGH_DICT['~~']
+const CODE_OPEN_REGEX = markdown.CODE_OPEN_DICT['`']
+const CODE_CLOSE_REGEX = markdown.CODE_CLOSE_DICT['`']
+const ITALIC_OPEN_REGEX = markdown.ITALIC_OPEN_DICT['*']
+const ITALIC_CLOSE_REGEX = markdown.ITALIC_CLOSE_DICT['*']
+const BOLD_OPEN_REGEX = markdown.BOLD_OPEN_DICT['**']
+const BOLD_CLOSE_REGEX = markdown.BOLD_CLOSE_DICT['**']
+const ITALIC_U_OPEN_REGEX = markdown.ITALIC_U_OPEN_DICT['_']
+const ITALIC_U_CLOSE_REGEX = markdown.ITALIC_U_OPEN_DICT['_']
+const BOLD_U_OPEN_REGEX = markdown.BOLD_U_OPEN_DICT['__']
+const BOLD_U_CLOSE_REGEX = markdown.BOLD_U_CLOSE_DICT['__']
+const STRIKE_OPEN_REGEX = markdown.STRIKE_OPEN_DICT['~~']
+const STRIKE_CLOSE_REGEX = markdown.STRIKE_CLOSE_DICT['~~']
 const LINK_OPEN_REGEX = markdown.LINK_OPEN_DICT['[']
 const LINK_CLOSE_REGEX = markdown.LINK_CLOSE_DICT[']']
 
@@ -93,26 +99,39 @@ def Cleanup_testfile(src_name: string)
    delete(src_name)
 enddef
 
-
 # Tests start here
-def g:Test_textstyle_regex()
+def g:Test_textstyle_italic_regex()
   vnew
   Generate_testfile(lines_1, src_name_1)
-
   exe $"edit {src_name_1}"
   setlocal conceallevel=0
 
-  # Italic
+  # Italic open
   var expected_pos = [[2, 26], [3, 29], [4, 26], [4, 48],
     [8, 24], [8, 28], [10, 30], [10, 41], [0, 0]]
   var actual_pos = []
   var tmp = []
   cursor(1, 1)
   while tmp != [0, 0]
-    tmp = searchpos(ITALIC_REGEX, 'W')
+    tmp = searchpos(ITALIC_OPEN_REGEX, 'W')
     add(actual_pos, tmp)
   endwhile
-  assert_equal(expected_pos, actual_pos)
+  echo actual_pos
+  echom "FOO"
+  echom assert_equal(expected_pos, actual_pos)
+
+  # # redraw!
+  # # sleep 3
+  # :%bw!
+  # Cleanup_testfile(src_name_1)
+enddef
+
+def g:Test_textstyle_bold_regex()
+  vnew
+  Generate_testfile(lines_1, src_name_1)
+
+  exe $"edit {src_name_1}"
+  setlocal conceallevel=0
 
   # Bold
   expected_pos = [[1, 37], [2, 12], [5, 12], [5, 33], [0, 0]]
@@ -124,6 +143,19 @@ def g:Test_textstyle_regex()
     add(actual_pos, tmp)
   endwhile
   assert_equal(expected_pos, actual_pos)
+  #
+  # # redraw!
+  # # sleep 3
+  :%bw!
+  Cleanup_testfile(src_name_1)
+enddef
+
+def g:Test_textstyle_code_regex()
+  vnew
+  Generate_testfile(lines_1, src_name_1)
+
+  exe $"edit {src_name_1}"
+  setlocal conceallevel=0
 
   # # Code
   expected_pos = [[15, 40], [15, 65], [0, 0]]
@@ -136,6 +168,19 @@ def g:Test_textstyle_regex()
   endwhile
   assert_equal(expected_pos, actual_pos)
 
+  # # redraw!
+  # # sleep 3
+  :%bw!
+  Cleanup_testfile(src_name_1)
+enddef
+
+def g:Test_textstyle_strikethrough_regex()
+  vnew
+  Generate_testfile(lines_1, src_name_1)
+
+  exe $"edit {src_name_1}"
+  setlocal conceallevel=0
+
   # # Strkethrough
   expected_pos = [[6, 5], [6, 41], [0, 0]]
   actual_pos = []
@@ -146,6 +191,19 @@ def g:Test_textstyle_regex()
     add(actual_pos, tmp)
   endwhile
   assert_equal(expected_pos, actual_pos)
+
+  # # redraw!
+  # # sleep 3
+  :%bw!
+  Cleanup_testfile(src_name_1)
+enddef
+
+def g:Test_textstyle_italic_u_regex()
+  vnew
+  Generate_testfile(lines_1, src_name_1)
+
+  exe $"edit {src_name_1}"
+  setlocal conceallevel=0
 
   # # italic underscore
   expected_pos = [[18, 16], [19, 32], [20, 26],
@@ -158,6 +216,19 @@ def g:Test_textstyle_regex()
     add(actual_pos, tmp)
   endwhile
   assert_equal(expected_pos, actual_pos)
+
+  # # redraw!
+  # # sleep 3
+  :%bw!
+  Cleanup_testfile(src_name_1)
+enddef
+
+def g:Test_textstyle_bold_u_regex()
+  vnew
+  Generate_testfile(lines_1, src_name_1)
+
+  exe $"edit {src_name_1}"
+  setlocal conceallevel=0
 
   # # bold underscore
   expected_pos = [[24, 21], [26, 23], [0, 0]]

@@ -5,16 +5,42 @@ import autoload "../../lib/preview.vim"
 import autoload "../../lib/links.vim"
 import autoload '../../lib/utils.vim'
 
-# --------- Constants ---------------------------------
-const CODE_REGEX = '\v(\\|`)@<!``@!'
-# The following picks standalone * and the last * of \**
-# It excludes escaped * (i.e. \*\*\*, and sequences like ****)
-const ITALIC_REGEX = '\v((\\|\*)@<!|(\\\*))@<=\*\*@!'
-const ITALIC_REGEX_U = '\v((\\|_)@<!|(\\_))@<=_(_)@!'
+# ------ Attempt for better regex -----------
+# The following regex reads (opening italics delimiter, pre and post):
+#  1. * must be preceded by a \W character with the exclusion of '*' and '\'
+#     OR it must be at the beginning of line,
+#  2. * must NOT be followed by '\'s or by another '*'.
+# const ITALIC_OPEN_REGEX = '\v((\W|^|\\\*_)@<=(\*|\\)@<!)\*(\s|\*)@!'
+# USE THIS if you use bundled markdown:
+# searchpos('\v((\W|^)@<=(\\)@<!)\*(\s|\*)@!', 'b')
+#
+# The following regex reads (closing italics delimiter, pre and post):
+#    1. * cannot be preceded by a '\s' character or by a '\' or by a '*'.
+#    2. * cannot be followed by another '*'.
+#  TODO: It won't catch closing delimiters when '\**' (the second asterisk is
+#  supposed to be the closing delimiter) because a preceding '*' is
+#  is already excluded.
+# const ITALIC_CLOSE_REGEX = '\v(\s|\\|\*)@<!\*\*@!' # ALMOST GOOD
+# ------ End attempt for better regex -----------
 
-const BOLD_REGEX = '\v(\\|\*)@<!\*\*\*@!'
-const BOLD_REGEX_U = '\v(\\|_)@<!___@!'
-const STRIKETHROUGH_REGEX = '\v(\\|\~)@<!\~\~\~@!'
+# --------- Constants ---------------------------------
+const CODE_OPEN_REGEX = '\v(\\|`)@<!``@!\S'
+const CODE_CLOSE_REGEX = '\v\S(\\|`)@<!``@!'
+
+const ITALIC_OPEN_REGEX = '\v((\\|\*)@<!|(\\\*))@<=\*\*@!\S'
+const ITALIC_CLOSE_REGEX = '\v\S((\\|\*)@<!|(\\\*))@<=\*\*@!'
+
+const ITALIC_U_OPEN_REGEX = '\v((\\|_)@<!|(\\_))@<=_(_)@\S!'
+const ITALIC_U_CLOSE_REGEX = '\v\S((\\|_)@<!|(\\_))@<=_(_)@!'
+
+const BOLD_OPEN_REGEX = '\v((\\|\*)@<!|(\\\*))@<=\*\*(\*)@!\S'
+const BOLD_CLOSE_REGEX = '\v\S((\\|\*)@<!|(\\\*))@<=\*\*(\*)@!'
+
+const BOLD_U_OPEN_REGEX = '\v((\\|_)@<!|(\\_))@<=__(_)@\S!'
+const BOLD_U_CLOSE_REGEX = '\v\S((\\|_)@<!|(\\_))@<=__(_)@!'
+
+const STRIKE_OPEN_REGEX = '\v(\\|\~)@<!\~\~\~@!\S'
+const STRIKE_CLOSE_REGEX = '\v\S(\\|\~)@<!\~\~\~@!\S'
 # TODO: CODEBLOCK REGEX COULD BE IMPROVED
 const CODEBLOCK_REGEX = '```'
 
@@ -32,22 +58,57 @@ const LINK_OPEN_REGEX = '\v\zs\[\ze[^]]+\]'
 const LINK_CLOSE_REGEX = '\v\[[^]]+\zs\]\ze'
   .. $'(\(({URL_PREFIXES}):[^)]+\)|\[[^]]+\])'
 
-export const TEXT_STYLES_DICT = {'`': CODE_REGEX,
-  '*': ITALIC_REGEX,
-  '**': BOLD_REGEX,
-  '_': ITALIC_REGEX_U,
-  '__': BOLD_REGEX_U,
-  '~~': STRIKETHROUGH_REGEX}
+export const TEXT_STYLES_DICT = {
+  markdownCode: {open_delim: '`', close_delim: '`',
+  open_regex: CODE_OPEN_REGEX, close_regex: CODE_CLOSE_REGEX },
+
+  markdownItalic: { open_delim: '*', close_delim: '*',
+  open_regex: ITALIC_OPEN_REGEX, close_regex: ITALIC_CLOSE_REGEX },
+
+  markdownItalicU: { open_delim: '_', close_delim: '_',
+  open_regex: ITALIC_U_OPEN_REGEX, close_regex: ITALIC_U_CLOSE_REGEX },
+
+  markdownBold: { open_delim: '**', close_delim: '**',
+  open_regex: BOLD_OPEN_REGEX, close_regex: BOLD_CLOSE_REGEX },
+
+  markdownBoldU: { open_delim: '__', close_delim: '__',
+  open_regex: BOLD_U_OPEN_REGEX, close_regex: BOLD_U_CLOSE_REGEX },
+
+  markdownStrike: { open_delim: '~~', close_delim: '~~',
+  open_regex: STRIKE_OPEN_REGEX, close_regex: STRIKE_OPEN_REGEX },
+}
 
 export const LINK_OPEN_DICT = {'[': LINK_OPEN_REGEX}
 export const LINK_CLOSE_DICT = {']': LINK_CLOSE_REGEX}
-export const CODE_DICT = {'`': CODE_REGEX}
+
+export const CODE_OPEN_DICT = {[TEXT_STYLES_DICT.markdownCode.open_delim]:
+  TEXT_STYLES_DICT.markdownCode.open_regex}
+export const CODE_CLOSE_DICT = {[TEXT_STYLES_DICT.markdownCode.close_delim]:
+  TEXT_STYLES_DICT.markdownCode.close_regex}
+export const ITALIC_OPEN_DICT = {[TEXT_STYLES_DICT.markdownItalic.open_delim]:
+  TEXT_STYLES_DICT.markdownItalic.open_regex}
+export const ITALIC_CLOSE_DICT = {[TEXT_STYLES_DICT.markdownItalic.close_delim]:
+  TEXT_STYLES_DICT.markdownItalic.close_regex}
+export const ITALIC_U_OPEN_DICT =
+  {[TEXT_STYLES_DICT.markdownItalicU.open_delim]:
+  TEXT_STYLES_DICT.markdownItalicU.open_regex}
+export const ITALIC_U_CLOSE_DICT =
+  {[TEXT_STYLES_DICT.markdownItalicU.close_delim]:
+  TEXT_STYLES_DICT.markdownItalicU.close_regex}
+export const BOLD_OPEN_DICT = {[TEXT_STYLES_DICT.markdownBold.open_delim]:
+  TEXT_STYLES_DICT.markdownBold.open_regex}
+export const BOLD_CLOSE_DICT = {[TEXT_STYLES_DICT.markdownBold.close_delim]:
+  TEXT_STYLES_DICT.markdownBold.close_regex}
+export const BOLD_U_OPEN_DICT = {[TEXT_STYLES_DICT.markdownBoldU.open_delim]:
+  TEXT_STYLES_DICT.markdownBoldU.open_regex}
+export const BOLD_U_CLOSE_DICT = {[TEXT_STYLES_DICT.markdownBoldU.close_delim]:
+  TEXT_STYLES_DICT.markdownBoldU.close_regex}
+export const STRIKE_OPEN_DICT = {[TEXT_STYLES_DICT.markdownStrike.open_delim]:
+  TEXT_STYLES_DICT.markdownStrike.open_regex}
+export const STRIKE_CLOSE_DICT = {[TEXT_STYLES_DICT.markdownStrike.close_delim]:
+  TEXT_STYLES_DICT.markdownStrike.close_regex}
+
 export const CODEBLOCK_DICT = {'```': CODEBLOCK_REGEX}
-export const ITALIC_DICT = {'*': ITALIC_REGEX}
-export const BOLD_DICT = {'**': BOLD_REGEX}
-export const ITALIC_DICT_U = {'_': ITALIC_REGEX_U}
-export const BOLD_DICT_U = {'__': BOLD_REGEX_U}
-export const STRIKETHROUGH_DICT = {'~~': STRIKETHROUGH_REGEX}
 # --------- End Constants ---------------------------------
 
 # TODO put this in an autocmd?
@@ -193,7 +254,7 @@ endif
 
 if empty(maparg('<Plug>MarkdownItalic'))
   noremap <script> <buffer> <Plug>MarkdownItalic
-        \ <ScriptCmd>SetSurroundOpFunc('*', '*',
+        \ <ScriptCmd>SetSurroundOpFunc(' *', '* ',
         \ TEXT_STYLES_DICT, TEXT_STYLES_DICT)<cr>g@
 endif
 

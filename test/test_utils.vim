@@ -23,7 +23,7 @@ const LINK_CLOSE_DICT = markdown.LINK_CLOSE_DICT
 # SEE :HELP /\@<! AND :HELP /\@!
 const CODE_REGEX = values(CODE_DICT)
 const CODEBLOCK_REGEX = values(CODEBLOCK_DICT)
-const ITALIC_REGEX = values(ITALIC_DICT)
+const ITALIC_OPEN_REGEX = values(ITALIC_DICT)
 const BOLD_REGEX = values(BOLD_DICT)
 const ITALIC_REGEX_U = values(ITALIC_DICT_U)
 const BOLD_REGEX_U = values(BOLD_DICT_U)
