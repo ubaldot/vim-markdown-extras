@@ -28,7 +28,8 @@ const BOLD_U_CLOSE_REGEX = '\v\S((\\|_)@<!|(\\_))@<=__(_)@!|^$'
 const STRIKE_OPEN_REGEX = '\v((\\|\~)@<!|(\\\~))@<=\~\~(\~)@!\S'
 const STRIKE_CLOSE_REGEX = '\v\S((\\|\~)@<!|(\\\~))@<=\~\~(\~)@!|^$'
 # TODO: CODEBLOCK REGEX COULD BE IMPROVED
-const CODEBLOCK_REGEX = '```'
+const CODEBLOCK_OPEN_REGEX = '^```'
+const CODEBLOCK_CLOSE_REGEX = '^```$'
 
 # Of the form '[bla bla](https://example.com)' or '[bla bla][12]'
 # TODO: if you only want numbers as reference, line [my page][11], then you
@@ -54,6 +55,9 @@ export const TEXT_STYLES_DICT = {
   markdownCode: {open_delim: '`', close_delim: '`',
   open_regex: CODE_OPEN_REGEX, close_regex: CODE_CLOSE_REGEX },
 
+  markdownCodeBlock: {open_delim: '```', close_delim: '```',
+  open_regex: CODEBLOCK_OPEN_REGEX, close_regex: CODEBLOCK_CLOSE_REGEX },
+
   markdownItalic: { open_delim: '*', close_delim: '*',
   open_regex: ITALIC_OPEN_REGEX, close_regex: ITALIC_CLOSE_REGEX },
 
@@ -68,10 +72,10 @@ export const TEXT_STYLES_DICT = {
 
   markdownStrike: { open_delim: '~~', close_delim: '~~',
   open_regex: STRIKE_OPEN_REGEX, close_regex: STRIKE_CLOSE_REGEX },
-}
 
-export const LINK_OPEN_DICT = {'[': LINK_OPEN_REGEX}
-export const LINK_CLOSE_DICT = {']': LINK_CLOSE_REGEX}
+  markdownLinkText: { open_delim: '[', close_delim: ']',
+  open_regex: LINK_OPEN_REGEX, close_regex: LINK_CLOSE_REGEX },
+}
 
 export const CODE_OPEN_DICT = {[TEXT_STYLES_DICT.markdownCode.open_delim]:
   TEXT_STYLES_DICT.markdownCode.open_regex}
@@ -99,6 +103,12 @@ export const STRIKE_OPEN_DICT = {[TEXT_STYLES_DICT.markdownStrike.open_delim]:
   TEXT_STYLES_DICT.markdownStrike.open_regex}
 export const STRIKE_CLOSE_DICT = {[TEXT_STYLES_DICT.markdownStrike.close_delim]:
   TEXT_STYLES_DICT.markdownStrike.close_regex}
-
-export const CODEBLOCK_DICT = {'```': CODEBLOCK_REGEX}
+export const LINK_OPEN_DICT = {[TEXT_STYLES_DICT.markdownLinkText.open_delim]:
+  TEXT_STYLES_DICT.markdownLinkText.open_regex}
+export const LINK_CLOSE_DICT = {[TEXT_STYLES_DICT.markdownLinkText.close_delim]:
+  TEXT_STYLES_DICT.markdownStrike.close_regex}
+export const CODEBLOCK_OPEN_DICT = {[TEXT_STYLES_DICT.markdownCodeBlock.open_delim]:
+  TEXT_STYLES_DICT.markdownCodeBlock.open_regex}
+export const CODEBLOCK_CLOSE_DICT = {[TEXT_STYLES_DICT.markdownCodeBlock.close_delim]:
+  TEXT_STYLES_DICT.markdownStrike.close_regex}
 # --------- End Constants ---------------------------------

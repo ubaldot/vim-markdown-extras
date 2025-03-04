@@ -4,21 +4,21 @@ vim9script
 # Copied and adjusted from Vim distribution
 
 import "./common.vim"
+import "../lib/constants.vim"
 import "../lib/utils.vim"
-import "../after/ftplugin/markdown.vim"
 const WaitForAssert = common.WaitForAssert
 
-const TEXT_STYLES_DICT = markdown.TEXT_STYLES_DICT
+const TEXT_STYLES_DICT = constants.TEXT_STYLES_DICT
 
-const CODE_DICT = markdown.CODE_DICT
-const CODEBLOCK_DICT = markdown.CODEBLOCK_DICT
-const ITALIC_DICT = markdown.ITALIC_DICT
-const BOLD_DICT = markdown.BOLD_DICT
-const ITALIC_DICT_U = markdown.ITALIC_DICT_U
-const BOLD_DICT_U = markdown.BOLD_DICT_U
-const STRIKETHROUGH_DICT = markdown.STRIKETHROUGH_DICT
-const LINK_OPEN_DICT = markdown.LINK_OPEN_DICT
-const LINK_CLOSE_DICT = markdown.LINK_CLOSE_DICT
+const CODE_DICT = constants.CODE_DICT
+const CODEBLOCK_DICT = constants.CODEBLOCK_DICT
+const ITALIC_DICT = constants.ITALIC_DICT
+const BOLD_DICT = constants.BOLD_DICT
+const ITALIC_DICT_U = constants.ITALIC_DICT_U
+const BOLD_DICT_U = constants.BOLD_DICT_U
+const STRIKETHROUGH_DICT = constants.STRIKETHROUGH_DICT
+const LINK_OPEN_DICT = constants.LINK_OPEN_DICT
+const LINK_CLOSE_DICT = constants.LINK_CLOSE_DICT
 
 # SEE :HELP /\@<! AND :HELP /\@!
 const CODE_REGEX = values(CODE_DICT)

@@ -1,11 +1,10 @@
 vim9script
 
+import autoload './constants.vim'
 import autoload './utils.vim'
 import autoload '../after/ftplugin/markdown.vim'
 
 export var links_dict = {}
-export const URL_PREFIXES = [ 'https://', 'http://', 'ftp://', 'ftps://',
-    'sftp://', 'telnet://', 'file://']
 
 export def IsLink(): bool
   # Check if the word under the cursor is a link
@@ -114,9 +113,7 @@ export def GetLinkID(): number
 enddef
 
 export def IsURL(link: string): bool
-  var url_prefixes = [ 'https://', 'http://', 'ftp://', 'ftps://',
-    'sftp://', 'telnet://', 'file://']
-  for url_prefix in url_prefixes
+  for url_prefix in constants.URL_PREFIXES
     if link =~ $'^{url_prefix}'
       return true
     endif

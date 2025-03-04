@@ -1,21 +1,21 @@
 vim9script
 
-import "../after/ftplugin/markdown.vim"
+import "../lib/constants.vim"
 
-const CODE_OPEN_REGEX = markdown.CODE_OPEN_DICT['`']
-const CODE_CLOSE_REGEX = markdown.CODE_CLOSE_DICT['`']
-const ITALIC_OPEN_REGEX = markdown.ITALIC_OPEN_DICT['*']
-const ITALIC_CLOSE_REGEX = markdown.ITALIC_CLOSE_DICT['*']
-const BOLD_OPEN_REGEX = markdown.BOLD_OPEN_DICT['**']
-const BOLD_CLOSE_REGEX = markdown.BOLD_CLOSE_DICT['**']
-const ITALIC_U_OPEN_REGEX = markdown.ITALIC_U_OPEN_DICT['_']
-const ITALIC_U_CLOSE_REGEX = markdown.ITALIC_U_CLOSE_DICT['_']
-const BOLD_U_OPEN_REGEX = markdown.BOLD_U_OPEN_DICT['__']
-const BOLD_U_CLOSE_REGEX = markdown.BOLD_U_CLOSE_DICT['__']
-const STRIKE_OPEN_REGEX = markdown.STRIKE_OPEN_DICT['~~']
-const STRIKE_CLOSE_REGEX = markdown.STRIKE_CLOSE_DICT['~~']
-const LINK_OPEN_REGEX = markdown.LINK_OPEN_DICT['[']
-const LINK_CLOSE_REGEX = markdown.LINK_CLOSE_DICT[']']
+const CODE_OPEN_REGEX = constants.CODE_OPEN_DICT['`']
+const CODE_CLOSE_REGEX = constants.CODE_CLOSE_DICT['`']
+const ITALIC_OPEN_REGEX = constants.ITALIC_OPEN_DICT['*']
+const ITALIC_CLOSE_REGEX = constants.ITALIC_CLOSE_DICT['*']
+const BOLD_OPEN_REGEX = constants.BOLD_OPEN_DICT['**']
+const BOLD_CLOSE_REGEX = constants.BOLD_CLOSE_DICT['**']
+const ITALIC_U_OPEN_REGEX = constants.ITALIC_U_OPEN_DICT['_']
+const ITALIC_U_CLOSE_REGEX = constants.ITALIC_U_CLOSE_DICT['_']
+const BOLD_U_OPEN_REGEX = constants.BOLD_U_OPEN_DICT['__']
+const BOLD_U_CLOSE_REGEX = constants.BOLD_U_CLOSE_DICT['__']
+const STRIKE_OPEN_REGEX = constants.STRIKE_OPEN_DICT['~~']
+const STRIKE_CLOSE_REGEX = constants.STRIKE_CLOSE_DICT['~~']
+const LINK_OPEN_REGEX = constants.LINK_OPEN_DICT['[']
+const LINK_CLOSE_REGEX = constants.LINK_CLOSE_DICT[']']
 
 const src_name_1 = 'testfile.md'
 const lines_1 =<< trim END

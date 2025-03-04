@@ -1,5 +1,8 @@
 vim9script
 
+import autoload "./constants.vim"
+
+
 export def Echoerr(msg: string)
   echohl ErrorMsg | echom $'[markdown_extras] {msg}' | echohl None
 enddef
@@ -547,35 +550,96 @@ export def IsBetweenMarks(A: string, B: string): bool
     return result
 enddef
 
-export def IsInRange(
-    open_delimiter_dict: dict<string>,
-    close_delimiter_dict: dict<string>,
-    ): list<list<number>>
-  # Arguments must be singleton dicts.
-  # Return the range of the delimiters if the cursor is within such a range,
-  # otherwise return an empty list.
-  var interval = []
+export def g:IsInRange(): dict<list<list<number>>>
+  # Return a dict like {'markdownCode': [[21, 19], [22, 21]]}.
+  # The returned intervals are open.
+  #
+  # NOTE: Due to that bundled markdown syntax file returns 'markdownItalic' and
+  # 'markdownBold' regardless is the delimiters are '_' or '*', we need the
+  # StarOrUnrescore() function
 
-  # OBS! Ranges are open-intervals!
-  var ranges = GetDelimitersRanges(open_delimiter_dict, close_delimiter_dict)
+  def StarOrUnderscore(text_style: string): string
+    var text_style_refined = ''
 
-  var saved_mark_a = getcharpos("'a")
-  var saved_mark_b = getcharpos("'b")
+    var tmp_star = $'constants.TEXT_STYLES_DICT.{text_style}.open_regex'
+    const star_delim = eval(tmp_star)
+    const pos_star = searchpos(star_delim, 'nbW')
 
-  for range in ranges
-    setcharpos("'a", range[0])
-    setcharpos("'b", range[1])
-    if IsBetweenMarks("'a", "'b")
-      interval = [range[0], range[1]]
-      break
+    const tmp_underscore = $'constants.TEXT_STYLES_DICT.{text_style}U.open_regex'
+    const underscore_delim = eval(tmp_underscore)
+    const pos_underscore = searchpos(underscore_delim, 'nbW')
+
+    if pos_star == [0, 0]
+      text_style_refined = text_style .. "U"
+    elseif pos_underscore == [0, 0]
+      text_style_refined = text_style
+    elseif IsGreater(pos_underscore, pos_star)
+      text_style_refined = text_style .. "U"
+    else
+      text_style_refined = text_style
     endif
-  endfor
+    return text_style_refined
+  enddef
 
-  # Restore marks 'a and 'b
-  setcharpos("'a", saved_mark_a)
-  setcharpos("'b", saved_mark_b)
+  # Main function start here
+  const text_style =
+    synIDattr(synID(line("."), col("."), 1), "name") == 'markdownItalic'
+    || synIDattr(synID(line("."), col("."), 1), "name") == 'markdownBold'
+     ? StarOrUnderscore(synIDattr(synID(line("."), col("."), 1), "name"))
+     : synIDattr(synID(line("."), col("."), 1), "name")
+  var return_val = {}
 
-  return interval
+  if !empty(text_style)
+      && index(keys(constants.TEXT_STYLES_DICT), text_style) != -1
+
+    const saved_cursor = getcursorcharpos()
+    # Search start delimiter
+    const open_delim =
+      eval($'constants.TEXT_STYLES_DICT.{text_style}.open_delim')
+    const open_regex =
+      eval($'constants.TEXT_STYLES_DICT.{text_style}.open_regex')
+    # TODO You could iteratively search until
+    # synIDattr(synID(start_delim[0], start_delim[1], 1), "name") == text_style
+    # .. "Delimiter". You have to move the cursor if you do it.
+    var start_delim = searchpos(open_regex, 'bW')
+    while synIDattr(synID(line("."), col("."), 1), "name")
+        != $'{text_style}Delimiter'
+        start_delim = searchpos(open_regex, 'bW')
+    endwhile
+    start_delim[1] += len(open_delim)
+
+    # Search end delimiter
+    cursor(saved_cursor[1 : 2])
+    # TODO: very ugly hack due to that the close regex of markdownLinkText end
+    # up on ] and not on the char just before it. LINK_CLOSE_REGEX shall be
+    # fixed.
+    var tmp =
+      synIDattr(synID(line("."), col("."), 1), "name") == 'markdownLinkText'
+      ? 0
+      : 1
+    # End ugly hack
+    const close_delim =
+     eval($'constants.TEXT_STYLES_DICT.{text_style}.close_delim')
+    const close_regex =
+      eval($'constants.TEXT_STYLES_DICT.{text_style}.close_regex')
+    var end_delim = searchpos(close_regex, 'ncW')
+    while synIDattr(synID(line("."), col(".") + tmp, 1), "name")
+        != $'{text_style}Delimiter'
+        && getline(line('.')) !~ "^$"
+        end_delim = searchpos(close_regex, 'cW')
+    endwhile
+
+    # TODO: again, very ugly hack due to the LINK_CLOSE_REGEX ending up on ]
+    if synIDattr(synID(line("."), col("."), 1), "name")
+        == 'markdownLinkTextDelimiter'
+      end_delim[1] -= 1
+    endif
+
+    cursor(saved_cursor[1 : 2])
+    return_val =  {[text_style]: [start_delim, end_delim]}
+  endif
+
+  return return_val
 enddef
 
 # Not used in markdown
