@@ -91,10 +91,8 @@ export def FormatWithoutMoving(a: number = 0, b: number = 0)
   winrestview(view)
 enddef
 
-export def RemoveSurrounding(
-    open_delimiter_dict: dict<string>,
-    close_delimiter_dict: dict<string>)
-    var interval = IsInRange(open_delimiter_dict, close_delimiter_dict)
+export def RemoveSurrounding()
+    var interval = IsInRange()
     if !empty(interval)
       # Remove left delimiter
       var lA = interval[0][1]
@@ -368,8 +366,8 @@ export def SurroundToggle(open_delimiter: string,
   # Also, remember that a yank set the marks '[ and '].
 
 
-  if !empty(IsInRange(open_delimiter_dict, close_delimiter_dict))
-    RemoveSurrounding(open_regex, close_regex)
+  if !empty(IsInRange())
+    RemoveSurrounding()
   else
     Surround(open_delimiter,
     close_delimiter,
@@ -550,7 +548,7 @@ export def IsBetweenMarks(A: string, B: string): bool
     return result
 enddef
 
-export def g:IsInRange(): dict<list<list<number>>>
+export def IsInRange(): dict<list<list<number>>>
   # Return a dict like {'markdownCode': [[21, 19], [22, 21]]}.
   # The returned intervals are open.
   #
@@ -592,24 +590,15 @@ export def g:IsInRange(): dict<list<list<number>>>
   if !empty(text_style)
       && index(keys(constants.TEXT_STYLES_DICT), text_style) != -1
 
-    const saved_cursor = getcursorcharpos()
     # Search start delimiter
     const open_delim =
       eval($'constants.TEXT_STYLES_DICT.{text_style}.open_delim')
     const open_regex =
       eval($'constants.TEXT_STYLES_DICT.{text_style}.open_regex')
-    # TODO You could iteratively search until
-    # synIDattr(synID(start_delim[0], start_delim[1], 1), "name") == text_style
-    # .. "Delimiter". You have to move the cursor if you do it.
-    var start_delim = searchpos(open_regex, 'bW')
-    while synIDattr(synID(line("."), col("."), 1), "name")
-        != $'{text_style}Delimiter'
-        start_delim = searchpos(open_regex, 'bW')
-    endwhile
+    var start_delim = searchpos(open_regex, 'nbW')
     start_delim[1] += len(open_delim)
 
     # Search end delimiter
-    cursor(saved_cursor[1 : 2])
     # TODO: very ugly hack due to that the close regex of markdownLinkText end
     # up on ] and not on the char just before it. LINK_CLOSE_REGEX shall be
     # fixed.
@@ -623,19 +612,13 @@ export def g:IsInRange(): dict<list<list<number>>>
     const close_regex =
       eval($'constants.TEXT_STYLES_DICT.{text_style}.close_regex')
     var end_delim = searchpos(close_regex, 'ncW')
-    while synIDattr(synID(line("."), col(".") + tmp, 1), "name")
-        != $'{text_style}Delimiter'
-        && getline(line('.')) !~ "^$"
-        end_delim = searchpos(close_regex, 'cW')
-    endwhile
 
     # TODO: again, very ugly hack due to the LINK_CLOSE_REGEX ending up on ]
-    if synIDattr(synID(line("."), col("."), 1), "name")
+    if synIDattr(synID(end_delim[0], end_delim[1], 1), "name")
         == 'markdownLinkTextDelimiter'
       end_delim[1] -= 1
     endif
 
-    cursor(saved_cursor[1 : 2])
     return_val =  {[text_style]: [start_delim, end_delim]}
   endif
 
@@ -670,7 +653,7 @@ export def SetBlock(open_block: dict<string>,
   endif
 
   # TODO return or remove surrounding?
-  if !empty(IsInRange(open_block, close_block))
+  if !empty(IsInRange())
       || getline('.') == $'{keys(open_block)[0] .. label}'
       || getline('.') == $'{keys(close_block)[0]}'
     return
@@ -716,15 +699,18 @@ export def SetBlock(open_block: dict<string>,
 enddef
 
 export def UnsetBlock(open_block: dict<string>, close_block: dict<string>)
-   var interval = IsInRange(open_block, close_block)
-   var lA = interval[0][1]
-   var lB = interval[1][1]
-   if !empty(interval)
-     deletebufline('%', lA - 1)
-     deletebufline('%', lB)
-   endif
+  # TODO Replace with IsInRange() once vim-surround is fixed
+  if synIDattr(synID(line("."), col("."), 1), "name") == 'markdownCodeBlock'
+    const pos_start = searchpos(constants.CODEBLOCK_OPEN_REGEX, 'nbW')
+    const pos_end = searchpos(constants.CODEBLOCK_CLOSE_REGEX, 'nbW')
 
-   for line in range(lA - 1, lB - 1)
-     setline(line, getline(line)->substitute('^\s*', '', 'g'))
-   endfor
+    const lA = pos_start[0]
+    const lB = pos_end[0]
+    deletebufline('%', lA - 1)
+    deletebufline('%', lB)
+
+    for line in range(lA - 1, lB - 1)
+      setline(line, getline(line)->substitute('^\s*', '', 'g'))
+    endfor
+  endif
 enddef

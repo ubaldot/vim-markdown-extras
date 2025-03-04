@@ -10,24 +10,38 @@ const WaitForAssert = common.WaitForAssert
 
 const TEXT_STYLES_DICT = constants.TEXT_STYLES_DICT
 
-const CODE_DICT = constants.CODE_DICT
-const CODEBLOCK_DICT = constants.CODEBLOCK_DICT
-const ITALIC_DICT = constants.ITALIC_DICT
-const BOLD_DICT = constants.BOLD_DICT
-const ITALIC_DICT_U = constants.ITALIC_DICT_U
-const BOLD_DICT_U = constants.BOLD_DICT_U
-const STRIKETHROUGH_DICT = constants.STRIKETHROUGH_DICT
+const CODE_OPEN_DICT = constants.CODE_OPEN_DICT
+const CODE_CLOSE_DICT = constants.CODE_CLOSE_DICT
+const CODEBLOCK_OPEN_DICT = constants.CODEBLOCK_OPEN_DICT
+const CODEBLOCK_CLOSE_DICT = constants.CODEBLOCK_CLOSE_DICT
+const ITALIC_OPEN_DICT = constants.ITALIC_OPEN_DICT
+const ITALIC_CLOSE_DICT = constants.ITALIC_CLOSE_DICT
+const BOLD_OPEN_DICT = constants.BOLD_OPEN_DICT
+const BOLD_CLOSE_DICT = constants.BOLD_CLOSE_DICT
+const ITALIC_U_OPEN_DICT = constants.ITALIC_U_OPEN_DICT
+const ITALIC_U_CLOSE_DICT = constants.ITALIC_U_CLOSE_DICT
+const BOLD_U_OPEN_DICT = constants.BOLD_U_OPEN_DICT
+const BOLD_U_CLOSE_DICT = constants.BOLD_U_CLOSE_DICT
+const STRIKE_OPEN_DICT = constants.STRIKE_OPEN_DICT
+const STRIKE_CLOSE_DICT = constants.STRIKE_CLOSE_DICT
 const LINK_OPEN_DICT = constants.LINK_OPEN_DICT
 const LINK_CLOSE_DICT = constants.LINK_CLOSE_DICT
 
 # SEE :HELP /\@<! AND :HELP /\@!
-const CODE_REGEX = values(CODE_DICT)
-const CODEBLOCK_REGEX = values(CODEBLOCK_DICT)
-const ITALIC_OPEN_REGEX = values(ITALIC_DICT)
-const BOLD_REGEX = values(BOLD_DICT)
-const ITALIC_REGEX_U = values(ITALIC_DICT_U)
-const BOLD_REGEX_U = values(BOLD_DICT_U)
-const STRIKETHROUGH_REGEX = values(STRIKETHROUGH_DICT)
+const CODE_OPEN_REGEX = values(CODE_OPEN_DICT)
+const CODE_CLOSE_REGEX = values(CODE_CLOSE_DICT)
+const CODEBLOCK_OPEN_REGEX = values(CODEBLOCK_OPEN_DICT)
+const CODEBLOCK_CLOSE_REGEX = values(CODEBLOCK_CLOSE_DICT)
+const ITALIC_OPEN_REGEX = values(ITALIC_OPEN_DICT)
+const ITALIC_CLOSE_REGEX = values(ITALIC_CLOSE_DICT)
+const BOLD_OPEN_REGEX = values(BOLD_OPEN_DICT)
+const BOLD_CLOSE_REGEX = values(BOLD_CLOSE_DICT)
+const ITALIC_U_OPEN_REGEX = values(ITALIC_U_OPEN_DICT)
+const ITALIC_U_CLOSE_REGEX = values(ITALIC_U_CLOSE_DICT)
+const BOLD_U_OPEN_REGEX = values(BOLD_U_OPEN_DICT)
+const BOLD_U_CLOSE_REGEX = values(BOLD_U_CLOSE_DICT)
+const STRIKE_OPEN_REGEX = values(STRIKE_OPEN_DICT)
+const STRIKE_CLOSE_REGEX = values(STRIKE_CLOSE_DICT)
 const LINK_OPEN_REGEX = values(LINK_OPEN_DICT)
 const LINK_CLOSE_REGEX = values(LINK_CLOSE_DICT)
 
@@ -48,9 +62,9 @@ const lines_1 =<< trim END
       enim ad minima veniam, quis nostrum exercitationem ullam corporis
       suscipit laboriosam`, nisi ut ~~aliquid ex ea commodi consequatur?~~
 
-      Quis autem vel eum **iure reprehenderit qui in ea voluptate velit esse
+      Quis autem vel eum __iure reprehenderit qui in ea voluptate velit esse
       quam nihil molestiae consequatur, vel illum qui dolorem eum fugiat quo
-      voluptas nulla** pariatur?
+      voluptas nulla__ pariatur?
 
       At vero eos et accusamus et iusto odio dignissimos ducimus qui
       blanditiis praesentium voluptatum deleniti atque corrupti quos dolores~~
@@ -235,62 +249,48 @@ def g:Test_IsInRange()
   vnew
   Generate_testfile(lines_1, src_name_1)
   exe $"edit {src_name_1}"
+  set ft=markdown
+  set conceallevel=0
+
+  cursor(1, 27)
+  var expected_value = {'markdownBold': [[1, 23], [1, 37]]}
+  var range = utils.IsInRange()
+  echom assert_equal(expected_value, range)
 
   cursor(5, 18)
-  var expected_value = [[0, 4, 18, 0], [0, 5, 29, 0]]
-  var range = utils.IsInRange(ITALIC_DICT, ITALIC_DICT)
-  assert_equal(expected_value, range)
-
-  range = utils.IsInRange(BOLD_DICT, BOLD_DICT)
-  assert_true(empty(range))
-
-  range = utils.IsInRange(CODE_DICT, CODE_DICT)
-  assert_true(empty(range))
-
-  range = utils.IsInRange(STRIKETHROUGH_DICT, STRIKETHROUGH_DICT)
-  assert_true(empty(range))
+  expected_value = {'markdownItalic': [[4, 18], [5, 29]]}
+  range = utils.IsInRange()
+  echom assert_equal(expected_value, range)
 
   # Test singularity: cursor on a delimiter
   cursor(14, 21)
-  range = utils.IsInRange(ITALIC_DICT, ITALIC_DICT)
-  assert_true(empty(range))
+  range = utils.IsInRange()
+  echom assert_true(empty(range))
 
-  range = utils.IsInRange(BOLD_DICT, BOLD_DICT)
-  assert_true(empty(range))
+  # Normal Test
+  cursor(14, 25)
+  expected_value = {'markdownBoldU': [[14, 22], [16, 14]]}
+  range = utils.IsInRange()
+  echom assert_equal(expected_value, range)
 
-  range = utils.IsInRange(CODE_DICT, CODE_DICT)
-  assert_true(empty(range))
-
-  range = utils.IsInRange(STRIKETHROUGH_DICT, STRIKETHROUGH_DICT)
-  assert_true(empty(range))
-
+  # End of paragraph with no delimiter
   cursor(21, 43)
-  expected_value = [[0, 21, 39, 0], [0, 21, 69, 0]]
-  range = utils.IsInRange(STRIKETHROUGH_DICT, STRIKETHROUGH_DICT)
-  assert_equal(expected_value, range)
-
-  cursor(36, 4)
-  expected_value = [[0, 35, 1, 0], [0, 38, 11, 0]]
-  range = utils.IsInRange(CODEBLOCK_DICT, CODEBLOCK_DICT)
-  assert_equal(expected_value, range)
+  expected_value = {'markdownStrike': [[21, 39], [23, 1]]}
+  range = utils.IsInRange()
+  echom assert_equal(expected_value, range)
 
   cursor(24, 10)
-  expected_value = []
-  range = utils.IsInRange(CODEBLOCK_DICT, CODEBLOCK_DICT)
-  assert_equal(expected_value, range)
+  expected_value = {}
+  range = utils.IsInRange()
+  echom assert_equal(expected_value, range)
 
   cursor(31, 18)
-  expected_value = [[0, 31, 16, 0], [0, 31, 26, 0]]
-  range = utils.IsInRange(LINK_OPEN_DICT, LINK_CLOSE_DICT)
-  assert_equal(expected_value, range)
+  expected_value = {'markdownLinkText': [[31, 16], [31, 26]]}
+  range = utils.IsInRange()
+  echom assert_equal(expected_value, range)
 
-  cursor(22, 18)
-  expected_value = []
-  range = utils.IsInRange(LINK_OPEN_DICT, LINK_CLOSE_DICT)
-  assert_equal(expected_value, range)
-
-  :%bw!
-  Cleanup_testfile(src_name_1)
+  # :%bw!
+  # Cleanup_testfile(src_name_1)
 enddef
 
 def g:Test_GetTextObject()

@@ -55,8 +55,12 @@ export const TEXT_STYLES_DICT = {
   markdownCode: {open_delim: '`', close_delim: '`',
   open_regex: CODE_OPEN_REGEX, close_regex: CODE_CLOSE_REGEX },
 
-  markdownCodeBlock: {open_delim: '```', close_delim: '```',
-  open_regex: CODEBLOCK_OPEN_REGEX, close_regex: CODEBLOCK_CLOSE_REGEX },
+  # TODO on the delimiter synIDattr(synID(line("."), col("."), 1), "name")
+  # return markdownCodeDelimiter instead of
+  # markdownCodeBlockDelimiter. Perhaps it is a bug in vim-markdown. Hence, we
+  # cannot include it here.
+  # markdownCodeBlock: {open_delim: '```', close_delim: '```',
+  # open_regex: CODEBLOCK_OPEN_REGEX, close_regex: CODEBLOCK_CLOSE_REGEX },
 
   markdownItalic: { open_delim: '*', close_delim: '*',
   open_regex: ITALIC_OPEN_REGEX, close_regex: ITALIC_CLOSE_REGEX },
@@ -107,8 +111,11 @@ export const LINK_OPEN_DICT = {[TEXT_STYLES_DICT.markdownLinkText.open_delim]:
   TEXT_STYLES_DICT.markdownLinkText.open_regex}
 export const LINK_CLOSE_DICT = {[TEXT_STYLES_DICT.markdownLinkText.close_delim]:
   TEXT_STYLES_DICT.markdownStrike.close_regex}
-export const CODEBLOCK_OPEN_DICT = {[TEXT_STYLES_DICT.markdownCodeBlock.open_delim]:
-  TEXT_STYLES_DICT.markdownCodeBlock.open_regex}
-export const CODEBLOCK_CLOSE_DICT = {[TEXT_STYLES_DICT.markdownCodeBlock.close_delim]:
-  TEXT_STYLES_DICT.markdownStrike.close_regex}
+
+# TODO on the delimiter synIDattr(synID(line("."), col("."), 1), "name")
+# return markdownCodeDelimiter instead of
+# markdownCodeBlockDelimiter. Perhaps it is a bug in vim-markdown. Hence, we
+  # cannot include it here.
+export const CODEBLOCK_OPEN_DICT = {'```': CODEBLOCK_OPEN_REGEX}
+export const CODEBLOCK_CLOSE_DICT = {'```': CODEBLOCK_CLOSE_REGEX}
 # --------- End Constants ---------------------------------
