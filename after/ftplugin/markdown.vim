@@ -5,42 +5,33 @@ import autoload "../../lib/preview.vim"
 import autoload "../../lib/links.vim"
 import autoload '../../lib/utils.vim'
 
-# ------ Attempt for better regex -----------
-# The following regex reads (opening italics delimiter, pre and post):
-#  1. * must be preceded by a \W character with the exclusion of '*' and '\'
-#     OR it must be at the beginning of line,
-#  2. * must NOT be followed by '\'s or by another '*'.
-# const ITALIC_OPEN_REGEX = '\v((\W|^|\\\*_)@<=(\*|\\)@<!)\*(\s|\*)@!'
-# USE THIS if you use bundled markdown:
-# searchpos('\v((\W|^)@<=(\\)@<!)\*(\s|\*)@!', 'b')
-#
-# The following regex reads (closing italics delimiter, pre and post):
-#    1. * cannot be preceded by a '\s' character or by a '\' or by a '*'.
-#    2. * cannot be followed by another '*'.
-#  TODO: It won't catch closing delimiters when '\**' (the second asterisk is
-#  supposed to be the closing delimiter) because a preceding '*' is
-#  is already excluded.
-# const ITALIC_CLOSE_REGEX = '\v(\s|\\|\*)@<!\*\*@!' # ALMOST GOOD
-# ------ End attempt for better regex -----------
-
 # --------- Constants ---------------------------------
-const CODE_OPEN_REGEX = '\v(\\|`)@<!``@!\S'
-const CODE_CLOSE_REGEX = '\v\S(\\|`)@<!``@!'
+const CODE_OPEN_REGEX = '\v((\\|\`)@<!|(\\\`))@<=\`(\`)@!\S'
+const CODE_CLOSE_REGEX = '\v\S((\\|\`)@<!|(\\\`))@<=\`(\`)@!|^$'
 
-const ITALIC_OPEN_REGEX = '\v((\\|\*)@<!|(\\\*))@<=\*\*@!\S'
-const ITALIC_CLOSE_REGEX = '\v\S((\\|\*)@<!|(\\\*))@<=\*\*@!'
+# TODO It correctly pick \**, and it excludes ** and \*. It cannot distinguish
+# is the pattern *\* is opening or closing, because you can easily have
+# \S*\*\S, like foo*\*bar.
+# You cannot distinguish if the first * is an opening or closing pattern
+# without any additional information (read: internal state)
+# regex cannot be used when internal states are involved.
+# However, by using the information: A) The cursor is currently on a
+# highlighted region B) The search direction, you should reliably (always?)
+# hit the correct delimiter. Perhaps that could be mathematically proven.
+const ITALIC_OPEN_REGEX = '\v((\\|\*)@<!|(\\\*))@<=\*(\*)@!\S'
+const ITALIC_CLOSE_REGEX = '\v\S((\\|\*)@<!|(\\\*))@<=\*(\*)@!|^$'
 
-const ITALIC_U_OPEN_REGEX = '\v((\\|_)@<!|(\\_))@<=_(_)@\S!'
-const ITALIC_U_CLOSE_REGEX = '\v\S((\\|_)@<!|(\\_))@<=_(_)@!'
+const ITALIC_U_OPEN_REGEX = '\v((\\|_)@<!|(\\_))@<=_(_)@!\S'
+const ITALIC_U_CLOSE_REGEX = '\v\S((\\|_)@<!|(\\_))@<=_(_)@!|^$'
 
 const BOLD_OPEN_REGEX = '\v((\\|\*)@<!|(\\\*))@<=\*\*(\*)@!\S'
-const BOLD_CLOSE_REGEX = '\v\S((\\|\*)@<!|(\\\*))@<=\*\*(\*)@!'
+const BOLD_CLOSE_REGEX = '\v\S((\\|\*)@<!|(\\\*))@<=\*\*(\*)@!|^$'
 
-const BOLD_U_OPEN_REGEX = '\v((\\|_)@<!|(\\_))@<=__(_)@\S!'
-const BOLD_U_CLOSE_REGEX = '\v\S((\\|_)@<!|(\\_))@<=__(_)@!'
+const BOLD_U_OPEN_REGEX = '\v((\\|_)@<!|(\\_))@<=__(_)@!\S'
+const BOLD_U_CLOSE_REGEX = '\v\S((\\|_)@<!|(\\_))@<=__(_)@!|^$'
 
-const STRIKE_OPEN_REGEX = '\v(\\|\~)@<!\~\~\~@!\S'
-const STRIKE_CLOSE_REGEX = '\v\S(\\|\~)@<!\~\~\~@!\S'
+const STRIKE_OPEN_REGEX = '\v((\\|\~)@<!|(\\\~))@<=\~\~(\~)@!\S'
+const STRIKE_CLOSE_REGEX = '\v\S((\\|\~)@<!|(\\\~))@<=\~\~(\~)@!|^$'
 # TODO: CODEBLOCK REGEX COULD BE IMPROVED
 const CODEBLOCK_REGEX = '```'
 
@@ -55,6 +46,8 @@ const URL_PREFIXES = links.URL_PREFIXES
 
 const LINK_OPEN_REGEX = '\v\zs\[\ze[^]]+\]'
   .. $'(\(({URL_PREFIXES}):[^)]+\)|\[[^]]+\])'
+# TODO Differently of the other CLOSE regexes, the link CLOSE regex end up ON
+# the last ] and not just before the match
 const LINK_CLOSE_REGEX = '\v\[[^]]+\zs\]\ze'
   .. $'(\(({URL_PREFIXES}):[^)]+\)|\[[^]]+\])'
 
@@ -75,7 +68,7 @@ export const TEXT_STYLES_DICT = {
   open_regex: BOLD_U_OPEN_REGEX, close_regex: BOLD_U_CLOSE_REGEX },
 
   markdownStrike: { open_delim: '~~', close_delim: '~~',
-  open_regex: STRIKE_OPEN_REGEX, close_regex: STRIKE_OPEN_REGEX },
+  open_regex: STRIKE_OPEN_REGEX, close_regex: STRIKE_CLOSE_REGEX },
 }
 
 export const LINK_OPEN_DICT = {'[': LINK_OPEN_REGEX}
