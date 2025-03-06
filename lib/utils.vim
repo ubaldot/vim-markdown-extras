@@ -199,6 +199,7 @@ export def SurroundSmart(style: string, type: string = '')
     # i.e. you would end up in adjacent delimiters like ** ** => Remove both
     toA = strcharpart(getline(lA), 0, cA - 1)
   else
+    # Force space
     toA = strcharpart(getline(lA), 0, cA - 1) .. open_delim
   endif
 
@@ -239,10 +240,10 @@ export def SurroundSmart(style: string, type: string = '')
     endif
     # echom "A_to_B: " .. A_to_B
 
-    # echom $'toA: ' .. toA
-    # echom $'fromB: ' .. fromB
-    # echom $'A_to_B:' .. A_to_B
-    # echom '----------\n'
+    echom $'toA: ' .. toA
+    echom $'fromB: ' .. fromB
+    echom $'A_to_B:' .. A_to_B
+    echom '----------\n'
 
     # Set the whole line
     setline(lA, toA .. A_to_B .. fromB)
@@ -509,11 +510,11 @@ export def SetBlock(open_block: dict<string>,
   endif
 enddef
 
-export def UnsetBlock(open_block: dict<string>, close_block: dict<string>)
+export def UnsetBlock()
   # TODO Replace with IsInRange() once vim-surround is fixed
   if synIDattr(synID(line("."), col("."), 1), "name") == 'markdownCodeBlock'
-    const pos_start = searchpos(constants.CODEBLOCK_OPEN_REGEX, 'nbW')
-    const pos_end = searchpos(constants.CODEBLOCK_CLOSE_REGEX, 'nbW')
+    const pos_start = searchpos(values(constants.CODEBLOCK_OPEN_DICT)[0], 'nbW')
+    const pos_end = searchpos(values(constants.CODEBLOCK_CLOSE_DICT)[0], 'nW')
 
     const lA = pos_start[0]
     const lB = pos_end[0]

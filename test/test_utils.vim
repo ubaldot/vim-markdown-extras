@@ -521,7 +521,7 @@ def g:Test_set_code_block()
   cursor(3, 29)
   setcharpos("'[", [0, 3, 33, 0])
   setcharpos("']", [0, 6, 22, 0])
-  utils.SetBlock(CODEBLOCK_DICT, CODEBLOCK_DICT)
+  utils.SetBlock(CODEBLOCK_OPEN_DICT, CODEBLOCK_CLOSE_DICT)
   var actual_value = getline(3, 10)
   echom assert_equal(expected_value, actual_value)
 
@@ -529,14 +529,14 @@ def g:Test_set_code_block()
   cursor(6, 10)
   setcharpos("'[", [0, 5, 21, 0])
   setcharpos("']", [0, 8, 10, 0])
-  utils.SetBlock(CODEBLOCK_DICT, CODEBLOCK_DICT)
+  utils.SetBlock(CODEBLOCK_OPEN_DICT, CODEBLOCK_CLOSE_DICT)
   echom assert_equal(expected_value, actual_value)
 
   # Check that it won't undo when on the border
   cursor(4, 2)
   setcharpos("'[", [0, 4, 2, 0])
   setcharpos("']", [0, 5, 10, 0])
-  utils.SetBlock(CODEBLOCK_DICT, CODEBLOCK_DICT)
+  utils.SetBlock(CODEBLOCK_OPEN_DICT, CODEBLOCK_CLOSE_DICT)
   echom assert_equal(expected_value, actual_value)
 
   unlet g:markdown_extras_config
@@ -557,7 +557,7 @@ def g:Test_unset_code_block()
     'repellat.'
   ]
   cursor(35, 1)
-  utils.UnsetBlock(CODEBLOCK_DICT, CODEBLOCK_DICT)
+  utils.UnsetBlock()
   var actual_value = getline(34, 37)
   assert_equal(expected_value, actual_value)
 

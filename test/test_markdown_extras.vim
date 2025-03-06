@@ -6,13 +6,14 @@ vim9script
 import "./common.vim"
 import "./../after/ftplugin/markdown.vim"
 import "./../lib/utils.vim"
+import "./../lib/constants.vim"
 
 var WaitForAssert = common.WaitForAssert
-var TEXT_STYLES_DICT = markdown.TEXT_STYLES_DICT
-var CODE_DICT = markdown.CODE_DICT
-var ITALIC_DICT = markdown.ITALIC_DICT
-var BOLD_DICT = markdown.BOLD_DICT
-var STRIKETHROUGH_DICT = markdown.STRIKETHROUGH_DICT
+var TEXT_STYLES_DICT = constants.TEXT_STYLES_DICT
+var CODE_OPEN_DICT = constants.CODE_OPEN_DICT
+var ITALIC_OPEN_DICT = constants.ITALIC_OPEN_DICT
+var BOLD_OPEN_DICT = constants.BOLD_OPEN_DICT
+var STRIKE_OPEN_DICT = constants.STRIKE_OPEN_DICT
 
 # Test file 1
 var src_name_1 = 'testfile.md'

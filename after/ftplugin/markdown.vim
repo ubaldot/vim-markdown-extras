@@ -211,20 +211,20 @@ if use_default_mappings
     xnoremap <buffer> <localleader>b <Plug>MarkdownBold
   endif
 
-  if !hasmapto('<Plug>MarkdownBoldUnderscore')
-    nnoremap <buffer> <localleader>b <Plug>MarkdownBoldUnderscore
-    xnoremap <buffer> <localleader>b <Plug>MarkdownBoldUnderscore
-  endif
+  # if !hasmapto('<Plug>MarkdownBoldUnderscore')
+  #   nnoremap <buffer> <localleader>b <Plug>MarkdownBoldUnderscore
+  #   xnoremap <buffer> <localleader>b <Plug>MarkdownBoldUnderscore
+  # endif
 
   if !hasmapto('<Plug>MarkdownItalic')
     nnoremap <buffer> <localleader>i <Plug>MarkdownItalic
     xnoremap <buffer> <localleader>i <Plug>MarkdownItalic
   endif
 
-  if !hasmapto('<Plug>MarkdownItalic')
-    nnoremap <buffer> <localleader>i_ <Plug>MarkdownItalicUnderscore
-    xnoremap <buffer> <localleader>i_ <Plug>MarkdownItalicUnderscore
-  endif
+  # if !hasmapto('<Plug>MarkdownItalic')
+  #   nnoremap <buffer> <localleader>i_ <Plug>MarkdownItalicUnderscore
+  #   xnoremap <buffer> <localleader>i_ <Plug>MarkdownItalicUnderscore
+  # endif
 
   if !hasmapto('<Plug>MarkdownStrike')
     nnoremap <buffer> <localleader>s <Plug>MarkdownStrike
