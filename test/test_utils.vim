@@ -138,64 +138,6 @@ def Cleanup_testfile(src_name: string)
 enddef
 
 # Tests start here
-def g:Test_GetTextBetweenMarks()
-  Generate_testfile(lines_1, src_name_1)
-
-  exe $"edit {src_name_1}"
-
-  const A = setcharpos("'A", [0, 4, 32, 0])
-  const B = setcharpos("'B", [0, 10, 1, 0])
-  const expected_text = ['m voluptatem quia voluptas sit',
-    'aspernatur aut odit aut fugit*, sed quia consequuntur magni dolores eos',
-    'qui ratione voluptatem sequi nesciunt.', '',
-    'Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet,',
-    'consectetur, adipisci velit, `sed quia non numquam eius modi tempora', 'i']
-
-  const actual_text = utils.GetTextBetweenMarks("'A", "'B")
-  assert_true(expected_text == actual_text)
-
-  :%bw!
-  Cleanup_testfile(src_name_1)
-enddef
-
-def g:Test_GetDelimitersRanges()
-  vnew
-  Generate_testfile(lines_1, src_name_1)
-
-  exe $"edit {src_name_1}"
-
-  var expected_ranges = [[[0, 9, 31, 0], [0, 12, 19, 0]]]
-  var actual_ranges = utils.GetDelimitersRanges(CODE_DICT, CODE_DICT)
-  assert_equal(expected_ranges, actual_ranges)
-
-  expected_ranges = [[[0, 3, 20, 0], [0, 3, 28, 0]],
-    [[0, 4, 18, 0], [0, 5, 29, 0]]]
-  actual_ranges = utils.GetDelimitersRanges(ITALIC_DICT, ITALIC_DICT)
-  assert_equal(expected_ranges, actual_ranges)
-
-  expected_ranges = [[[0, 1, 23, 0], [0, 1, 37, 0]],
-    [[0, 14, 22, 0], [0, 16, 14, 0]]]
-  actual_ranges = utils.GetDelimitersRanges(BOLD_DICT, BOLD_DICT)
-  assert_equal(expected_ranges, actual_ranges)
-
-  expected_ranges = [[[0, 12, 33, 0], [0, 12, 66, 0]],
-  [[0, 20, 1, 0], [0, 20, 32, 0]],
-  [[0, 21, 39, 0], [0, 21, 69, 0]]]
-  actual_ranges = utils.GetDelimitersRanges(STRIKETHROUGH_DICT, STRIKETHROUGH_DICT)
-  assert_equal(expected_ranges, actual_ranges)
-
-  :%bw!
-  Cleanup_testfile(src_name_1)
-enddef
-
-def g:Test_KeysFromValue()
-  const dict = {a: 'foo', b: 'bar', c: 'foo'}
-  const expected_value = ['a', 'c']
-  const target_value = 'foo'
-  const actual_value = utils.KeysFromValue(dict, target_value)
-  assert_equal(expected_value, actual_value)
-enddef
-
 def g:Test_ListComparison()
   var A = [5, 19, 22]
   var B = [3, 43]
@@ -300,140 +242,9 @@ def g:Test_IsInRange()
   range = utils.IsInRange()
   echom assert_equal(expected_value, range)
 
-  # :%bw!
-  # Cleanup_testfile(src_name_1)
-enddef
-
-def g:Test_GetTextObject()
-  vnew
-  Generate_testfile(lines_1, src_name_1)
-  exe $"edit {src_name_1}"
-
-  # test 'iw'
-  cursor(1, 8)
-  var expected_value = {text: 'perspiciatis',
-  start: [0, 1, 8, 0],
-  end: [0, 1, 19, 0],
-  }
-
-  var actual_value = utils.GetTextObject('iw')
-  assert_equal(expected_value, actual_value)
-
-  # test 'iW'
-  actual_value = utils.GetTextObject('iW')
-  assert_equal(expected_value, actual_value)
-
-  # # test 'aw'
-  expected_value = {text: 'perspiciatis ',
-  start: [0, 1, 8, 0],
-  end: [0, 1, 20, 0],
-  }
-  actual_value = utils.GetTextObject('aw')
-  assert_equal(expected_value, actual_value)
-
-  # # test 'aW'
-  actual_value = utils.GetTextObject('aW')
-  assert_equal(expected_value, actual_value)
-
-  # # Test 'i('
-  cursor(25, 33)
-  expected_value = {text: 'eligendi optio cumque nihil',
-  start: [0, 25, 32, 0],
-  end: [0, 25, 58, 0],
-  }
-  actual_value = utils.GetTextObject('i(')
-  assert_equal(expected_value, actual_value)
-
-  # # Test 'yib'
-  actual_value = utils.GetTextObject('ib')
-  assert_equal(expected_value, actual_value)
-
-  # # Test 'a('
-  expected_value = {text: '(eligendi optio cumque nihil)',
-  start: [0, 25, 31, 0],
-  end: [0, 25, 59, 0],
-  }
-  actual_value = utils.GetTextObject('a(')
-  assert_equal(expected_value, actual_value)
-
-  # # Test 'ab'
-  actual_value = utils.GetTextObject('ab')
-  assert_equal(expected_value, actual_value)
-
-  # # Test 'i{'
-  cursor(28, 25)
-  expected_value = {text: 'rerum necessitatibus',
-  start: [0, 28, 23, 0],
-  end: [0, 28, 42, 0],
-  }
-  actual_value = utils.GetTextObject('i{')
-  assert_equal(expected_value, actual_value)
-
-  # # Test 'a{'
-  expected_value = {text: '{rerum necessitatibus}',
-  start: [0, 28, 22, 0],
-  end: [0, 28, 43, 0],
-  }
-  actual_value = utils.GetTextObject('a{')
-  assert_equal(expected_value, actual_value)
-
-  # Test quoted text
-  # TODO: it does not work due to a bug in vim, see:
-  # https://github.com/vim/vim/issues/16679
-  # cursor(27, 22)
-  # expected_value = {text: 'dolor repellendus',
-  #   start_pos: [0, 27, 13, 0],
-  #   end_pos: [0, 27, 29, 0]}
-  # actual_value = utils.GetTextObject('i"')
-  # AssertGetTextObject(expected_value, actual_value)
-
   :%bw!
   Cleanup_testfile(src_name_1)
 enddef
-
-def g:Test_DeleteTextBetweenMarks()
-  Generate_testfile(lines_1, src_name_1)
-  exe $"edit {src_name_1}"
-
-  setcharpos("'A", [0, 9, 23, 0])
-  setcharpos("'B", [0, 18, 39, 0])
-
-  var expected_value =
-    ['Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet,',
-      'consectetur, adipisci dignissimos ducimus qui',
-    'blanditiis praesentium voluptatum deleniti atque corrupti quos dolores~~']
-
-  utils.DeleteTextBetweenMarks("'A", "'B")
-  var actual_value = getline(8, 10)
-
-  assert_equal(expected_value, actual_value)
-
-  :%bw!
-  Cleanup_testfile(src_name_1)
-enddef
-
-def g:Test_ZipList()
-
-  var list_a = [1, 2, 3, 4]
-  var list_b = [4, 3, 2, 1]
-  var expected_value = [[1, 4], [2, 3], [3, 2], [4, 1]]
-  var actual_value = utils.ZipLists(list_a, list_b)
-  assert_equal(expected_value, actual_value)
-
-  # Test with different lengths
-  add(list_b, 0)
-  actual_value = utils.ZipLists(list_a, list_b)
-  assert_equal(expected_value, actual_value)
-
-enddef
-
-def g:Test_Dict2ListOfDicts()
-  var MY_DICT = {a: 'foo', b: 'bar', c: 'baz'}
-  var expected_value = [{a: 'foo'}, {b: 'bar'}, {c: 'baz'}]
-  var actual_value = utils.DictToListOfDicts(MY_DICT)
-  assert_equal(expected_value, actual_value)
-enddef
-
 
 def g:Test_SurroundSimple_one_line()
   vnew
@@ -450,7 +261,7 @@ def g:Test_SurroundSimple_one_line()
   # The following mimic opfunc when setting "'[" and "']" marks
   setcharpos("'[", [0, 11, 17, 0])
   setcharpos("']", [0, 11, 41, 0])
-  utils.SurroundSimple('*', '*', TEXT_STYLES_DICT, TEXT_STYLES_DICT)
+  utils.SurroundSimple('markdownItalic')
   var actual_value = getline(10, 12)
   echom assert_equal(expected_value, actual_value)
 
@@ -462,7 +273,7 @@ def g:Test_SurroundSimple_one_line()
     'pro**vident, **(sim**ilique sunt *in* culpa, `qui` officia *deserunt*)**',
     'mollitia) animi, id est laborum et dolorum fuga.'
   ]
-  utils.SurroundSimple('**', '**', TEXT_STYLES_DICT, TEXT_STYLES_DICT)
+  utils.SurroundSimple('markdownBold')
   actual_value = getline(20, 22)
   echom assert_equal(expected_value, actual_value)
 
@@ -485,7 +296,7 @@ def g:Test_SurroundSimple_multi_line()
   cursor(25, 12)
   setcharpos("'[", [0, 25, 12, 0])
   setcharpos("']", [0, 27, 68, 0])
-  utils.SurroundSimple('_', '_', TEXT_STYLES_DICT, TEXT_STYLES_DICT)
+  utils.SurroundSimple('markdownItalicU')
   var actual_value = getline(25, 27)
   echom assert_equal(expected_value, actual_value)
 
@@ -497,7 +308,7 @@ def g:Test_SurroundSimple_multi_line()
   cursor(32, 12)
   setcharpos("'[", [0, 32, 1, 0])
   setcharpos("']", [0, 34, 65, 0])
-  utils.SurroundSimple('__', '__', TEXT_STYLES_DICT, TEXT_STYLES_DICT)
+  utils.SurroundSimple('markdownBoldU')
   actual_value = getline(32, 34)
   echom assert_equal(expected_value, actual_value)
 
@@ -519,9 +330,9 @@ def g:Test_SurroundSmart_one_line()
   cursor(3, 38)
   setcharpos("'[", [0, 3, 38, 0])
   setcharpos("']", [0, 3, 60, 0])
-  # utils.SurroundSmart('markdownCode')
+  utils.SurroundSmart('markdownCode')
   var actual_value = getline(2, 4)
-  # echom assert_equal(expected_value, actual_value)
+  echom assert_equal(expected_value, actual_value)
 
   # Bold: simple text-object around '(molestias excepturi sint)'
   expected_value = [
@@ -536,34 +347,32 @@ def g:Test_SurroundSmart_one_line()
   # Do the same operation, nothing should change
   utils.SurroundSmart('markdownBold')
   utils.SurroundSmart('markdownBold')
-  # utils.SurroundSmart('markdownBold')
-  # utils.SurroundSmart('markdownBold')
   actual_value = getline(14, 16)
   echom assert_equal(expected_value, actual_value)
 
   # Prolong delimiter
   # TODO to check
-  # expected_value = [
-  #   'Quis autem vel eum iure reprehenderit qui in ea **voluptate velit esse**',
-  #   'quam nihil **(molestiae consequatur), vel** illum qui dolorem eum fugiat quo',
-  #   'voluptas nulla pariatur?',
-  #   ]
-  # cursor(15, 32)
-  # setcharpos("'[", [0, 15, 32, 0])
-  # setcharpos("']", [0, 15, 43, 0])
-  # utils.SurroundSmart('markdownBold')
-  # actual_value = getline(14, 16)
-  # echom assert_equal(expected_value, actual_value)
+  expected_value = [
+    'Quis autem vel eum iure reprehenderit qui in ea **voluptate velit esse**',
+    'quam nihil **(molestiae consequatur), vel** illum qui dolorem eum fugiat quo',
+    'voluptas nulla pariatur?',
+    ]
+  cursor(15, 32)
+  setcharpos("'[", [0, 15, 32, 0])
+  setcharpos("']", [0, 15, 43, 0])
+  utils.SurroundSmart('markdownBold')
+  actual_value = getline(14, 16)
+  echom assert_equal(expected_value, actual_value)
 
-  # :%bw!
-  # Cleanup_testfile(src_name_2)
+  :%bw!
+  Cleanup_testfile(src_name_2)
 enddef
 
 def g:Test_SurroundSmart_one_line_1()
   vnew
   Generate_testfile(lines_2, src_name_2)
   exe $"edit {src_name_2}"
-  # setlocal conceallevel=0
+  setlocal conceallevel=0
 
   # Smart delimiters
   var expected_value = [
@@ -574,7 +383,7 @@ def g:Test_SurroundSmart_one_line_1()
   cursor(11, 29)
   setcharpos("'[", [0, 11, 17, 0])
   setcharpos("']", [0, 11, 41, 0])
-  utils.SurroundSmart('*', '*', TEXT_STYLES_DICT, TEXT_STYLES_DICT)
+  utils.SurroundSmart('markdownItalic')
   var actual_value = getline(10, 12)
   echom assert_equal(expected_value, actual_value)
 
@@ -588,7 +397,7 @@ def g:Test_SurroundSmart_one_line_1()
     'pro**vident, (similique sunt in culpa, qui officia deserunt)**',
     'mollitia) animi, id est laborum et dolorum fuga.'
   ]
-  utils.SurroundSmart('**', '**', TEXT_STYLES_DICT, TEXT_STYLES_DICT)
+  utils.SurroundSmart('markdownBold')
   actual_value = getline(20, 22)
   echom assert_equal(expected_value, actual_value)
 
@@ -602,7 +411,7 @@ def g:Test_SurroundSmart_one_line_1()
     'blandit*iis pra(esentium voluptatum deleniti atque) corrupti*, quos',
     'dolores et quas molestias excepturi sint, obcaecati cupiditate non',
   ]
-  utils.SurroundSmart('*', '*', TEXT_STYLES_DICT, TEXT_STYLES_DICT)
+  utils.SurroundSmart('markdownItalic')
   actual_value = getline(18, 20)
   echom assert_equal(expected_value, actual_value)
 
@@ -613,40 +422,40 @@ enddef
 def g:Test_RemoveSurrounding_one_line()
 
   Generate_testfile(lines_2, src_name_2)
-  # vnew
+  vnew
   exe $"edit {src_name_2}"
 
   cursor(10, 30)
   var expected_value =
     'incidunt ut (labore et dolore magnam) aliquam quaerat voluptatem. Ut'
-  utils.RemoveSurrounding(STRIKETHROUGH_DICT, STRIKETHROUGH_DICT)
+  utils.RemoveSurrounding()
   var actual_value = getline(10)
-  assert_equal(expected_value, actual_value)
+  echom assert_equal(expected_value, actual_value)
 
   cursor(11, 40)
   expected_value =
     'enim ad `minima [veniam`, quis nostrum] exercitationem ullam corporis'
-  utils.RemoveSurrounding(STRIKETHROUGH_DICT, STRIKETHROUGH_DICT)
+  utils.RemoveSurrounding()
   actual_value = getline(11)
-  assert_equal(expected_value, actual_value)
+  echom assert_equal(expected_value, actual_value)
 
   cursor(14, 60)
   expected_value =
     'Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse'
-  utils.RemoveSurrounding(BOLD_DICT, BOLD_DICT)
+  utils.RemoveSurrounding()
   actual_value = getline(14)
-  assert_equal(expected_value, actual_value)
+  echom assert_equal(expected_value, actual_value)
 
   cursor(19, 18)
-  utils.RemoveSurrounding(ITALIC_DICT, ITALIC_DICT)
+  utils.RemoveSurrounding()
   cursor(19, 30)
-  utils.RemoveSurrounding(CODE_DICT, CODE_DICT)
+  utils.RemoveSurrounding()
   cursor(19, 47)
-  utils.RemoveSurrounding(ITALIC_DICT, ITALIC_DICT)
+  utils.RemoveSurrounding()
   expected_value =
     'blanditiis pra(esentium voluptatum deleniti atque) corrupti, quos'
   actual_value = getline(19)
-  assert_equal(expected_value, actual_value)
+  echom assert_equal(expected_value, actual_value)
 
   :%bw!
   Cleanup_testfile(src_name_2)
@@ -667,8 +476,7 @@ def g:Test_SurroundSmart_multi_line()
   cursor(25, 21)
   setcharpos("'[", [0, 25, 21, 0])
   setcharpos("']", [0, 27, 30, 0])
-  # exe "norm! v27ggt,\<esc>"
-  utils.SurroundSmart('_', '_', TEXT_STYLES_DICT, TEXT_STYLES_DICT)
+  utils.SurroundSmart('markdownItalicU')
   var actual_value = getline(25, 27)
   echom assert_equal(expected_value, actual_value)
 
@@ -680,7 +488,7 @@ def g:Test_SurroundSmart_multi_line()
   cursor(18, 1)
   setcharpos("'[", [0, 18, 1, 0])
   setcharpos("']", [0, 19, 71, 0])
-  utils.SurroundSmart('~~', '~~', TEXT_STYLES_DICT, TEXT_STYLES_DICT)
+  utils.SurroundSmart('markdownStrike')
   actual_value = getline(18, 19)
   echom assert_equal(expected_value, actual_value)
 
@@ -700,9 +508,9 @@ def g:Test_RemoveSurrounding_multi_line()
     'repudiandae sint et molestiae non recusandae.',
     ]
   cursor(28, 25)
-  utils.RemoveSurrounding(CODE_DICT, CODE_DICT)
+  utils.RemoveSurrounding()
   var actual_value = getline(28, 30)
-  assert_equal(expected_value, actual_value)
+  echom assert_equal(expected_value, actual_value)
 
   # Test 2: preserve inner surrounding
   expected_value = [
@@ -710,9 +518,9 @@ def g:Test_RemoveSurrounding_multi_line()
     'voluptatibus maiores',
     ]
   cursor(32, 28)
-  utils.RemoveSurrounding(ITALIC_DICT, ITALIC_DICT)
+  utils.RemoveSurrounding()
   actual_value = getline(32, 33)
-  assert_equal(expected_value, actual_value)
+  echom assert_equal(expected_value, actual_value)
 
   :%bw!
   Cleanup_testfile(src_name_2)

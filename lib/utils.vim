@@ -11,60 +11,6 @@ export def Echowarn(msg: string)
   echohl WarningMsg | echom $'[markdown_extras] {msg}' | echohl None
 enddef
 
-# TODO it may be limiting to have 'string' only
-export def KeysFromValue(dict: dict<string>, target_value: string): list<string>
-    # Given a value, return all the keys associated to it
-    return keys(filter(copy(dict), $'v:val == "{target_value}"'))
-enddef
-
-export def DictToListOfDicts(d: dict<any>): list<dict<any>>
-  # Convert a dict in a list of dict.
-  #
-  # For example, {a: 'foo', b: 'bar', c: 'baz'} becomes
-  # [{a: 'foo'}, {b: 'bar'}, {c: 'baz'}]
-  #
-  var list_of_dicts = []
-  for [k, v] in items(d)
-    add(list_of_dicts, {[k]: v})
-  endfor
-  return list_of_dicts
-enddef
-
-export def ZipLists(l1: list<any>, l2: list<any>): list<list<any>>
-    # Zip-like function, like in Python
-    var min_len = min([len(l1), len(l2)])
-    return map(range(min_len), $'[{l1}[v:val], {l2}[v:val]]')
-enddef
-
-export def GetTextObject(textobject: string): dict<any>
-  # You pass a text object like 'iw' and it returns the text
-  # associated to it along with the start and end positions.
-  #
-  # Note that when you yank some text, the registers '[' and ']' are set, so
-  # after call this function, you can retrieve start and end position of the
-  # text-object by looking at such marks.
-  #
-  # The function also work with motions.
-
-  # Backup the content of register t (arbitrary choice, YMMV) and marks
-  var oldreg = getreg("t")
-  var saved_A = getcharpos("'[")
-  var saved_B = getcharpos("']")
-  # silently yank the text covered by whatever text object
-  # was given as argument into register t. Yank also set marks '[ and ']
-  noautocmd execute 'silent normal "ty' .. textobject
-
-  var text = getreg("t")
-  var start_pos = getcharpos("'[")
-  var end_pos = getcharpos("']")
-
-  # restore register t and marks
-  setreg("t", oldreg)
-  setcharpos("'[", saved_A)
-  setcharpos("']", saved_B)
-
-  return {text: text, start: start_pos, end: end_pos}
-enddef
 
 export def FormatWithoutMoving(a: number = 0, b: number = 0)
   # To be used for formatting through autocmds
@@ -92,48 +38,42 @@ export def FormatWithoutMoving(a: number = 0, b: number = 0)
 enddef
 
 export def RemoveSurrounding()
-    var interval = IsInRange()
-    if !empty(interval)
+    const style_interval = IsInRange()
+    if !empty(style_interval)
+      const style = keys(style_interval)[0]
+      const interval = values(style_interval)[0]
+
       # Remove left delimiter
-      var lA = interval[0][1]
-      var cA = interval[0][2]
-      var newline =
-        strcharpart(getline(lA), 0, cA - 1 - len(keys(open_delimiter_dict)[0]))
-        .. strcharpart(getline(lA), cA - 1)
+      const lA = interval[0][0]
+      const cA = interval[0][1]
+      var newline = strcharpart(getline(lA), 0,
+              \ cA - 1 - len(constants.TEXT_STYLES_DICT[style].open_delim))
+              \ .. strcharpart(getline(lA), cA - 1)
       setline(lA, newline)
 
       # Remove right delimiter
-      var lB = interval[1][1]
-      var cB = interval[1][2]
+      const lB = interval[1][0]
+      var cB = interval[1][1]
       # The value of cB may no longer be valid since we shortened the line
       if lA == lB
-        cB = cB - len(keys(open_delimiter_dict)[0])
+        cB = cB - len(constants.TEXT_STYLES_DICT[style].open_delim)
       endif
 
-      newline =
-        strcharpart(getline(lB), 0, cB)
-        .. strcharpart(getline(lB), cB + len(keys(close_delimiter_dict)[0]))
+      newline = strcharpart(getline(lB), 0, cB)
+            \ .. strcharpart(getline(lB),
+              \ cB + len(constants.TEXT_STYLES_DICT[style].open_delim))
       setline(lB, newline)
     endif
 enddef
 
-export def SurroundSimple(open_delimiter: string,
-    close_delimiter: string,
-    open_delimiters_dict: dict<string>,
-    close_delimiters_dict: dict<string>,
-    type: string = '')
+export def SurroundSimple(style: string, type: string = '')
 
   if getcharpos("'[") == getcharpos("']")
     return
   endif
 
-  var open_string = open_delimiter
-  var open_regex = open_delimiters_dict[open_string]
-  var open_delimiter_dict = {open_string: open_regex}
-
-  var close_string = close_delimiter
-  var close_regex = close_delimiters_dict[close_string]
-  var close_delimiter_dict = {close_string: close_regex}
+  var open_delim = constants.TEXT_STYLES_DICT[style].open_delim
+  var close_delim = constants.TEXT_STYLES_DICT[style].close_delim
 
   # line and column of point A
   var lA = line("'[")
@@ -143,8 +83,8 @@ export def SurroundSimple(open_delimiter: string,
   var lB = line("']")
   var cB = col("']")
 
-  var toA = strcharpart(getline(lA), 0, cA - 1) .. open_string
-  var fromB = close_string .. strcharpart(getline(lB), cB)
+  var toA = strcharpart(getline(lA), 0, cA - 1) .. open_delim
+  var fromB = close_delim .. strcharpart(getline(lB), cB)
 
   # If on the same line
   if lA == lB
@@ -189,9 +129,11 @@ export def SurroundSmart(style: string, type: string = '')
   # We don't want to remove links between A and B
   var regex_for_removal = keys(constants.TEXT_STYLES_DICT)
     ->filter("v:val !~ '\\v(markdownLinkText)'")
+  # TODO here we should use open_regex and close_regex but then the substitute()
+  # will replace also the \S :-(
   for k in regex_for_removal
-      add(delimiters_to_remove, constants.TEXT_STYLES_DICT[k].open_regex)
-      add(delimiters_to_remove, constants.TEXT_STYLES_DICT[k].close_regex)
+      add(delimiters_to_remove, constants.TEXT_STYLES_DICT[k].open_delim)
+      add(delimiters_to_remove, constants.TEXT_STYLES_DICT[k].close_delim)
   endfor
 
   # line and column of point A
@@ -226,7 +168,6 @@ export def SurroundSmart(style: string, type: string = '')
   cursor(lA, cA)
   var old_right_delimiter = ''
   var found_interval = IsInRange()
-  echom found_interval
   if !empty(found_interval)
     var found_style = keys(found_interval)[0]
     old_right_delimiter = constants.TEXT_STYLES_DICT[found_style].open_delim
@@ -294,11 +235,7 @@ export def SurroundSmart(style: string, type: string = '')
     var A_to_B = ''
     A_to_B = strcharpart(getline(lA), cA - 1, cB - cA + 1)
     if style != 'markdownCode'
-      for regex in delimiters_to_remove
-        A_to_B = A_to_B->substitute(regex, '', 'g')
-        # echom regex
-        echom "A_to_B: " .. A_to_B
-      endfor
+      A_to_B = A_to_B->substitute($'\V{join(delimiters_to_remove, '\|')}', '', 'g')
     endif
     # echom "A_to_B: " .. A_to_B
 
@@ -314,9 +251,8 @@ export def SurroundSmart(style: string, type: string = '')
     # Set line A
     var afterA = strcharpart(getline(lA), cA - 1)
     if style != 'markdownCode'
-      for regex in delimiters_to_remove
-        afterA = afterA->substitute(regex, '', 'g')
-      endfor
+      afterA = afterA
+        ->substitute($'\V{join(delimiters_to_remove, '\|')}', '', 'g')
     endif
     var lineA = toA .. afterA
     setline(lA, lineA)
@@ -324,9 +260,8 @@ export def SurroundSmart(style: string, type: string = '')
     # Set line B
     var beforeB = strcharpart(getline(lB), 0, cB)
     if style != 'markdownCode'
-      for regex in delimiters_to_remove
-        beforeB = beforeB->substitute(regex, '', 'g')
-      endfor
+      beforeB = beforeB
+        ->substitute($'\V{join(delimiters_to_remove, '\|')}', '', 'g')
     endif
     var lineB = beforeB .. fromB
     setline(lB, lineB)
@@ -336,9 +271,8 @@ export def SurroundSmart(style: string, type: string = '')
     while lA + ii < lB
       var middleline = getline(lA + ii)
       if style != 'markdownCode'
-        for regex in delimiters_to_remove
-          middleline = middleline-> substitute(regex, '', 'g')
-        endfor
+        middleline = middleline
+          ->substitute($'\V{join(delimiters_to_remove, '\|')}', '', 'g')
       endif
       setline(lA + ii, middleline)
       ii += 1
@@ -383,116 +317,6 @@ export def SurroundToggle(open_delimiter: string,
     close_delimiters_dict,
     text_object
     )
-enddef
-
-export def GetTextBetweenMarks(A: string, B: string): list<string>
-    # Usage: GetTextBetweenMarks("'A", "'B").
-    #
-    # Arguments must be marks called with the back ticks to get the exact
-    # position ('a jump to the marker but places the cursor
-    # at the beginning of the line.)
-    #
-    var [_, l1, c1, _] = getcharpos(A)
-    var [_, l2, c2, _] = getcharpos(B)
-
-    if l1 == l2
-        # Extract text within a single line
-        return [getline(l1)[c1 - 1 : c2 - 1]]
-    else
-        # Extract text across multiple lines
-        var lines = getline(l1, l2)
-        lines[0] = lines[0][c1 - 1 : ]  # Trim the first line from c1
-        lines[-1] = lines[-1][ : c2 - 1]  # Trim the last line up to c2
-        return lines
-    endif
-enddef
-
-export def GetDelimitersRanges(
-    open_delimiter_dict: dict<string>,
-    close_delimiter_dict: dict<string>,
-    ): list<list<list<number>>>
-  # It returns open-intervals, i.e. the delimiters are excluded.
-  #
-  # Passed delimiters are singleton dicts with key = the delimiter string,
-  # value = the regex to exactly capture such a delimiter string
-  #
-  # It is assumed that the ranges have no intersections. This happens if
-  # open_delimiter = close_delimiter, as in many languages.
-  #
-  # By contradiction, say that open_delimiter = * and close_delimiter = /. You may
-  # have something like:
-  # ----*---*===/---/-----
-  # The part in === is an intersection between two ranges.
-  # In these cases, this function will not work.
-  # However, languages where open_delimiter = close_delimiter such intersections
-  # cannot happen and this function apply.
-  #
-  var saved_cursor = getcursorcharpos()
-  cursor(1, 1)
-
-  var ranges = []
-
-  var open_regex = values(open_delimiter_dict)[0]
-  var open_string = keys(open_delimiter_dict)[0]
-  var close_regex = values(close_delimiter_dict)[0]
-  var close_string = keys(close_delimiter_dict)[0]
-
-  # 2D format due to that searchpos() returns a 2D vector
-  var open_regex_pos_short = [-1, -1]
-  var close_regex_pos_short = [-1, -1]
-  var open_regex_pos_short_final = [-1, -1]
-  var close_regex_pos_short_final = [-1, -1]
-
-  # 4D format due to that marks have 4-coordinates
-  var open_regex_pos = [0] + open_regex_pos_short + [0]
-  var open_regex_match = ''
-  var close_regex_pos = [0] + close_regex_pos_short + [0]
-  var close_regex_length = 0
-  var close_regex_match = ''
-
-  while open_regex_pos_short != [0, 0]
-
-    # A. ------------ open_regex -----------------
-    open_regex_pos_short = searchpos(open_regex, 'W')
-
-    # If the open delimiter is the tail of the line,
-    # then the open-interval starts from the next line, column 1
-    if open_regex_pos_short[1] + len(open_string) == col('$')
-      open_regex_pos_short_final[0] = open_regex_pos_short[0] + 1
-      open_regex_pos_short_final[1] = 1
-    else
-      # Pick the open-interval
-      open_regex_pos_short_final[0] = open_regex_pos_short[0]
-      open_regex_pos_short_final[1] = open_regex_pos_short[1]
-                                             + len(open_string)
-    endif
-    open_regex_pos = [0] + open_regex_pos_short_final + [0]
-
-    # B. ------ Close regex -------
-    close_regex_pos_short = searchpos(close_regex, 'W')
-    # TODO: if close_regex_pos_short = [0, 0] => anomaly! One tag has been
-    # opened and never closed!
-
-    # If the closed delimiter is the lead of the line, then the open-interval
-    # starts from the previous line, last column
-    if close_regex_pos_short[1] - 1 == 0
-      close_regex_pos_short_final[0] = close_regex_pos_short[0] - 1
-      close_regex_pos_short_final[1] = len(getline(close_regex_pos_short_final[0]))
-    else
-      close_regex_pos_short_final[0] = close_regex_pos_short[0]
-      close_regex_pos_short_final[1] = close_regex_pos_short[1] - 1
-    endif
-    close_regex_pos = [0] + close_regex_pos_short_final + [0]
-
-    add(ranges, [open_regex_pos, close_regex_pos])
-  endwhile
-  setcursorcharpos(saved_cursor[1 : 2])
-
-  # Remove the last element junky [[0,0,len(open_delimiter),0], [0,0,-1,0]]
-  # TODO it does not seems to remove anything...
-  remove(ranges, -1)
-
-  return ranges
 enddef
 
 export def IsLess(l1: list<number>, l2: list<number>): bool
@@ -626,20 +450,6 @@ export def IsInRange(): dict<list<list<number>>>
   return return_val
 enddef
 
-# Not used in markdown
-export def DeleteTextBetweenMarks(A: string, B: string): string
-  # To jump to the exact position (and not at the beginning of a line) you
-  # have to call the marker with the backtick ` rather than with ', e.g. `a
-  # instead of 'a
-  # TODO
-  # This implementation most likely modify the jumplist.
-  # Find a solution based on functions instead
-  var exact_A = substitute(A, "'", "`", "")
-  var exact_B = substitute(B, "'", "`", "")
-  execute $'norm! {exact_A}v{exact_B}"_d'
-  # This to get rid off E1186
-  return ''
-enddef
 
 export def SetBlock(open_block: dict<string>,
     close_block: dict<string>,
