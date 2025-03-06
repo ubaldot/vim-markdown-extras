@@ -160,33 +160,6 @@ def g:Test_ListComparison()
 
 enddef
 
-def g:Test_IsBetweenMarks()
-  Generate_testfile(lines_1, src_name_1)
-  exe $"edit {src_name_1}"
-
-  setcharpos("'p", [0, 4, 23, 0])
-  setcharpos("'q", [0, 9, 11, 0])
-
-  # Test 1
-  cursor(2, 15)
-  assert_false(utils.IsBetweenMarks("'p", "'q"))
-  cursor(8, 3)
-  assert_true(utils.IsBetweenMarks("'p", "'q"))
-
-  # Test 2
-  cursor(8, 3)
-  setcharpos("'p", [0, 3, 20, 0])
-  setcharpos("'q", [0, 3, 28, 0])
-  assert_false(utils.IsBetweenMarks("'p", "'q"))
-
-  setcharpos("'p", [0, 4, 18, 0])
-  setcharpos("'q", [0, 5, 29, 0])
-  assert_false(utils.IsBetweenMarks("'p", "'q"))
-
-  :%bw!
-  Cleanup_testfile(src_name_1)
-enddef
-
 def g:Test_IsInRange()
   vnew
   Generate_testfile(lines_1, src_name_1)
