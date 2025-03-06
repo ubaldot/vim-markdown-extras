@@ -532,25 +532,28 @@ def g:Test_SurroundSmart_one_line()
   cursor(15, 13)
   setcharpos("'[", [0, 15, 12, 0])
   setcharpos("']", [0, 15, 34, 0])
-  # utils.SurroundSmart('markdownBold')
+  utils.SurroundSmart('markdownBold')
   # Do the same operation, nothing should change
+  utils.SurroundSmart('markdownBold')
+  utils.SurroundSmart('markdownBold')
   # utils.SurroundSmart('markdownBold')
-  # actual_value = getline(14, 16)
-  # echom assert_equal(expected_value, actual_value)
+  # utils.SurroundSmart('markdownBold')
+  actual_value = getline(14, 16)
+  echom assert_equal(expected_value, actual_value)
 
   # Prolong delimiter
   # TODO to check
-  expected_value = [
-    'Quis autem vel eum iure reprehenderit qui in ea **voluptate velit esse**',
-    'quam nihil **(molestiae consequatur), vel** illum qui dolorem eum fugiat quo',
-    'voluptas nulla pariatur?',
-    ]
-  cursor(15, 32)
-  setcharpos("'[", [0, 15, 32, 0])
-  setcharpos("']", [0, 15, 43, 0])
-  utils.SurroundSmart('markdownBold')
-  actual_value = getline(14, 16)
-  echom assert_equal(expected_value, actual_value)
+  # expected_value = [
+  #   'Quis autem vel eum iure reprehenderit qui in ea **voluptate velit esse**',
+  #   'quam nihil **(molestiae consequatur), vel** illum qui dolorem eum fugiat quo',
+  #   'voluptas nulla pariatur?',
+  #   ]
+  # cursor(15, 32)
+  # setcharpos("'[", [0, 15, 32, 0])
+  # setcharpos("']", [0, 15, 43, 0])
+  # utils.SurroundSmart('markdownBold')
+  # actual_value = getline(14, 16)
+  # echom assert_equal(expected_value, actual_value)
 
   # :%bw!
   # Cleanup_testfile(src_name_2)

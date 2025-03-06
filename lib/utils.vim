@@ -184,8 +184,12 @@ export def SurroundSmart(style: string, type: string = '')
   var close_delim = constants.TEXT_STYLES_DICT[style].close_delim
   var close_regex = constants.TEXT_STYLES_DICT[style].close_regex
 
+  # This is needed to remove all existing other text-styles between A and B
   var delimiters_to_remove = []
-  for k in keys(constants.TEXT_STYLES_DICT)
+  # We don't want to remove links between A and B
+  var regex_for_removal = keys(constants.TEXT_STYLES_DICT)
+    ->filter("v:val !~ '\\v(markdownLinkText)'")
+  for k in regex_for_removal
       add(delimiters_to_remove, constants.TEXT_STYLES_DICT[k].open_regex)
       add(delimiters_to_remove, constants.TEXT_STYLES_DICT[k].close_regex)
   endfor
@@ -222,6 +226,7 @@ export def SurroundSmart(style: string, type: string = '')
   cursor(lA, cA)
   var old_right_delimiter = ''
   var found_interval = IsInRange()
+  echom found_interval
   if !empty(found_interval)
     var found_style = keys(found_interval)[0]
     old_right_delimiter = constants.TEXT_STYLES_DICT[found_style].open_delim
@@ -255,7 +260,6 @@ export def SurroundSmart(style: string, type: string = '')
   else
     toA = strcharpart(getline(lA), 0, cA - 1) .. open_delim
   endif
-  echom $'toA: ' .. toA
 
   # Check if B falls in an existing interval
   cursor(lB, cB)
@@ -276,8 +280,6 @@ export def SurroundSmart(style: string, type: string = '')
   else
     fromB = close_delim .. strcharpart(getline(lB), cB)
   endif
-  echom $'fromB: ' .. fromB
-  echom ''
 
   # ------- SMART DELIMITERS PART END -----------
   # We have compute the partial strings until A and the partial string that
@@ -294,9 +296,15 @@ export def SurroundSmart(style: string, type: string = '')
     if style != 'markdownCode'
       for regex in delimiters_to_remove
         A_to_B = A_to_B->substitute(regex, '', 'g')
+        # echom regex
+        echom "A_to_B: " .. A_to_B
       endfor
     endif
-    echom $'A_to_B:' .. A_to_B
+    # echom "A_to_B: " .. A_to_B
+
+    # echom $'toA: ' .. toA
+    # echom $'fromB: ' .. fromB
+    # echom $'A_to_B:' .. A_to_B
     # echom '----------\n'
 
     # Set the whole line
