@@ -165,24 +165,31 @@ export def SurroundSimple(open_delimiter: string,
   endif
 enddef
 
-export def SurroundSmart(open_delimiter: string,
-    close_delimiter: string,
-    open_delimiters_dict: dict<string>,
-    close_delimiters_dict: dict<string>,
-    type: string = '')
+export def SurroundSmart(style: string, type: string = '')
+  # It tries to preserve the style.
+  # In general, you may want to pass constant.TEXT_STYLES_DICT as a parameter.
 
   if getcharpos("'[") == getcharpos("']")
     return
   endif
 
-  var open_string = open_delimiter
-  var open_regex = open_delimiters_dict[open_string]
-  var open_delimiter_dict = {open_string: open_regex}
+  if index(keys(constants.TEXT_STYLES_DICT), style) == -1
+    Echoerr($'Style "{style}" not found in dict')
+    return
+  endif
 
-  var close_string = close_delimiter
-  var close_regex = close_delimiters_dict[close_string]
-  var close_delimiter_dict = {close_string: close_regex}
-  #
+  var open_delim = constants.TEXT_STYLES_DICT[style].open_delim
+  var open_regex = constants.TEXT_STYLES_DICT[style].open_regex
+
+  var close_delim = constants.TEXT_STYLES_DICT[style].close_delim
+  var close_regex = constants.TEXT_STYLES_DICT[style].close_regex
+
+  var delimiters_to_remove = []
+  for k in keys(constants.TEXT_STYLES_DICT)
+      add(delimiters_to_remove, constants.TEXT_STYLES_DICT[k].open_regex)
+      add(delimiters_to_remove, constants.TEXT_STYLES_DICT[k].close_regex)
+  endfor
+
   # line and column of point A
   var lA = line("'[")
   var cA = col("'[")
@@ -190,6 +197,7 @@ export def SurroundSmart(open_delimiter: string,
   # line and column of point B
   var lB = line("']")
   var cB = col("']")
+
   # -------- SMART DELIMITERS BEGIN ---------------------------
   # We check conditions like the following and we adjust the style
   # delimiters
@@ -210,26 +218,14 @@ export def SurroundSmart(open_delimiter: string,
   #
   # so that all the styles are visible
 
-  # We need a list-of-dicts [{a: 'foo'}, {b: 'bar'}, {c: 'baz'}]
-  var open_delimiters_dict_list = DictToListOfDicts(open_delimiters_dict)
-  var close_delimiters_dict_list = DictToListOfDicts(close_delimiters_dict)
-
   # Check if A falls in an existing interval
-  var found_delimiters_interval = []
   cursor(lA, cA)
   var old_right_delimiter = ''
-  for delim in ZipLists(open_delimiters_dict_list,
-      close_delimiters_dict_list)
-
-    found_delimiters_interval = IsInRange(delim[0], delim[1])
-
-    if !empty(found_delimiters_interval)
-      old_right_delimiter = keys(delim[0])[0]
-      # Existing blocks shall be disjoint,
-      # so we can break as soon as we find a delimiter
-      break
-    endif
-  endfor
+  var found_interval = IsInRange()
+  if !empty(found_interval)
+    var found_style = keys(found_interval)[0]
+    old_right_delimiter = constants.TEXT_STYLES_DICT[found_style].open_delim
+  endif
 
   # Try to preserve overlapping ranges by moving the delimiters.
   # For example. If we have the pairs (C, D) and (E,F) as it follows:
@@ -247,44 +243,41 @@ export def SurroundSmart(open_delimiter: string,
   #
   # TODO: the following is specifically designed for markdown, so if you use
   # for other languages, you may need to modify it!
+  #
   var toA = ''
-  if !empty(found_delimiters_interval) && old_right_delimiter != open_string
+  if !empty(found_interval) && old_right_delimiter != open_delim
     toA = strcharpart(getline(lA), 0, cA - 1)->substitute('\s*$', '', '')
-      .. $'{old_right_delimiter} {open_string}'
-  elseif !empty(found_delimiters_interval) && old_right_delimiter == open_string
+      .. $'{old_right_delimiter} {open_delim}'
+  elseif !empty(found_interval) && old_right_delimiter == open_delim
     # If the found interval is a text style equal to the one you want to set,
     # i.e. you would end up in adjacent delimiters like ** ** => Remove both
     toA = strcharpart(getline(lA), 0, cA - 1)
   else
-    toA = strcharpart(getline(lA), 0, cA - 1) .. open_string
+    toA = strcharpart(getline(lA), 0, cA - 1) .. open_delim
   endif
+  echom $'toA: ' .. toA
 
   # Check if B falls in an existing interval
   cursor(lB, cB)
   var old_left_delimiter = ''
-  found_delimiters_interval = []
-  for delim in ZipLists(close_delimiters_dict_list,
-      close_delimiters_dict_list)
-
-    found_delimiters_interval = IsInRange(delim[0], delim[0])
-
-    if !empty(found_delimiters_interval)
-      old_left_delimiter = keys(delim[0])[0]
-      # Existing blocks shall be disjoint,
-      # so we can break as soon as we find a delimiter
-      break
-    endif
-  endfor
+  found_interval = IsInRange()
+  if !empty(found_interval)
+    var found_style = keys(found_interval)[0]
+    old_left_delimiter = constants.TEXT_STYLES_DICT[found_style].close_delim
+  endif
 
   var fromB = ''
-  if !empty(found_delimiters_interval) && old_left_delimiter != close_string
-    fromB = $'{close_string} {old_left_delimiter}'
+  if !empty(found_interval) && old_left_delimiter != close_delim
+    # Move old_left_delimiter "outside"
+    fromB = $'{close_delim} {old_left_delimiter}'
       .. strcharpart(getline(lB), cB)->substitute('^\s*', '', '')
-  elseif !empty(found_delimiters_interval) && old_left_delimiter == close_string
+  elseif !empty(found_interval) && old_left_delimiter == close_delim
       fromB = strcharpart(getline(lB), cB)
   else
-    fromB = close_string .. strcharpart(getline(lB), cB)
+    fromB = close_delim .. strcharpart(getline(lB), cB)
   endif
+  echom $'fromB: ' .. fromB
+  echom ''
 
   # ------- SMART DELIMITERS PART END -----------
   # We have compute the partial strings until A and the partial string that
@@ -292,17 +285,19 @@ export def SurroundSmart(open_delimiter: string,
   # Next, we have to adjust the text between A and B, by removing all the
   # possible delimiters left between them.
 
-  var delimiters_to_remove = values(
-    extendnew(open_delimiters_dict, close_delimiters_dict)
-  )
+
   # If on the same line
   if lA == lB
     # Overwrite everything that is in the middle
     var A_to_B = ''
     A_to_B = strcharpart(getline(lA), cA - 1, cB - cA + 1)
-    for regex in delimiters_to_remove
-      A_to_B = A_to_B->substitute(regex, '', 'g')
-    endfor
+    if style != 'markdownCode'
+      for regex in delimiters_to_remove
+        A_to_B = A_to_B->substitute(regex, '', 'g')
+      endfor
+    endif
+    echom $'A_to_B:' .. A_to_B
+    # echom '----------\n'
 
     # Set the whole line
     setline(lA, toA .. A_to_B .. fromB)
@@ -310,17 +305,21 @@ export def SurroundSmart(open_delimiter: string,
   else
     # Set line A
     var afterA = strcharpart(getline(lA), cA - 1)
-    for regex in delimiters_to_remove
-      afterA = afterA->substitute(regex, '', 'g')
-    endfor
+    if style != 'markdownCode'
+      for regex in delimiters_to_remove
+        afterA = afterA->substitute(regex, '', 'g')
+      endfor
+    endif
     var lineA = toA .. afterA
     setline(lA, lineA)
 
     # Set line B
     var beforeB = strcharpart(getline(lB), 0, cB)
-    for regex in delimiters_to_remove
-      beforeB = beforeB->substitute(regex, '', 'g')
-    endfor
+    if style != 'markdownCode'
+      for regex in delimiters_to_remove
+        beforeB = beforeB->substitute(regex, '', 'g')
+      endfor
+    endif
     var lineB = beforeB .. fromB
     setline(lB, lineB)
 
@@ -328,14 +327,15 @@ export def SurroundSmart(open_delimiter: string,
     var ii = 1
     while lA + ii < lB
       var middleline = getline(lA + ii)
-      for regex in delimiters_to_remove
-        middleline = middleline-> substitute(regex, '', 'g')
-      endfor
+      if style != 'markdownCode'
+        for regex in delimiters_to_remove
+          middleline = middleline-> substitute(regex, '', 'g')
+        endfor
+      endif
       setline(lA + ii, middleline)
       ii += 1
     endwhile
   endif
-
 enddef
 
 # TODO: Not used in markdown
@@ -548,6 +548,7 @@ export def IsBetweenMarks(A: string, B: string): bool
     return result
 enddef
 
+
 export def IsInRange(): dict<list<list<number>>>
   # Return a dict like {'markdownCode': [[21, 19], [22, 21]]}.
   # The returned intervals are open.
@@ -599,21 +600,13 @@ export def IsInRange(): dict<list<list<number>>>
     start_delim[1] += len(open_delim)
 
     # Search end delimiter
-    # TODO: very ugly hack due to that the close regex of markdownLinkText end
-    # up on ] and not on the char just before it. LINK_CLOSE_REGEX shall be
-    # fixed.
-    var tmp =
-      synIDattr(synID(line("."), col("."), 1), "name") == 'markdownLinkText'
-      ? 0
-      : 1
-    # End ugly hack
     const close_delim =
      eval($'constants.TEXT_STYLES_DICT.{text_style}.close_delim')
     const close_regex =
       eval($'constants.TEXT_STYLES_DICT.{text_style}.close_regex')
     var end_delim = searchpos(close_regex, 'ncW')
 
-    # TODO: again, very ugly hack due to the LINK_CLOSE_REGEX ending up on ]
+    # TODO: Very ugly hack due to the LINK_CLOSE_REGEX ending up on ]
     if synIDattr(synID(end_delim[0], end_delim[1], 1), "name")
         == 'markdownLinkTextDelimiter'
       end_delim[1] -= 1

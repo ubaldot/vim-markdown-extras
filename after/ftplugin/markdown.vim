@@ -133,50 +133,41 @@ if exists('g:markdown_extras_config')
   Surround = utils.SurroundSimple
 endif
 
-def SetSurroundOpFunc(open_string: string,
-    close_string: string,
-    all_open_styles: dict<string>,
-    all_close_styles: dict<string>)
+def SetSurroundOpFunc(style: string)
 
   &l:opfunc = function(
-    Surround, [open_string, close_string, all_open_styles, all_close_styles]
+    Surround, [style]
   )
 enddef
 
 if empty(maparg('<Plug>MarkdownBold'))
   noremap <script> <buffer> <Plug>MarkdownBold
-        \ <ScriptCmd>SetSurroundOpFunc('**', '**',
-        \ TEXT_STYLES_DICT, TEXT_STYLES_DICT)<cr>g@
+        \ <ScriptCmd>SetSurroundOpFunc('markdownBold')<cr>g@
 endif
 
 if empty(maparg('<Plug>MarkdownItalic'))
   noremap <script> <buffer> <Plug>MarkdownItalic
-        \ <ScriptCmd>SetSurroundOpFunc(' *', '* ',
-        \ TEXT_STYLES_DICT, TEXT_STYLES_DICT)<cr>g@
+        \ <ScriptCmd>SetSurroundOpFunc('markdownItalic')<cr>g@
 endif
 
 if empty(maparg('<Plug>MarkdownBoldUnderscore'))
   noremap <script> <buffer> <Plug>MarkdownBoldUnderscore
-        \ <ScriptCmd>SetSurroundOpFunc('__', '__',
-        \ TEXT_STYLES_DICT, TEXT_STYLES_DICT)<cr>g@
+        \ <ScriptCmd>SetSurroundOpFunc('markdownBoldU')<cr>g@
 endif
 
 if empty(maparg('<Plug>MarkdownItalicUnderscore'))
   noremap <script> <buffer> <Plug>MarkdownItalicUnderscore
-        \ <ScriptCmd>SetSurroundOpFunc('_', '_',
-        \ TEXT_STYLES_DICT, TEXT_STYLES_DICT)<cr>g@
+        \ <ScriptCmd>SetSurroundOpFunc('markdownItalicU')<cr>g@
 endif
 
-if empty(maparg('<Plug>MarkdownStrikethrough'))
-  noremap <script> <buffer> <Plug>MarkdownStrikethrough
-        \ <ScriptCmd>SetSurroundOpFunc('~~', '~~',
-        \ TEXT_STYLES_DICT, TEXT_STYLES_DICT)<cr>g@
+if empty(maparg('<Plug>MarkdownStrike'))
+  noremap <script> <buffer> <Plug>MarkdownStrike
+        \ <ScriptCmd>SetSurroundOpFunc('markdownStrike')<cr>g@
 endif
 
 if empty(maparg('<Plug>MarkdownCode'))
   noremap <script> <buffer> <Plug>MarkdownCode
-        \ <ScriptCmd>SetSurroundOpFunc('`', '`',
-        \ TEXT_STYLES_DICT, TEXT_STYLES_DICT)<cr>g@
+        \ <ScriptCmd>SetSurroundOpFunc('MarkdownCode')<cr>g@
 endif
 
 if empty(maparg('<Plug>MarkdownAddHighlight'))
@@ -235,9 +226,9 @@ if use_default_mappings
     xnoremap <buffer> <localleader>i_ <Plug>MarkdownItalicUnderscore
   endif
 
-  if !hasmapto('<Plug>MarkdownStrikethrough')
-    nnoremap <buffer> <localleader>s <Plug>MarkdownStrikethrough
-    xnoremap <buffer> <localleader>s <Plug>MarkdownStrikethrough
+  if !hasmapto('<Plug>MarkdownStrike')
+    nnoremap <buffer> <localleader>s <Plug>MarkdownStrike
+    xnoremap <buffer> <localleader>s <Plug>MarkdownStrike
   endif
 
   if !hasmapto('<Plug>MarkdownCode')
