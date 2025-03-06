@@ -4,6 +4,7 @@ import autoload "../../lib/funcs.vim"
 import autoload "../../lib/preview.vim"
 import autoload "../../lib/links.vim"
 import autoload '../../lib/utils.vim'
+import autoload '../../lib/highlight.vim'
 import autoload '../../lib/constants.vim'
 
 
@@ -61,8 +62,8 @@ if use_pandoc && executable('pandoc')
 
   compiler pandoc
 
+  # TODO: make it to take additional arguments
   def Make(format: string = 'html')
-    #
 
     var output_file = $'{expand('%:p:r')}.{format}'
     var cmd = execute($'make {format}')
@@ -178,6 +179,15 @@ if empty(maparg('<Plug>MarkdownCode'))
         \ TEXT_STYLES_DICT, TEXT_STYLES_DICT)<cr>g@
 endif
 
+if empty(maparg('<Plug>MarkdownAddHighlight'))
+  noremap <script> <buffer> <Plug>MarkdownAddHighlight
+        \ <esc><ScriptCmd>highlight.AddProp()<cr>
+endif
+
+if empty(maparg('<Plug>MarkdownClearHighlight'))
+  noremap <script> <buffer> <Plug>MarkdownClearHighlight
+        \ <esc><ScriptCmd>highlight.ClearProp()<cr>
+endif
 # ----------- TODO:TO BE REVIEWED ----------------------
 
 def SetCodeBlock(open_block: dict<string>,
@@ -254,5 +264,13 @@ if use_default_mappings
   # ------------------------------------------------------
   if !hasmapto('<Plug>MarkdownReferencePreview')
     nnoremap <buffer> <silent> K <Plug>MarkdownReferencePreview
+  endif
+
+  # ---------- Highlight --------------------------
+  if !hasmapto('<Plug>MarkdownAddHighlight')
+    xnoremap <leader>ha <Plug>MarkdownAddHighlight
+  endif
+  if !hasmapto('<Plug>MarkdownClearHighlight')
+    xnoremap <leader>hd <Plug>MarkdownClearHighlight
   endif
 endif

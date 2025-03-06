@@ -1,3 +1,6 @@
-ReplicaContents	markdown_extras.txt	/*ReplicaContents*
-ReplicaIntroduction	markdown_extras.txt	/*ReplicaIntroduction*
+g:markdown_extras_config	markdown_extras.txt	/*g:markdown_extras_config*
 markdown-extras	markdown_extras.txt	/*markdown-extras*
+markdown-extras-configuration	markdown_extras.txt	/*markdown-extras-configuration*
+markdown-extras-contents	markdown_extras.txt	/*markdown-extras-contents*
+markdown-extras-introduction	markdown_extras.txt	/*markdown-extras-introduction*
+markdown-extras-requirements	markdown_extras.txt	/*markdown-extras-requirements*
