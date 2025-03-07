@@ -157,7 +157,6 @@ def g:Test_ListComparison()
   assert_false(utils.IsGreater(A, B))
   assert_false(utils.IsLess(A, B))
   assert_true(utils.IsEqual(A, B))
-
 enddef
 
 def g:Test_IsInRange()
@@ -201,7 +200,7 @@ def g:Test_IsInRange()
 
   # End of paragraph with no delimiter
   cursor(21, 43)
-  expected_value = {'markdownStrike': [[21, 39], [23, 1]]}
+  expected_value = {'markdownStrike': [[21, 39], [22, 26]]}
   range = utils.IsInRange()
   echom assert_equal(expected_value, range)
 
@@ -388,8 +387,8 @@ def g:Test_SurroundSmart_one_line_1()
   actual_value = getline(18, 20)
   echom assert_equal(expected_value, actual_value)
 
-  :%bw!
-  Cleanup_testfile(src_name_2)
+  # :%bw!
+  # Cleanup_testfile(src_name_2)
 enddef
 
 def g:Test_RemoveSurrounding_one_line()

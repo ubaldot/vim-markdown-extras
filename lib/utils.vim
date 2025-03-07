@@ -2,7 +2,6 @@ vim9script
 
 import autoload "./constants.vim"
 
-
 export def Echoerr(msg: string)
   echohl ErrorMsg | echom $'[markdown_extras] {msg}' | echohl None
 enddef
@@ -10,7 +9,6 @@ enddef
 export def Echowarn(msg: string)
   echohl WarningMsg | echom $'[markdown_extras] {msg}' | echohl None
 enddef
-
 
 export def FormatWithoutMoving(a: number = 0, b: number = 0)
   # To be used for formatting through autocmds
@@ -238,12 +236,11 @@ export def SurroundSmart(style: string, type: string = '')
     if style != 'markdownCode'
       A_to_B = A_to_B->substitute($'\V{join(delimiters_to_remove, '\|')}', '', 'g')
     endif
-    # echom "A_to_B: " .. A_to_B
 
-    echom $'toA: ' .. toA
-    echom $'fromB: ' .. fromB
-    echom $'A_to_B:' .. A_to_B
-    echom '----------\n'
+    # echom $'toA: ' .. toA
+    # echom $'fromB: ' .. fromB
+    # echom $'A_to_B:' .. A_to_B
+    # echom '----------\n'
 
     # Set the whole line
     setline(lA, toA .. A_to_B .. fromB)
@@ -381,7 +378,6 @@ export def IsBetweenMarks(A: string, B: string): bool
     return result
 enddef
 
-
 export def IsInRange(): dict<list<list<number>>>
   # Return a dict like {'markdownCode': [[21, 19], [22, 21]]}.
   # The returned intervals are open.
@@ -414,38 +410,69 @@ export def IsInRange(): dict<list<list<number>>>
   enddef
 
   # Main function start here
-  const text_style =
-    synIDattr(synID(line("."), col("."), 1), "name") == 'markdownItalic'
-    || synIDattr(synID(line("."), col("."), 1), "name") == 'markdownBold'
+  # text_style comes from vim-markdown
+  const text_style = synIDattr(synID(line("."), col("."), 1), "name")
+  const text_style_adjusted =
+    text_style == 'markdownItalic' || text_style == 'markdownBold'
      ? StarOrUnderscore(synIDattr(synID(line("."), col("."), 1), "name"))
      : synIDattr(synID(line("."), col("."), 1), "name")
   var return_val = {}
 
-  if !empty(text_style)
-      && index(keys(constants.TEXT_STYLES_DICT), text_style) != -1
+  if !empty(text_style_adjusted)
+      && index(keys(constants.TEXT_STYLES_DICT), text_style_adjusted) != -1
+
+    const saved_curpos = getcursorcharpos()
 
     # Search start delimiter
     const open_delim =
-      eval($'constants.TEXT_STYLES_DICT.{text_style}.open_delim')
-    const open_regex =
-      eval($'constants.TEXT_STYLES_DICT.{text_style}.open_regex')
-    var start_delim = searchpos(open_regex, 'nbW')
-    start_delim[1] += len(open_delim)
+      eval($'constants.TEXT_STYLES_DICT.{text_style_adjusted}.open_delim')
 
-    # Search end delimiter
+    var open_delim_pos = searchpos($'\V{open_delim}', 'bW')
+    var current_style = synIDattr(synID(line("."), col("."), 1), "name")
+    while current_style != $'{text_style}Delimiter'
+      open_delim_pos = searchpos($'\V{open_delim}', 'bW')
+      current_style = synIDattr(synID(line("."), col("."), 1), "name")
+    endwhile
+    open_delim_pos[1] += len(open_delim)
+
+    # Search end delimiter. The end delimiter may be a blank line, hence
+    # things become a bit cumbersome.
+    setcursorcharpos(saved_curpos[1 : 2])
     const close_delim =
-     eval($'constants.TEXT_STYLES_DICT.{text_style}.close_delim')
-    const close_regex =
-      eval($'constants.TEXT_STYLES_DICT.{text_style}.close_regex')
-    var end_delim = searchpos(close_regex, 'ncW')
+     eval($'constants.TEXT_STYLES_DICT.{text_style_adjusted}.close_delim')
+    var close_delim_pos = searchpos($'\V{close_delim}', 'nW')
+    var blank_line_pos = searchpos($'^$', 'nW')
+    var first_met = [0, 0]
+    current_style = synIDattr(synID(line("."), col("."), 1), "name")
 
-    # TODO: Very ugly hack due to the LINK_CLOSE_REGEX ending up on ]
-    if synIDattr(synID(end_delim[0], end_delim[1], 1), "name")
-        == 'markdownLinkTextDelimiter'
-      end_delim[1] -= 1
+    while current_style != $'{text_style}Delimiter'
+        && getline(line('.')) !~ '^$'
+      close_delim_pos = searchpos($'\V{close_delim}', 'nW')
+      blank_line_pos = searchpos($'^$', 'nW')
+      if close_delim_pos == [0, 0]
+        first_met = blank_line_pos
+      elseif blank_line_pos == [0, 0]
+        first_met = close_delim_pos
+      else
+        first_met = IsLess(close_delim_pos, blank_line_pos)
+        ? close_delim_pos
+        : blank_line_pos
+      endif
+      setcursorcharpos(first_met)
+      current_style = synIDattr(synID(line("."), col("."), 1), "name")
+    endwhile
+
+    # If we hit a blank line, then we take the previous line and last column,
+    # to keep consistency in returning open-intervals
+    if getline(line('.')) =~ '^$'
+      first_met[0] = first_met[0] - 1
+      first_met[1] = len(getline(first_met[0]))
+    else
+      first_met[1] -= 1
     endif
 
-    return_val =  {[text_style]: [start_delim, end_delim]}
+    setcursorcharpos(saved_curpos[1 : 2])
+    return_val =  {[text_style_adjusted]: [open_delim_pos, first_met]}
   endif
 
   return return_val

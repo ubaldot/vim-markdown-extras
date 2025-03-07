@@ -301,15 +301,16 @@ def g:Test_links_regex()
   for ii in range(len(curpos))
     cursor(curpos[ii])
     actual_pos = searchpos(LINK_OPEN_REGEX, 'bW')
-    echom actual_pos
     echom assert_equal(expected_pos_open[ii], actual_pos)
 
     # Close
     cursor(curpos[ii])
     actual_pos = searchpos(LINK_CLOSE_REGEX, 'cW')
+    echom LINK_CLOSE_REGEX
+    echom actual_pos
     echom assert_equal(expected_pos_close[ii], actual_pos)
   endfor
 
-  :%bw!
-  Cleanup_testfile(src_name_2)
+  # :%bw!
+  # Cleanup_testfile(src_name_2)
 enddef

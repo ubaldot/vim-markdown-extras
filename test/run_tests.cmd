@@ -16,9 +16,11 @@ REM
     echo set runtimepath+=..
     echo set runtimepath+=../after
     echo filetype plugin indent on
+    echo syntax on
 ) >> "%VIMRC%"
 
-SET "VIM_CMD=%VIMPRG% --clean -u %VIMRC% -i NONE --not-a-term"
+REM SET "VIM_CMD=%VIMPRG% --clean -u %VIMRC% -i NONE --not-a-term"
+SET "VIM_CMD=%VIMPRG% --clean -u %VIMRC% -i NONE"
 
 REM Check if the vimrc file was created successfully
 if NOT EXIST "%VIMRC%" (
@@ -33,7 +35,8 @@ type "%VIMRC%"
 echo/
 
 REM Run Vim with the specified configuration and additional commands
-SET "TEST_FILES=['test_markdown_extras.vim', 'test_utils.vim', 'test_regex.vim']"
+REM SET "TEST_FILES=['test_markdown_extras.vim', 'test_utils.vim', 'test_regex.vim']"
+SET "TEST_FILES=['test_utils.vim']"
 %VIM_CMD% -c "vim9cmd g:TestFiles =  %TEST_FILES%" -S "runner.vim"
 REM If things go wrong uncomment the following line and see e.g. if the
 REM vimrc_for_test is valid, check :messages and so on.

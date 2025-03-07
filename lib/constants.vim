@@ -110,7 +110,7 @@ export const STRIKE_CLOSE_DICT = {[TEXT_STYLES_DICT.markdownStrike.close_delim]:
 export const LINK_OPEN_DICT = {[TEXT_STYLES_DICT.markdownLinkText.open_delim]:
   TEXT_STYLES_DICT.markdownLinkText.open_regex}
 export const LINK_CLOSE_DICT = {[TEXT_STYLES_DICT.markdownLinkText.close_delim]:
-  TEXT_STYLES_DICT.markdownStrike.close_regex}
+  TEXT_STYLES_DICT.markdownLinkText.close_regex}
 
 # TODO on the delimiter synIDattr(synID(line("."), col("."), 1), "name")
 # return markdownCodeDelimiter instead of
