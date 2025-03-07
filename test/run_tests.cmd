@@ -19,8 +19,7 @@ REM
     echo syntax on
 ) >> "%VIMRC%"
 
-REM SET "VIM_CMD=%VIMPRG% --clean -u %VIMRC% -i NONE --not-a-term"
-SET "VIM_CMD=%VIMPRG% --clean -u %VIMRC% -i NONE"
+SET "VIM_CMD=%VIMPRG% --clean -u %VIMRC% -i NONE --not-a-term"
 
 REM Check if the vimrc file was created successfully
 if NOT EXIST "%VIMRC%" (
@@ -35,8 +34,7 @@ type "%VIMRC%"
 echo/
 
 REM Run Vim with the specified configuration and additional commands
-REM SET "TEST_FILES=['test_markdown_extras.vim', 'test_utils.vim', 'test_regex.vim']"
-SET "TEST_FILES=['test_utils.vim']"
+SET "TEST_FILES=['test_markdown_extras.vim', 'test_utils.vim', 'test_regex.vim']"
 %VIM_CMD% -c "vim9cmd g:TestFiles =  %TEST_FILES%" -S "runner.vim"
 REM If things go wrong uncomment the following line and see e.g. if the
 REM vimrc_for_test is valid, check :messages and so on.
