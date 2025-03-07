@@ -48,18 +48,30 @@ export def RemoveSurrounding()
               \ cA - 1 - len(constants.TEXT_STYLES_DICT[style].open_delim))
               \ .. strcharpart(getline(lA), cA - 1)
       setline(lA, newline)
+      echom newline
 
       # Remove right delimiter
       const lB = interval[1][0]
       var cB = interval[1][1]
-      # The value of cB may no longer be valid since we shortened the line
+
+      # If lA == lB, then The value of cB may no longer be valid since
+      # we shortened the line
       if lA == lB
         cB = cB - len(constants.TEXT_STYLES_DICT[style].open_delim)
       endif
 
-      newline = strcharpart(getline(lB), 0, cB)
-            \ .. strcharpart(getline(lB),
-              \ cB + len(constants.TEXT_STYLES_DICT[style].open_delim))
+      # Check if you hit a delimiter or a blank line OR if you hit a delimiter
+      # but you also have a blank like
+      # If you have open intervals (as we do), then cB < lenght_of_line, If
+      # not, then don't do anything. This behavior is compliant with
+      # vim-surround
+      if  cB < len(getline(lB))
+        newline = strcharpart(getline(lB), 0, cB)
+              \ .. strcharpart(getline(lB),
+                \ cB + len(constants.TEXT_STYLES_DICT[style].close_delim))
+      else
+        newline = getline(lB)
+      endif
       setline(lB, newline)
     endif
 enddef
@@ -149,7 +161,6 @@ export def SurroundSmart(style: string, type: string = '')
 
   var close_delim = constants.TEXT_STYLES_DICT[style].close_delim
   var close_regex = constants.TEXT_STYLES_DICT[style].close_regex
-
 
   # line and column of point A
   var lA = line("'[")

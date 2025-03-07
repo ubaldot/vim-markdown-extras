@@ -214,8 +214,8 @@ def g:Test_IsInRange()
   range = utils.IsInRange()
   echom assert_equal(expected_value, range)
 
-  # :%bw!
-  # Cleanup_testfile(src_name_1)
+  :%bw!
+  Cleanup_testfile(src_name_1)
 enddef
 
 def g:Test_SurroundSimple_one_line()
@@ -387,8 +387,8 @@ def g:Test_SurroundSmart_one_line_1()
   actual_value = getline(18, 20)
   echom assert_equal(expected_value, actual_value)
 
-  # :%bw!
-  # Cleanup_testfile(src_name_2)
+  :%bw!
+  Cleanup_testfile(src_name_2)
 enddef
 
 def g:Test_RemoveSurrounding_one_line()
@@ -464,14 +464,15 @@ def g:Test_SurroundSmart_multi_line()
   actual_value = getline(18, 19)
   echom assert_equal(expected_value, actual_value)
 
-  :%bw!
-  Cleanup_testfile(src_name_2)
+  # :%bw!
+  # Cleanup_testfile(src_name_2)
 enddef
 
 def g:Test_RemoveSurrounding_multi_line()
   vnew
   Generate_testfile(lines_2, src_name_2)
   exe $"edit {src_name_2}"
+  set conceallevel=0
 
   # Test 1
   var expected_value = [
@@ -494,8 +495,8 @@ def g:Test_RemoveSurrounding_multi_line()
   actual_value = getline(32, 33)
   echom assert_equal(expected_value, actual_value)
 
-  :%bw!
-  Cleanup_testfile(src_name_2)
+  # :%bw!
+  # Cleanup_testfile(src_name_2)
 enddef
 
 
