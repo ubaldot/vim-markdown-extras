@@ -214,8 +214,8 @@ def g:Test_IsInRange()
   range = utils.IsInRange()
   echom assert_equal(expected_value, range)
 
-  :%bw!
-  Cleanup_testfile(src_name_1)
+  # :%bw!
+  # Cleanup_testfile(src_name_1)
 enddef
 
 def g:Test_SurroundSimple_one_line()

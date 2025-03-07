@@ -103,9 +103,37 @@ export def SurroundSimple(style: string, type: string = '')
   endif
 enddef
 
+
 export def SurroundSmart(style: string, type: string = '')
   # It tries to preserve the style.
   # In general, you may want to pass constant.TEXT_STYLES_DICT as a parameter.
+
+  def RemoveDelimiters(to_overwrite: string): string
+    # Used for removing all the delimiters between A and B.
+
+    var overwritten = to_overwrite
+
+    # This is needed to remove all existing text-styles between A and B, i.e. we
+    # want to override existing styles.
+    # Note that we don't want to remove links between A and B
+    const styles_to_remove = keys(constants.TEXT_STYLES_DICT)
+      ->filter("v:val !~ '\\v(markdownLinkText)'")
+
+    for k in styles_to_remove
+      # Remove existing open delimiters
+      var regex = constants.TEXT_STYLES_DICT[k].open_regex
+      var to_remove = constants.TEXT_STYLES_DICT[k].open_delim
+      overwritten = overwritten
+  ->substitute(regex, (m) => substitute(m[0], $'\V{to_remove}', '', 'g'), 'g')
+
+      # Remove existing close delimiters
+      regex = constants.TEXT_STYLES_DICT[k].close_regex
+      to_remove = constants.TEXT_STYLES_DICT[k].close_delim
+      overwritten = overwritten
+  ->substitute(regex, (m) => substitute(m[0], $'\V{to_remove}', '', 'g'), 'g')
+    endfor
+    return overwritten
+  enddef
 
   if getcharpos("'[") == getcharpos("']")
     return
@@ -122,17 +150,6 @@ export def SurroundSmart(style: string, type: string = '')
   var close_delim = constants.TEXT_STYLES_DICT[style].close_delim
   var close_regex = constants.TEXT_STYLES_DICT[style].close_regex
 
-  # This is needed to remove all existing other text-styles between A and B
-  var delimiters_to_remove = []
-  # We don't want to remove links between A and B
-  var regex_for_removal = keys(constants.TEXT_STYLES_DICT)
-    ->filter("v:val !~ '\\v(markdownLinkText)'")
-  # TODO here we should use open_regex and close_regex but then the substitute()
-  # will replace also the \S :-(
-  for k in regex_for_removal
-      add(delimiters_to_remove, constants.TEXT_STYLES_DICT[k].open_delim)
-      add(delimiters_to_remove, constants.TEXT_STYLES_DICT[k].close_delim)
-  endfor
 
   # line and column of point A
   var lA = line("'[")
@@ -233,10 +250,11 @@ export def SurroundSmart(style: string, type: string = '')
     # Overwrite everything that is in the middle
     var A_to_B = ''
     A_to_B = strcharpart(getline(lA), cA - 1, cB - cA + 1)
-    if style != 'markdownCode'
-      A_to_B = A_to_B->substitute($'\V{join(delimiters_to_remove, '\|')}', '', 'g')
-    endif
 
+    # Overwrite existing styles in the middle by removing old delimiters
+    if style != 'markdownCode'
+      A_to_B = RemoveDelimiters(A_to_B)
+    endif
     # echom $'toA: ' .. toA
     # echom $'fromB: ' .. fromB
     # echom $'A_to_B:' .. A_to_B
@@ -248,19 +266,21 @@ export def SurroundSmart(style: string, type: string = '')
   else
     # Set line A
     var afterA = strcharpart(getline(lA), cA - 1)
+
     if style != 'markdownCode'
-      afterA = afterA
-        ->substitute($'\V{join(delimiters_to_remove, '\|')}', '', 'g')
+      afterA = RemoveDelimiters(afterA)
     endif
+
     var lineA = toA .. afterA
     setline(lA, lineA)
 
     # Set line B
     var beforeB = strcharpart(getline(lB), 0, cB)
+
     if style != 'markdownCode'
-      beforeB = beforeB
-        ->substitute($'\V{join(delimiters_to_remove, '\|')}', '', 'g')
+      beforeB = RemoveDelimiters(beforeB)
     endif
+
     var lineB = beforeB .. fromB
     setline(lB, lineB)
 
@@ -268,10 +288,11 @@ export def SurroundSmart(style: string, type: string = '')
     var ii = 1
     while lA + ii < lB
       var middleline = getline(lA + ii)
+
       if style != 'markdownCode'
-        middleline = middleline
-          ->substitute($'\V{join(delimiters_to_remove, '\|')}', '', 'g')
+        middleline = RemoveDelimiters(middleline)
       endif
+
       setline(lA + ii, middleline)
       ii += 1
     endwhile
@@ -435,7 +456,8 @@ export def IsInRange(): dict<list<list<number>>>
     endwhile
     open_delim_pos[1] += len(open_delim)
 
-    # Search end delimiter. The end delimiter may be a blank line, hence
+    # Search end delimiter.
+    # The end delimiter may be a blank line, hence
     # things become a bit cumbersome.
     setcursorcharpos(saved_curpos[1 : 2])
     const close_delim =
