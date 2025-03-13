@@ -37,8 +37,6 @@ if use_prettier && executable('prettier')
       autocmd BufWritePre <buffer> utils.FormatWithoutMoving()
     augroup END
   endif
-else
-  utils.Echowarn("'prettier' not installed!'")
 endif
 # --------------End prettier ------------------------
 
@@ -87,8 +85,6 @@ if use_pandoc && executable('pandoc')
   # Usage :Make, :Make pdf, :Make docx, etc
   command! -nargs=? -buffer -complete=customlist,MakeCompleteList
         \ Make Make(<f-args>)
-else
-  utils.Echowarn("'pandoc' is not installed.")
 endif
 # ------------------- End pandoc ------------------------------------
 
