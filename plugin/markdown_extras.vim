@@ -13,19 +13,14 @@ if !has('vim9script') ||  v:version < 900
   finish
 endif
 
+if !executable('prettier') && !exists('g:markdown_extras_loaded')
+    utils.Echowarn("'prettier' not installed!'")
+endif
+if !executable('pandoc') && !exists('g:markdown_extras_loaded')
+    utils.Echowarn("'pandoc' not installed!'")
+endif
+
 if exists('g:markdown_extras_loaded')
   finish
 endif
 g:markdown_extras_loaded = true
-
-augroup MARKDOWN_PRETTIER_PANDOC_EXE_CHECK
-  autocmd!
-  autocmd VimEnter * {
-    if executable('prettier') != 1
-        utils.Echowarn("'prettier' not installed!'")
-    endif
-    if executable('pandoc') != 1
-        utils.Echowarn("'pandoc' not installed!'")
-    endif
-  }
-augroup END
