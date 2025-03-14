@@ -7,7 +7,6 @@ import autoload '../../lib/utils.vim'
 import autoload '../../lib/highlight.vim'
 import autoload '../../lib/constants.vim'
 
-
 # TODO put this in an autocmd?
 links.GenerateLinksDict()
 
