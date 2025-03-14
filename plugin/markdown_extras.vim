@@ -6,6 +6,7 @@ vim9script noclear
 
 import autoload './../lib/utils.vim'
 
+
 if !has('vim9script') ||  v:version < 900
   # Needs Vim version 9.0 and above
   echo "You need at least Vim 9.0"
