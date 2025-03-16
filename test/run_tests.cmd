@@ -19,7 +19,7 @@ REM
     echo syntax on
 ) >> "%VIMRC%"
 
-SET "VIM_CMD=%VIMPRG% --clean -u %VIMRC% -i NONE --not-a-term"
+SET "VIM_CMD=%VIMPRG% --clean -Es -u %VIMRC% -i NONE --not-a-term"
 
 REM Check if the vimrc file was created successfully
 if NOT EXIST "%VIMRC%" (
