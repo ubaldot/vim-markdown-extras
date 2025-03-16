@@ -483,7 +483,6 @@ def g:Test_RemoveSurrounding_multi_line()
   utils.RemoveSurrounding()
   var actual_value = getline(28, 30)
   assert_equal(expected_value, actual_value)
-  redraw
 
   # # Test 2: preserve inner surrounding
   expected_value = [
@@ -494,7 +493,6 @@ def g:Test_RemoveSurrounding_multi_line()
   utils.RemoveSurrounding()
   actual_value = getline(32, 33)
   assert_equal(expected_value, actual_value)
-  redraw
 
   :%bw!
   Cleanup_testfile(src_name_2)
