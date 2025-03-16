@@ -15,10 +15,9 @@ endif
 
 if !executable('prettier') && !exists('g:markdown_extras_loaded')
     utils.Echowarn("'prettier' not installed!'")
-    redraw
 endif
 if !executable('pandoc') && !exists('g:markdown_extras_loaded')
-    # utils.Echowarn("'pandoc' not installed!'")
+    utils.Echowarn("'pandoc' not installed!'")
 endif
 
 if exists('g:markdown_extras_loaded')
