@@ -29,44 +29,61 @@ export def ContinueList()
   line('.')),
     '\n')
 
-  var tmp = ''
+  # Check if the current line is an item or not and check if there is only a
+  # bullet or a bullet + some text
   # There is only a buller with no text. Next <CR> shall remove the bullet
+  var is_item = false
   var only_bullet = false
-
-
   # Check if you only have the bullet with no item
   for variant in [variant_1, variant_2, variant_3, variant_4]
     if current_line =~ $'^\s*{variant}\s*$'
-          append(line('.'), '')
-          deletebufline('%', line('.'))
+          is_item = true
           only_bullet = true
           break
+    elseif current_line =~ $'^\s*{variant}\s*'
+      is_item = true
+      break
+    else
+      is_item = false
     endif
   endfor
 
+  echom is_item
+
   # Scan the current line through the less general regex (a regex can be
   # contained in another regex)
-  if !only_bullet
-     if current_line =~ $'^\s*{variant_1}'
-       # If - [x], the next item should be - [ ] anyway.
-       tmp = $"{current_line->matchstr($'^\s*{variant_1}')->substitute('x', ' ', 'g')}"
-     elseif current_line =~ $'^\s*{variant_2}'
-       tmp = $"{current_line->matchstr($'^\s*{variant_2}')}"
-     elseif current_line =~ $'^\s*{variant_3}'
-       tmp = $"{current_line->matchstr($'^\s*{variant_3}')}"
-     elseif current_line =~ $'^\s*{variant_4}'
-       # Get rid of the trailing '.' and convert to number
-       var curr_nr = str2nr(
-         $"{current_line->matchstr($'^\s*{variant_4}')->matchstr('\d\+')}"
-       )
-       tmp = $"{current_line->matchstr($'^\s*{variant_4}')
-             \ ->substitute(string(curr_nr), string(curr_nr + 1), '')}"
-     endif
+  var this_line = is_item ? strcharpart(current_line, 0, col('.') - 1) : ''
+  var next_line = is_item ? strcharpart(current_line, col('.') - 1) : ''
+  var item_symbol = ''
+  if is_item && !only_bullet
+    if current_line =~ $'^\s*{variant_1}'
+      # If - [x], the next item should be - [ ] anyway.
+      item_symbol = $"{current_line->matchstr($'^\s*{variant_1}')
+            \ ->substitute('x', ' ', 'g')}"
+    elseif current_line =~ $'^\s*{variant_2}'
+      item_symbol = $"{current_line->matchstr($'^\s*{variant_2}')}"
+    elseif current_line =~ $'^\s*{variant_3}'
+      item_symbol = $"{current_line->matchstr($'^\s*{variant_3}')}"
+    elseif current_line =~ $'^\s*{variant_4}'
+      # Get rid of the trailing '.' and convert to number
+      var curr_nr = str2nr(
+        $"{current_line->matchstr($'^\s*{variant_4}')->matchstr('\d\+')}"
+      )
+      item_symbol = $"{current_line->matchstr($'^\s*{variant_4}')
+            \ ->substitute(string(curr_nr), string(curr_nr + 1), '')}"
+    endif
+  elseif is_item && only_bullet
+    this_line = ''
+    next_line = ''
+  else
+    this_line = getline('.')
+    next_line = ''
   endif
 
   # Add the correct newline
-  append(line('.'), $"{tmp}")
-  cursor(line('.') + 1, col('$') - 1)
+  setline(line('.'), this_line)
+  append(line('.'), item_symbol .. next_line)
+  cursor(line('.') + 1, len(item_symbol) + 1)
   startinsert
 
 enddef
