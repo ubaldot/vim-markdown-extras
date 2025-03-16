@@ -483,15 +483,23 @@ def g:Test_RemoveSurrounding_multi_line()
   utils.RemoveSurrounding()
   var actual_value = getline(28, 30)
   assert_equal(expected_value, actual_value)
+  :%bw!
+  Cleanup_testfile(src_name_2)
+enddef
 
+def g:Test_RemoveSurrounding_multi_line2()
+  vnew
+  Generate_testfile(lines_2, src_name_2)
+  exe $"edit {src_name_2}"
+  set conceallevel=0
   # # Test 2: preserve inner surrounding
-  expected_value = [
+  var expected_value = [
     'Itaque earum rerum hic tenetur a sapiente `delectus`, ut aut reiciendis',
     'voluptatibus maiores',
     ]
   cursor(32, 28)
   utils.RemoveSurrounding()
-  actual_value = getline(32, 33)
+  var actual_value = getline(32, 33)
   assert_equal(expected_value, actual_value)
 
   :%bw!
