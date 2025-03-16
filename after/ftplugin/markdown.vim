@@ -93,7 +93,7 @@ endif
 setreg("o", "- [ ] ")
 
 # Redefinition of <cr>
-inoremap <buffer> <silent> <CR> <ScriptCmd>funcs.ContinueList()<CR>
+inoremap <buffer> <silent> <CR> <ScriptCmd>funcs.CR_Hacked()<CR>
 
 if exists(':OutlineToggle') != 0
   nnoremap <buffer> <silent> <localleader>o <Cmd>OutlineToggle ^- [ <cr>

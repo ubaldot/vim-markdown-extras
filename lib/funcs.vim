@@ -11,7 +11,7 @@ export def ToggleMark()
   endif
 enddef
 
-export def ContinueList()
+export def CR_Hacked()
   # Needed for hacking <CR> when you are writing a list
   #
   # Check if the current line starts with '- [ ]' or '- '

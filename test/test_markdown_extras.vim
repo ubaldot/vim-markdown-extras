@@ -64,7 +64,7 @@ enddef
 
 
 # Tests start here
-def g:Test_markdown_lists()
+def g:Test_CR_hacked()
   Generate_testfile(lines_1, src_name_1)
 
   exe $"edit {src_name_1}"
@@ -149,6 +149,53 @@ def g:Test_markdown_lists()
   Cleanup_testfile(src_name_1)
 enddef
 
+
+def g:Test_CR_hacked_linebreaks()
+  # OBS! normal shall be without ! because we are testing <CR> which is
+  # hacked!
+  Generate_testfile(lines_1, src_name_1)
+  vnew
+  exe $"edit {src_name_1}"
+
+  # Basic "-" item
+  var expected_line_7 = '- foo'
+  var expected_line_8 = '- bar'
+  # Write '- foo bar' to line 7 and hit <cr> on 'bar'
+  # OBS! normal is without ! to prevent bypassing mappings
+  execute "normal 7ggi-\<space>foo\<space>bar\<esc>bi\<enter>"
+
+  echom assert_match(expected_line_7, getline(7))
+  echom assert_match(expected_line_8, getline(8))
+
+  # 2. enter in the lhs of the item symbol
+  execute "normal I\<enter>"
+  echom assert_match(expected_line_7, getline(7))
+  echom assert_match('- ', getline(8))
+  echom assert_match(expected_line_8, getline(9))
+
+  # 3. test numbered list
+  var text = "    3. ciao sono io, amore mio"
+  var expected_line_19 = "    3. ciao sono io, "
+  var expected_line_20 = "    4. amore mio"
+  append(18, text)
+  cursor(19, 22)
+  execute "normal i\<cr>"
+  echom assert_match(expected_line_19, getline(19))
+  echom assert_match(expected_line_20, getline(20))
+
+  # 4. Add number above
+  execute "normal I\<cr>"
+  expected_line_20 = "    4. "
+  var expected_line_21 = "    5. amore mio"
+
+  echom assert_match(expected_line_19, getline(19))
+  echom assert_match(expected_line_20, getline(20))
+  echom assert_match(expected_line_21, getline(21))
+
+  :%bw!
+  Cleanup_testfile(src_name_1)
+enddef
+
 def g:Test_check_uncheck_todo_keybinding()
 
   Generate_testfile(lines_1, src_name_1)
@@ -163,5 +210,4 @@ def g:Test_check_uncheck_todo_keybinding()
 
   :%bw!
   Cleanup_testfile(src_name_1)
-
 enddef
