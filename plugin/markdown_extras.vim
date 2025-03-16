@@ -14,7 +14,8 @@ if !has('vim9script') ||  v:version < 900
 endif
 
 if !executable('prettier') && !exists('g:markdown_extras_loaded')
-    # utils.Echowarn("'prettier' not installed!'")
+    utils.Echowarn("'prettier' not installed!'")
+    redraw
 endif
 if !executable('pandoc') && !exists('g:markdown_extras_loaded')
     # utils.Echowarn("'pandoc' not installed!'")
