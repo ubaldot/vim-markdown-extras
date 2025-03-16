@@ -37,17 +37,11 @@ echo ""
 # Construct the VIM_CMD with correct variable substitution and quoting
 VIM_CMD="$VIM_PRG --clean -Es -u $VIMRC -i NONE --not-a-term"
 
-# Add test files here:
-# TESTS=('test_markdown_extras.vim' 'test_utils.vim' 'test_regex.vim')
+# Add test files here: OBS! <space> after ','!
+TESTS_LIST="['test_markdown_extras.vim', 'test_utils.vim', 'test_regex.vim']"
 
-# convert bash list to Vim list
-# TESTS_STRING=$(printf "'%s', " "${TESTS[@]}")
-# TESTS_STRING=${TESTS_STRING%, }  # Remove trailing comma
-
-FOO="['test_markdown_extras.vim', 'test_utils.vim', 'test_regex.vim']"
 # All the tests are executed in the same Vim instance
-# eval $VIM_CMD " -c \"vim9cmd g:TestName = [$TESTS_STRING]\" -S runner.vim"
-eval $VIM_CMD " -c \"vim9cmd g:TestName = $FOO\" -S runner.vim"
+eval $VIM_CMD " -c \"vim9cmd g:TestName = $TESTS_LIST\" -S runner.vim"
 
 # Check that Vim started and that the runner did its job
 if [ $? -eq 0 ]; then
