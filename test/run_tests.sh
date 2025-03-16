@@ -35,7 +35,8 @@ echo "----- vimrc content ---------"
 cat $VIMRC
 echo ""
 # Construct the VIM_CMD with correct variable substitution and quoting
-VIM_CMD="$VIM_PRG --clean -u $VIMRC -i NONE --not-a-term"
+# VIM_CMD="$VIM_PRG --clean -u $VIMRC -i NONE --not-a-term"
+VIM_CMD="$VIM_PRG --clean -u $VIMRC -i NONE"
 
 # Add test files here:
 TESTS=('test_markdown_extras.vim' 'test_utils.vim' 'test_regex.vim')
