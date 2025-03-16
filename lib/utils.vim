@@ -164,11 +164,11 @@ export def SurroundSmart(style: string, type: string = '')
 
   # line and column of point A
   var lA = line("'[")
-  var cA = col("'[")
+  var cA = type == 'line' ? 1 : col("'[")
 
   # line and column of point B
   var lB = line("']")
-  var cB = col("']")
+  var cB = type == 'line' ? len(getline(lB)) : col("']")
 
   # -------- SMART DELIMITERS BEGIN ---------------------------
   # We check conditions like the following and we adjust the style
