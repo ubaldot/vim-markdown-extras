@@ -170,49 +170,58 @@ def g:Test_IsInRange()
   var expected_value = {'markdownBold': [[1, 23], [1, 37]]}
   var range = utils.IsInRange()
   echom assert_equal(expected_value, range)
+  redraw
 
   # On the border
   cursor(1, 37)
   range = utils.IsInRange()
   echom assert_equal(expected_value, range)
+  redraw
 
   # On the delimiter
   cursor(1, 38)
   expected_value = {}
   range = utils.IsInRange()
   echom assert_equal(expected_value, range)
+  redraw
 
   cursor(5, 18)
   expected_value = {'markdownItalic': [[4, 18], [5, 29]]}
   range = utils.IsInRange()
   echom assert_equal(expected_value, range)
+  redraw
 
   # Test singularity: cursor on a delimiter
   cursor(14, 21)
   range = utils.IsInRange()
   echom assert_true(empty(range))
+  redraw
 
   # Normal Test
   cursor(14, 25)
   expected_value = {'markdownBoldU': [[14, 22], [16, 14]]}
   range = utils.IsInRange()
   echom assert_equal(expected_value, range)
+  redraw
 
   # End of paragraph with no delimiter
   cursor(21, 43)
   expected_value = {'markdownStrike': [[21, 39], [22, 26]]}
   range = utils.IsInRange()
   echom assert_equal(expected_value, range)
+  redraw
 
   cursor(24, 10)
   expected_value = {}
   range = utils.IsInRange()
   echom assert_equal(expected_value, range)
+  redraw
 
   cursor(31, 18)
   expected_value = {'markdownLinkText': [[31, 16], [31, 26]]}
   range = utils.IsInRange()
   echom assert_equal(expected_value, range)
+  redraw
 
   :%bw!
   Cleanup_testfile(src_name_1)
@@ -236,6 +245,7 @@ def g:Test_SurroundSimple_one_line()
   utils.SurroundSimple('markdownItalic')
   var actual_value = getline(10, 12)
   echom assert_equal(expected_value, actual_value)
+  redraw
 
   cursor(21, 41)
   setcharpos("'[", [0, 21, 14, 0])
@@ -248,6 +258,7 @@ def g:Test_SurroundSimple_one_line()
   utils.SurroundSimple('markdownBold')
   actual_value = getline(20, 22)
   echom assert_equal(expected_value, actual_value)
+  redraw
 
   :%bw!
   Cleanup_testfile(src_name_2)
@@ -271,6 +282,7 @@ def g:Test_SurroundSimple_multi_line()
   utils.SurroundSimple('markdownItalicU')
   var actual_value = getline(25, 27)
   echom assert_equal(expected_value, actual_value)
+  redraw
 
   expected_value = [
     '__Itaque earum rerum hic *tenetur a sapiente `delectus`, ut aut reiciendis',
@@ -283,6 +295,7 @@ def g:Test_SurroundSimple_multi_line()
   utils.SurroundSimple('markdownBoldU')
   actual_value = getline(32, 34)
   echom assert_equal(expected_value, actual_value)
+  redraw
 
   :%bw!
   Cleanup_testfile(src_name_2)
@@ -305,6 +318,7 @@ def g:Test_SurroundSmart_one_line()
   utils.SurroundSmart('markdownCode')
   var actual_value = getline(2, 4)
   echom assert_equal(expected_value, actual_value)
+  redraw
 
   # Bold: simple text-object around '(molestias excepturi sint)'
   expected_value = [
@@ -321,6 +335,7 @@ def g:Test_SurroundSmart_one_line()
   utils.SurroundSmart('markdownBold')
   actual_value = getline(14, 16)
   echom assert_equal(expected_value, actual_value)
+  redraw
 
   # Prolong delimiter
   # TODO to check
@@ -335,6 +350,7 @@ def g:Test_SurroundSmart_one_line()
   utils.SurroundSmart('markdownBold')
   actual_value = getline(14, 16)
   echom assert_equal(expected_value, actual_value)
+  redraw
 
   :%bw!
   Cleanup_testfile(src_name_2)
@@ -358,6 +374,7 @@ def g:Test_SurroundSmart_one_line_1()
   utils.SurroundSmart('markdownItalic')
   var actual_value = getline(10, 12)
   echom assert_equal(expected_value, actual_value)
+  redraw
 
   # Test with junk between A and B. Overwrite everything and avoid consecutive
   # delimiters of same type, like ** **
@@ -372,6 +389,7 @@ def g:Test_SurroundSmart_one_line_1()
   utils.SurroundSmart('markdownBold')
   actual_value = getline(20, 22)
   echom assert_equal(expected_value, actual_value)
+  redraw
 
   # Test with junk between A and B. Overwrite everything and avoid consecutive
   # delimiters of same type, like ** **
@@ -386,13 +404,13 @@ def g:Test_SurroundSmart_one_line_1()
   utils.SurroundSmart('markdownItalic')
   actual_value = getline(18, 20)
   echom assert_equal(expected_value, actual_value)
+  redraw
 
   :%bw!
   Cleanup_testfile(src_name_2)
 enddef
 
 def g:Test_RemoveSurrounding_one_line()
-
   Generate_testfile(lines_2, src_name_2)
   vnew
   exe $"edit {src_name_2}"
@@ -403,6 +421,7 @@ def g:Test_RemoveSurrounding_one_line()
   utils.RemoveSurrounding()
   var actual_value = getline(10)
   echom assert_equal(expected_value, actual_value)
+  redraw
 
   cursor(11, 40)
   expected_value =
@@ -410,6 +429,7 @@ def g:Test_RemoveSurrounding_one_line()
   utils.RemoveSurrounding()
   actual_value = getline(11)
   echom assert_equal(expected_value, actual_value)
+  redraw
 
   cursor(14, 60)
   expected_value =
@@ -417,6 +437,7 @@ def g:Test_RemoveSurrounding_one_line()
   utils.RemoveSurrounding()
   actual_value = getline(14)
   echom assert_equal(expected_value, actual_value)
+  redraw
 
   cursor(19, 18)
   utils.RemoveSurrounding()
@@ -428,6 +449,7 @@ def g:Test_RemoveSurrounding_one_line()
     'blanditiis pra(esentium voluptatum deleniti atque) corrupti, quos'
   actual_value = getline(19)
   echom assert_equal(expected_value, actual_value)
+  redraw
 
   :%bw!
   Cleanup_testfile(src_name_2)
@@ -451,6 +473,7 @@ def g:Test_SurroundSmart_multi_line()
   utils.SurroundSmart('markdownItalicU')
   var actual_value = getline(25, 27)
   echom assert_equal(expected_value, actual_value)
+  redraw
 
   # Smart delimiters
   expected_value = [
@@ -463,9 +486,10 @@ def g:Test_SurroundSmart_multi_line()
   utils.SurroundSmart('markdownStrike')
   actual_value = getline(18, 19)
   echom assert_equal(expected_value, actual_value)
+  redraw
 
-  # :%bw!
-  # Cleanup_testfile(src_name_2)
+  :%bw!
+  Cleanup_testfile(src_name_2)
 enddef
 
 def g:Test_RemoveSurrounding_multi_line()
@@ -484,8 +508,9 @@ def g:Test_RemoveSurrounding_multi_line()
   utils.RemoveSurrounding()
   var actual_value = getline(28, 30)
   echom assert_equal(expected_value, actual_value)
+  redraw
 
-  # Test 2: preserve inner surrounding
+  # # Test 2: preserve inner surrounding
   expected_value = [
     'Itaque earum rerum hic tenetur a sapiente `delectus`, ut aut reiciendis',
     'voluptatibus maiores',
@@ -494,9 +519,10 @@ def g:Test_RemoveSurrounding_multi_line()
   utils.RemoveSurrounding()
   actual_value = getline(32, 33)
   echom assert_equal(expected_value, actual_value)
+  redraw
 
-  # :%bw!
-  # Cleanup_testfile(src_name_2)
+  :%bw!
+  Cleanup_testfile(src_name_2)
 enddef
 
 
@@ -524,6 +550,7 @@ def g:Test_set_code_block()
   utils.SetBlock(CODEBLOCK_OPEN_DICT, CODEBLOCK_CLOSE_DICT)
   var actual_value = getline(3, 10)
   echom assert_equal(expected_value, actual_value)
+  redraw
 
   # Check that it won't undo
   cursor(6, 10)
@@ -531,6 +558,7 @@ def g:Test_set_code_block()
   setcharpos("']", [0, 8, 10, 0])
   utils.SetBlock(CODEBLOCK_OPEN_DICT, CODEBLOCK_CLOSE_DICT)
   echom assert_equal(expected_value, actual_value)
+  redraw
 
   # Check that it won't undo when on the border
   cursor(4, 2)
@@ -538,6 +566,7 @@ def g:Test_set_code_block()
   setcharpos("']", [0, 5, 10, 0])
   utils.SetBlock(CODEBLOCK_OPEN_DICT, CODEBLOCK_CLOSE_DICT)
   echom assert_equal(expected_value, actual_value)
+  redraw
 
   unlet g:markdown_extras_config
 

@@ -44,16 +44,17 @@ export def RemoveSurrounding()
       # Remove left delimiter
       const lA = interval[0][0]
       const cA = interval[0][1]
-      var newline = strcharpart(getline(lA), 0,
+      const lineA = getline(lA)
+      var newline = strcharpart(lineA, 0,
               \ cA - 1 - len(constants.TEXT_STYLES_DICT[style].open_delim))
-              \ .. strcharpart(getline(lA), cA - 1)
+              \ .. strcharpart(lineA, cA - 1)
       setline(lA, newline)
-      echom newline
 
       # Remove right delimiter
       const lB = interval[1][0]
       var cB = interval[1][1]
 
+      # Update cB.
       # If lA == lB, then The value of cB may no longer be valid since
       # we shortened the line
       if lA == lB
@@ -65,12 +66,15 @@ export def RemoveSurrounding()
       # If you have open intervals (as we do), then cB < lenght_of_line, If
       # not, then don't do anything. This behavior is compliant with
       # vim-surround
-      if  cB < len(getline(lB))
-        newline = strcharpart(getline(lB), 0, cB)
-              \ .. strcharpart(getline(lB),
+      const lineB = getline(lB)
+      if  cB < len(lineB)
+        # You have delimters
+        newline = strcharpart(lineB, 0, cB)
+              \ .. strcharpart(lineB,
                 \ cB + len(constants.TEXT_STYLES_DICT[style].close_delim))
       else
-        newline = getline(lB)
+        # You hit the end of paragraph
+        newline = lineB
       endif
       setline(lB, newline)
     endif
