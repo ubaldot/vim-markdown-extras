@@ -23,39 +23,40 @@ export def ContinueList()
   var variant_3 = '\*\s\+' # * bla bla bla
   var variant_4 = '\d\+\.\s\+' # 123. bla bla bla
 
-  var current_line = join(
-  getline(
-  search($'\({variant_1}\|{variant_2}\|{variant_3}\|{variant_4}\|\n\n\)', 'bn'),
-  line('.')),
-    '\n')
+  var current_line = getline('.')
 
-  # Check if the current line is an item or not and check if there is only a
-  # bullet or a bullet + some text
-  # There is only a buller with no text. Next <CR> shall remove the bullet
+  # Check if the current line is an item.
+  # Scan the current line through the less general regex (a regex can be
+  # contained in another regex)
   var is_item = false
-  var only_bullet = false
-  # Check if you only have the bullet with no item
   for variant in [variant_1, variant_2, variant_3, variant_4]
-    if current_line =~ $'^\s*{variant}\s*$'
-          is_item = true
-          only_bullet = true
-          break
-    elseif current_line =~ $'^\s*{variant}\s*'
+    if current_line =~ $'^\s*{variant}\s*'
       is_item = true
       break
-    else
-      is_item = false
     endif
   endfor
 
-  echom is_item
+  # If the current line is not in an item list, act as normal,
+  # i.e. <cr> = \n, otherwise split the current line depending on where is the
+  # cursor
+  var this_line = is_item
+    ? strcharpart(getline('.'), 0, col('.') - 1)
+    : getline('.')
+  var next_line = is_item
+    ? strcharpart(getline('.'), col('.') - 1)
+    : ''
 
-  # Scan the current line through the less general regex (a regex can be
-  # contained in another regex)
-  var this_line = is_item ? strcharpart(current_line, 0, col('.') - 1) : ''
-  var next_line = is_item ? strcharpart(current_line, col('.') - 1) : ''
+  # double <cr> equal to finish the itemization
+  if this_line =~
+      $'^\s*\({variant_1}\|{variant_2}\|{variant_3}\|{variant_4}\)\s*$'
+      && next_line =~ '^\s*$'
+    this_line = ''
+    is_item = false
+  endif
+
+  # Handle different cases if the current line is an item of a list
   var item_symbol = ''
-  if is_item && !only_bullet
+  if is_item
     if current_line =~ $'^\s*{variant_1}'
       # If - [x], the next item should be - [ ] anyway.
       item_symbol = $"{current_line->matchstr($'^\s*{variant_1}')
@@ -72,15 +73,20 @@ export def ContinueList()
       item_symbol = $"{current_line->matchstr($'^\s*{variant_4}')
             \ ->substitute(string(curr_nr), string(curr_nr + 1), '')}"
     endif
-  elseif is_item && only_bullet
-    this_line = ''
-    next_line = ''
-  else
-    this_line = getline('.')
-    next_line = ''
+
+    # The following is in case the cursor is on the lhs of the item_symbol
+    if col('.') < len(item_symbol)
+      if current_line =~ $'^\s*{variant_4}'
+        this_line = $"{current_line->matchstr($'^\s*{variant_4}')}"
+        next_line = strcharpart(current_line, len(item_symbol))
+      else
+        this_line = item_symbol
+        next_line = strcharpart(current_line, len(item_symbol))
+      endif
+    endif
   endif
 
-  # Add the correct newline
+  # Add the correct lines
   setline(line('.'), this_line)
   append(line('.'), item_symbol .. next_line)
   cursor(line('.') + 1, len(item_symbol) + 1)
