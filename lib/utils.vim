@@ -576,6 +576,7 @@ enddef
 
 export def UnsetBlock()
   # TODO Replace with IsInRange() once vim-surround is fixed
+  # TODO we assume that when we call it, we are actually into a block
   if synIDattr(synID(line("."), col("."), 1), "name") == 'markdownCodeBlock'
     const pos_start = searchpos(values(constants.CODEBLOCK_OPEN_DICT)[0], 'nbW')
     const pos_end = searchpos(values(constants.CODEBLOCK_CLOSE_DICT)[0], 'nW')
@@ -589,4 +590,34 @@ export def UnsetBlock()
       setline(line, getline(line)->substitute('^\s*', '', 'g'))
     endfor
   endif
+enddef
+
+export def GetTextObject(textobject: string): dict<any>
+  # You pass a text object like 'iw' and it returns the text
+  # associated to it along with the start and end positions.
+  #
+  # Note that when you yank some text, the registers '[' and ']' are set, so
+  # after call this function, you can retrieve start and end position of the
+  # text-object by looking at such marks.
+  #
+  # The function also work with motions.
+
+  # Backup the content of register t (arbitrary choice, YMMV) and marks
+  var oldreg = getreg("t")
+  var saved_A = getcharpos("'[")
+  var saved_B = getcharpos("']")
+  # silently yank the text covered by whatever text object
+  # was given as argument into register t. Yank also set marks '[ and ']
+  noautocmd execute 'silent normal "ty' .. textobject
+
+  var text = getreg("t")
+  var start_pos = getcharpos("'[")
+  var end_pos = getcharpos("']")
+
+  # restore register t and marks
+  setreg("t", oldreg)
+  setcharpos("'[", saved_A)
+  setcharpos("']", saved_B)
+
+  return {text: text, start: start_pos, end: end_pos}
 enddef

@@ -99,15 +99,43 @@ if exists(':OutlineToggle') != 0
   nnoremap <buffer> <silent> <localleader>o <Cmd>OutlineToggle ^- [ <cr>
 endif
 
+def RemoveAll()
+  # TODO Brutal
+  utils.UnsetBlock()
+
+  const range_info = utils.IsInRange()
+  if empty(range_info)
+    return
+  endif
+
+  const target = keys(range_info)[0]
+  var text_styles = copy(constants.TEXT_STYLES_DICT)
+  unlet text_styles[ 'markdownLinkText']
+  echom keys(text_styles)
+  if index(keys(text_styles), target) != -1
+      utils.RemoveSurrounding()
+  elseif target == 'markdownLinkText'
+    links.RemoveLink()
+  endif
+enddef
+
+# TODO: to be finished
+nnoremap <buffer> <BS> <ScriptCmd>RemoveAll()<cr>
+
 if empty(maparg('<Plug>MarkdownToggleCheck'))
   noremap <script> <buffer> <Plug>MarkdownToggleCheck
         \ <ScriptCmd>funcs.ToggleMark()<cr>
 endif
 #
 # TODO: to be reviewed
+
+def SetLinkOpFunc()
+  &l:opfunc = function(links.CreateLink)
+enddef
+
 if empty(maparg('<Plug>MarkdownAddLink'))
   noremap <script> <buffer> <Plug>MarkdownAddLink
-        \ <ScriptCmd>links.HandleLink()<cr>
+        \ <ScriptCmd>SetLinkOpFunc()<cr>g@
 endif
 if empty(maparg('<Plug>MarkdownRemoveLink'))
   noremap <script> <buffer> <Plug>MarkdownRemoveLink
@@ -242,11 +270,12 @@ if use_default_mappings
   endif
   # ---------- TODO: to be reviewed ------------------
   if !hasmapto('<Plug>MarkdownAddLink')
-    nnoremap <buffer> <silent> <enter> <Plug>MarkdownAddLink
+    nnoremap <buffer> <localleader>l <Plug>MarkdownAddLink
+    xnoremap <buffer> <localleader>l <Plug>MarkdownAddLink
   endif
-  if !hasmapto('<Plug>MarkdownRemoveLink')
-    nnoremap <buffer> <silent> <backspace> <Plug>MarkdownRemoveLink
-  endif
+  # if !hasmapto('<Plug>MarkdownRemoveLink')
+  #   nnoremap <buffer> <silent> <backspace> <Plug>MarkdownRemoveLink
+  # endif
   # ------------------------------------------------------
   if !hasmapto('<Plug>MarkdownReferencePreview')
     nnoremap <buffer> <silent> K <Plug>MarkdownReferencePreview
@@ -254,9 +283,9 @@ if use_default_mappings
 
   # ---------- Highlight --------------------------
   if !hasmapto('<Plug>MarkdownAddHighlight')
-    xnoremap <leader>ha <Plug>MarkdownAddHighlight
+    xnoremap <localleader>ha <Plug>MarkdownAddHighlight
   endif
   if !hasmapto('<Plug>MarkdownClearHighlight')
-    xnoremap <leader>hd <Plug>MarkdownClearHighlight
+    xnoremap <localleader>hd <Plug>MarkdownClearHighlight
   endif
 endif

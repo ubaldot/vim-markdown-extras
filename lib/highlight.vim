@@ -1,7 +1,10 @@
 vim9script
 
-# TODO: use opfunc
+# At the moment it only works in Visual
+# TODO: use opfunc to make it more general
 # TODO: use search mechanism
+# Use <BS> to delete a property given its ID. You need a function that detect
+# the property ID of the text under cursor.
 var prop_id = 0
 var hi_group = 'IncSearch'
 

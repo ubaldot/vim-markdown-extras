@@ -54,12 +54,13 @@ export def IsLink(): bool
   return is_link
 enddef
 
-def g:IsLinkNew()
-  var range = utils.IsInRange(
-    markdown.link_open_dict,
-    markdown.link_close_dict
-  )
-  echom range
+def IsLinkNew(): dict<list<list<number>>>
+  const found_range = utils.IsInRange()
+  if !empty(found_range) && keys(found_range)[0] == 'markdownLinkText'
+    return found_range
+  else
+    return {}
+  endif
 enddef
 
 def OpenLink()
@@ -141,7 +142,7 @@ export def RemoveLink()
     GenerateLinksDict()
   endif
   # TODO: it may not be the best but it works so far
-  if IsLink()
+  if !empty(IsLinkNew())
       search('[')
       norm! "_da[
       search(']', 'bc')
@@ -151,19 +152,37 @@ export def RemoveLink()
   endif
 enddef
 
-def CreateLink(textobject: string = '')
+export def CreateLink(type: string = '')
 
+  if getcharpos("'[") == getcharpos("']")
+    return
+  endif
+
+  # line and column of point A
+  var lA = line("'[")
+  var cA = type == 'line' ? 1 : col("'[")
+
+  # line and column of point B
+  var lB = line("']")
+  var cB = type == 'line' ? len(getline(lB)) : col("']")
+
+  echom lA cA
+  echom lB cB
+  # The regex reads:
+  # Take all characters, including newlines, from (l0,c0) to (l1,c1 + 1)'
+  const match_pattern = $'\%{lA}l\%{cA}c\_.*\%{lB}l\%{cB + 1}c'
+  const match_id = matchadd('IncSearch', match_pattern)
+  redraw
   var link_id = GetLinkID()
+  matchdelete(match_id)
   if link_id == 0
     return
   endif
 
-  utils.SurroundSmart("[",
-    "]",
-    markdown.link_open_dict,
-    markdown.link_close_dict,
-    textobject)
+  utils.SurroundSmart("markdownLinkText", type)
+
   # add link value
+  search(']')
   execute $'norm! a[{link_id}]'
   norm! F]h
   if !IsURL(links_dict[link_id]) && !filereadable(links_dict[link_id])
@@ -183,10 +202,14 @@ export def HandleLink()
   if empty(links_dict)
     GenerateLinksDict()
   endif
-  if IsLink()
+
+  # Execution
+  if !empty(IsLinkNew())
     OpenLink()
   else
+    echom "Create link"
     CreateLink()
+    echom links_dict
   endif
 enddef
 
@@ -240,7 +263,7 @@ export def AddLinkPopup()
   var refFiletype = 'txt'
   # TODO: only word are allowed as link aliases
   var current_word = expand('<cword>')
-  if links.IsLink()
+  if !empty(IsLinkNew())
     # Search from the current cursor position to the end of line
     var curr_col = col('.')
     var link_id = getline('.')
