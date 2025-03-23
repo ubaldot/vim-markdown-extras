@@ -100,7 +100,16 @@ if exists(':OutlineToggle') != 0
 endif
 
 # TODO: REMOVE ME
-nnoremap <buffer> <expr> <localleader>n search(constants.LINK_OPEN_REGEX)
+def Foo(backwards: bool = false)
+  const pattern = constants.LINK_OPEN_DICT['[']
+  if !backwards
+    search(pattern)
+  else
+    search(pattern, 'b')
+  endif
+enddef
+nnoremap <buffer> <localleader>n <scriptcmd>Foo()<cr>
+nnoremap <buffer> <localleader>p <scriptcmd>Foo(true)<cr>
 
 def RemoveAll()
   # TODO could be refactored to increase speed, but it may not be necessary
