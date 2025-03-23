@@ -68,6 +68,7 @@ export def RemoveSurrounding(range_info: dict<list<list<number>>> = {})
       # vim-surround
       const lineB = getline(lB)
       if  cB < len(lineB)
+        echom "FOO"
         # You have delimters
         newline = strcharpart(lineB, 0, cB)
               \ .. strcharpart(lineB,
@@ -465,7 +466,9 @@ export def IsInRange(): dict<list<list<number>>>
 
     var open_delim_pos = searchpos($'\V{open_delim}', 'bW')
     var current_style = synIDattr(synID(line("."), col("."), 1), "name")
+    # We search for a markdown delimiter or an htmlTag.
     while current_style != $'{text_style}Delimiter'
+        && current_style != 'htmlTag'
       open_delim_pos = searchpos($'\V{open_delim}', 'bW')
       current_style = synIDattr(synID(line("."), col("."), 1), "name")
     endwhile
@@ -483,6 +486,7 @@ export def IsInRange(): dict<list<list<number>>>
     current_style = synIDattr(synID(line("."), col("."), 1), "name")
 
     while current_style != $'{text_style}Delimiter'
+        && current_style != 'htmlEndTag'
         && getline(line('.')) !~ '^$'
       close_delim_pos = searchpos($'\V{close_delim}', 'nW')
       blank_line_pos = searchpos($'^$', 'nW')

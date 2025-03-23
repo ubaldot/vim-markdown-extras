@@ -105,6 +105,7 @@ def g:Test_textstyle_italic_regex()
   Generate_testfile(lines_1, src_name_1)
   exe $"edit {src_name_1}"
   setlocal conceallevel=0
+  setlocal spell spelllang=la
 
   # Setup
   const curpos = [[2, 33], [8, 25], [10, 36]]
@@ -135,6 +136,7 @@ def g:Test_textstyle_bold_regex()
   Generate_testfile(lines_1, src_name_1)
   exe $"edit {src_name_1}"
   setlocal conceallevel=0
+  setlocal spell spelllang=la
 
   # Setup
   const curpos = [[1, 53], [5, 21]]
@@ -165,6 +167,7 @@ def g:Test_textstyle_code_regex()
   Generate_testfile(lines_1, src_name_1)
   exe $"edit {src_name_1}"
   setlocal conceallevel=0
+  setlocal spell spelllang=la
 
   # Setup
   const curpos = [[15, 49]]
@@ -196,6 +199,7 @@ def g:Test_textstyle_strikethrough_regex()
 
   exe $"edit {src_name_1}"
   setlocal conceallevel=0
+  setlocal spell spelllang=la
 
   # Setup
   const curpos = [[6, 41], [28, 52]]
@@ -227,6 +231,7 @@ def g:Test_textstyle_italic_u_regex()
 
   exe $"edit {src_name_1}"
   setlocal conceallevel=0
+  setlocal spell spelllang=la
 
   # Setup
   const curpos = [[19, 21], [20, 31]]
@@ -258,6 +263,7 @@ def g:Test_textstyle_bold_u_regex()
 
   exe $"edit {src_name_1}"
   setlocal conceallevel=0
+  setlocal spell spelllang=la
 
   # Setup
   const curpos = [[26, 22]]
@@ -290,6 +296,7 @@ def g:Test_links_regex()
 
   exe $"edit {src_name_2}"
   setlocal conceallevel=0
+  setlocal spell spelllang=la
 
   # Setup
   const curpos = [[6, 7], [10, 6], [12, 46]]

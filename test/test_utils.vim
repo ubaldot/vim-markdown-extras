@@ -163,8 +163,8 @@ def g:Test_IsInRange()
   vnew
   Generate_testfile(lines_1, src_name_1)
   exe $"edit {src_name_1}"
-  set ft=markdown
-  set conceallevel=0
+  setlocal conceallevel=0
+  setlocal spell spelllang=la
 
   cursor(1, 27)
   var expected_value = {'markdownBold': [[1, 23], [1, 37]]}
@@ -223,6 +223,7 @@ def g:Test_SurroundSimple_one_line()
   Generate_testfile(lines_2, src_name_2)
   exe $"edit {src_name_2}"
   setlocal conceallevel=0
+  setlocal spell spelllang=la
 
   var expected_value = [
       'incidunt ut (labore et ~~dolore magnam) aliquam quaerat~~ voluptatem. Ut',
@@ -258,6 +259,7 @@ def g:Test_SurroundSimple_multi_line()
   Generate_testfile(lines_2, src_name_2)
   exe $"edit {src_name_2}"
   setlocal conceallevel=0
+  setlocal spell spelllang=la
 
   # Simple delimiters
   var expected_value = [
@@ -292,6 +294,7 @@ def g:Test_SurroundSmart_one_line()
   vnew
   Generate_testfile(lines_2, src_name_2)
   exe $"edit {src_name_2}"
+  setlocal spell spelllang=la
 
   # Simple test, add code delimiters to 'architecto beatae vitae'
   var expected_value = [
@@ -345,6 +348,7 @@ def g:Test_SurroundSmart_one_line_1()
   Generate_testfile(lines_2, src_name_2)
   exe $"edit {src_name_2}"
   setlocal conceallevel=0
+  setlocal spell spelllang=la
 
   # Smart delimiters
   var expected_value = [
@@ -395,6 +399,7 @@ def g:Test_RemoveSurrounding_one_line()
   Generate_testfile(lines_2, src_name_2)
   vnew
   exe $"edit {src_name_2}"
+  setlocal spell spelllang=la
 
   cursor(10, 30)
   var expected_value =
@@ -437,6 +442,7 @@ def g:Test_SurroundSmart_multi_line()
   Generate_testfile(lines_2, src_name_2)
   exe $"edit {src_name_2}"
   setlocal conceallevel=0
+  setlocal spell spelllang=la
 
   # Smart delimiters
   var expected_value = [
@@ -472,6 +478,7 @@ def g:Test_RemoveSurrounding_multi_line()
   Generate_testfile(lines_2, src_name_2)
   exe $"edit {src_name_2}"
   set conceallevel=0
+  setlocal spell spelllang=la
 
   # Test 1
   var expected_value = [
@@ -492,6 +499,7 @@ def g:Test_RemoveSurrounding_multi_line2()
   Generate_testfile(lines_2, src_name_2)
   exe $"edit {src_name_2}"
   set conceallevel=0
+  setlocal spell spelllang=la
   # # Test 2: preserve inner surrounding
   var expected_value = [
     'Itaque earum rerum hic tenetur a sapiente `delectus`, ut aut reiciendis',
@@ -513,6 +521,7 @@ def g:Test_set_code_block()
   vnew
   Generate_testfile(lines_2, src_name_2)
   exe $"edit {src_name_2}"
+  setlocal spell spelllang=la
 
   g:markdown_extras_config = {}
   g:markdown_extras_config['block_label'] = ''
@@ -558,6 +567,7 @@ def g:Test_unset_code_block()
   vnew
   Generate_testfile(lines_1, src_name_1)
   exe $"edit {src_name_1}"
+  setlocal spell spelllang=la
 
   var expected_value = [
     'Itaque earum',

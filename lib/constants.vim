@@ -31,6 +31,8 @@ const STRIKE_CLOSE_REGEX = '\v\S((\\|\~)@<!|(\\\~))@<=\~\~(\~)@!|^$'
 const CODEBLOCK_OPEN_REGEX = '^```'
 const CODEBLOCK_CLOSE_REGEX = '^```$'
 
+const UNDERLINE_OPEN_REGEX = "<u\>"
+const UNDERLINE_CLOSE_REGEX = "\\(</u\\_s*>\\|^$\\)"
 # Of the form '[bla bla](https://example.com)' or '[bla bla][12]'
 # TODO: if you only want numbers as reference, line [my page][11], then you
 # have to replace the last part '\[[^]]+\]' with '\[\d+\]'
@@ -79,6 +81,9 @@ export const TEXT_STYLES_DICT = {
 
   markdownLinkText: { open_delim: '[', close_delim: ']',
   open_regex: LINK_OPEN_REGEX, close_regex: LINK_CLOSE_REGEX },
+
+  htmlUnderline: { open_delim: '<u>', close_delim: '</u>',
+  open_regex: UNDERLINE_OPEN_REGEX, close_regex: UNDERLINE_CLOSE_REGEX },
 }
 
 export const CODE_OPEN_DICT = {[TEXT_STYLES_DICT.markdownCode.open_delim]:
@@ -111,6 +116,10 @@ export const LINK_OPEN_DICT = {[TEXT_STYLES_DICT.markdownLinkText.open_delim]:
   TEXT_STYLES_DICT.markdownLinkText.open_regex}
 export const LINK_CLOSE_DICT = {[TEXT_STYLES_DICT.markdownLinkText.close_delim]:
   TEXT_STYLES_DICT.markdownLinkText.close_regex}
+export const UNDERLINE_OPEN_DICT = {[TEXT_STYLES_DICT.htmlUnderline.open_delim]:
+  TEXT_STYLES_DICT.htmlUnderline.open_regex}
+export const UNDERLINE_CLOSE_DICT = {[TEXT_STYLES_DICT.htmlUnderline.close_delim]:
+  TEXT_STYLES_DICT.htmlUnderline.close_regex}
 
 # TODO on the delimiter synIDattr(synID(line("."), col("."), 1), "name")
 # return markdownCodeDelimiter instead of

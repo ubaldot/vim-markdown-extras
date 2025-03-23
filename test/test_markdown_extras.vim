@@ -68,6 +68,7 @@ def g:Test_CR_hacked()
   Generate_testfile(lines_1, src_name_1)
 
   exe $"edit {src_name_1}"
+  setlocal spell spelllang=la
 
   # Basic "-" item
   var expected_line = '- '
@@ -156,6 +157,7 @@ def g:Test_CR_hacked_linebreaks()
   Generate_testfile(lines_1, src_name_1)
   vnew
   exe $"edit {src_name_1}"
+  setlocal spell spelllang=la
 
   # Basic "-" item
   var expected_line_7 = '- foo'
@@ -200,6 +202,7 @@ def g:Test_check_uncheck_todo_keybinding()
 
   Generate_testfile(lines_1, src_name_1)
   exe $"edit {src_name_1}"
+  setlocal spell spelllang=la
 
   execute "silent norm! Go\<cr>-\<space>[\<space>]\<space>foo"
   echom assert_true(getline(line('.')) =~ '^- \[ \] ')

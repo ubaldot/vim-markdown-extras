@@ -293,5 +293,4 @@ if use_default_mappings
   if !hasmapto('<Plug>MarkdownReferencePreview')
     nnoremap <buffer> <silent> K <Plug>MarkdownReferencePreview
   endif
-
 endif

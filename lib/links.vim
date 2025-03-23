@@ -29,7 +29,7 @@ def OpenLink()
     endif
 enddef
 
-export def GetLinkID(): number
+def GetLinkID(): number
   # When user add a new link, it either create a new ID and return it or it
   # just return an existing ID if the link already exists
   #
@@ -65,7 +65,7 @@ export def GetLinkID(): number
   return link_id
 enddef
 
-export def IsURL(link: string): bool
+def IsURL(link: string): bool
   for url_prefix in constants.URL_PREFIXES
     if link =~ $'^{url_prefix}'
       return true
@@ -125,6 +125,9 @@ export def CreateLink(type: string = '')
   const match_pattern = $'\%{lA}l\%{cA}c\_.*\%{lB}l\%{cB + 1}c'
   const match_id = matchadd('IncSearch', match_pattern)
   redraw
+
+  # popup_create HERE
+  # TODO The following go in the popup Callback
   var link_id = GetLinkID()
   matchdelete(match_id)
   if link_id == 0
