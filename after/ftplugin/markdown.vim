@@ -99,6 +99,9 @@ if exists(':OutlineToggle') != 0
   nnoremap <buffer> <silent> <localleader>o <Cmd>OutlineToggle ^- [ <cr>
 endif
 
+# TODO: REMOVE ME
+nnoremap <buffer> <expr> <localleader>n search(constants.LINK_OPEN_REGEX)
+
 def RemoveAll()
   # TODO could be refactored to increase speed, but it may not be necessary
   const range_info = utils.IsInRange()

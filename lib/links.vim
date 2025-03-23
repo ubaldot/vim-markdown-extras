@@ -185,6 +185,7 @@ export def CreateLink(type: string = '')
     return
   endif
 
+  GenerateLinksDict()
   # line and column of point A
   var lA = line("'[")
   var cA = type == 'line' ? 1 : col("'[")
