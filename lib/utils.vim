@@ -519,7 +519,6 @@ export def IsInRange(): dict<list<list<number>>>
   return return_val
 enddef
 
-
 export def SetBlock(type: string = '')
   # TODO: you may want to make this feature 'Smart' like 'SurroundSmart'. At
   # the moment is more like 'SurroundSimple'.

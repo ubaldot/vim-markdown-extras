@@ -2,7 +2,7 @@ vim9script
 
 var prop_id = 0
 var prop_name = 'markdown_extras_highlight'
-var hi_group = 'IncSearch'
+var hi_group = 'MatchParen'
 
 if exists('g:markdown_extras_config') != 0
     && has_key(g:markdown_extras_config, 'hi_group')
@@ -35,7 +35,7 @@ enddef
 export def IsOnProp(): dict<any>
   var prop = prop_find({type: prop_name, 'col': col('.')}, 'b')
   if has_key(prop, 'id')
-    if col('.') > prop.col + prop.length
+    if line('.') != prop.lnum || col('.') > prop.col + prop.length
       prop = {}
     endif
   endif
