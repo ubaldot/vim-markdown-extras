@@ -6,29 +6,6 @@ import autoload '../after/ftplugin/markdown.vim'
 
 export var links_dict = {}
 
-export def IsLink(): dict<list<list<number>>>
-  const range_info = utils.IsInRange()
-  if !empty(range_info) && keys(range_info)[0] == 'markdownLinkText'
-    return range_info
-  else
-    return {}
-  endif
-enddef
-
-def OpenLink()
-    norm! f[l
-    # Only work for [blabla][]
-    var link_id = utils.GetTextObject('i[').text
-    var link = links_dict[link_id]
-    if filereadable(link)
-      norm! gf
-    elseif IsURL(link)
-      norm! gx
-    else
-      utils.Echoerr($"File {link} does not exists!")
-    endif
-enddef
-
 def GetLinkID(): number
   # When user add a new link, it either create a new ID and return it or it
   # just return an existing ID if the link already exists
@@ -65,7 +42,7 @@ def GetLinkID(): number
   return link_id
 enddef
 
-def IsURL(link: string): bool
+export def IsURL(link: string): bool
   for url_prefix in constants.URL_PREFIXES
     if link =~ $'^{url_prefix}'
       return true
@@ -73,6 +50,102 @@ def IsURL(link: string): bool
   endfor
     return false
 enddef
+
+def LinksPopupCallback(match_id: number, type: string,  popup_id: number, idx: number)
+  if idx > 0
+    var selection = getbufline(winbufnr(popup_id), idx)[0]
+    var link_id = -1
+    if selection == "Create new link"
+      link_id = GetLinkID()
+      if link_id == 0
+        matchdelete(match_id)
+        return
+      endif
+    else
+      # TODO: find keys based on selected value
+      link_id = idx - 1
+    endif
+
+    utils.SurroundSmart("markdownLinkText", type)
+
+    # add link value
+    search(']')
+    execute $'norm! a[{link_id}]'
+    if selection == "Create new link"
+      norm! F]h
+      if !IsURL(links_dict[link_id]) && !filereadable(links_dict[link_id])
+        exe $'edit {links_dict[link_id]}'
+        # write
+      endif
+    endif
+  endif
+  matchdelete(match_id)
+enddef
+
+def LinksPopupFilter(popup_id: number, key: string): bool
+  # TODO: add try-catch
+  if key == "\<esc>"
+    popup_close(popup_id, -1)
+  elseif key == "\<cr>"
+    popup_close(popup_id, getcurpos(popup_id)[1])
+  elseif index(["j", "\<tab>", "\<C-n>", "\<Down>", "\<ScrollWheelDown>"], key) != -1
+    var ln = getcurpos(popup_id)[1]
+    win_execute(popup_id, "normal! j")
+    if ln == getcurpos(popup_id)[1]
+      win_execute(popup_id, "normal! gg")
+    endif
+  elseif index(["k", "\<S-Tab>", "\<C-p>", "\<Up>", "\<ScrollWheelUp>"], key) != -1
+    var ln = getcurpos(popup_id)[1]
+    win_execute(popup_id, "normal! k")
+    if ln == getcurpos(popup_id)[1]
+      win_execute(popup_id, "normal! G")
+    endif
+  endif
+  return true
+enddef
+
+const popup_width = (&columns * 2) / 3
+const popup_height = (&lines * 2) / 3
+var links_popup_opts = {
+    title: ' links: ',
+    pos: 'center',
+    border: [1, 1, 1, 1],
+    borderchars:  ['─', '│', '─', '│', '╭', '╮', '╯', '╰'],
+    maxheight: popup_height,
+    minwidth: popup_width,
+    maxwidth: popup_width,
+    scrollbar: 0,
+    cursorline: 1,
+    mapping: 0,
+    wrap: 0,
+    drag: 0,
+    filter: LinksPopupFilter,
+    callback: LinksPopupCallback,
+  }
+
+export def IsLink(): dict<list<list<number>>>
+  const range_info = utils.IsInRange()
+  if !empty(range_info) && keys(range_info)[0] == 'markdownLinkText'
+    return range_info
+  else
+    return {}
+  endif
+enddef
+
+def OpenLink()
+    norm! f[l
+    # Only work for [blabla][]
+    var link_id = utils.GetTextObject('i[').text
+    var link = links_dict[link_id]
+    if filereadable(link)
+      norm! gf
+    elseif IsURL(link)
+      norm! gx
+    else
+      utils.Echoerr($"File {link} does not exists!")
+    endif
+enddef
+
 
 export def GenerateLinksDict()
   # Generate the links_dict but it requires that there is a
@@ -126,24 +199,9 @@ export def CreateLink(type: string = '')
   const match_id = matchadd('Changed', match_pattern)
   redraw
 
-  # popup_create HERE
-  # TODO The following go in the popup Callback
-  var link_id = GetLinkID()
-  matchdelete(match_id)
-  if link_id == 0
-    return
-  endif
-
-  utils.SurroundSmart("markdownLinkText", type)
-
-  # add link value
-  search(']')
-  execute $'norm! a[{link_id}]'
-  norm! F]h
-  if !IsURL(links_dict[link_id]) && !filereadable(links_dict[link_id])
-    exe $'edit {links_dict[link_id]}'
-    # write
-  endif
+  links_popup_opts.callback =
+    (popup_id, idx) => LinksPopupCallback(match_id, type, popup_id, idx)
+  popup_create(values(links_dict)->insert("Create new link"), links_popup_opts)
 enddef
 
 
