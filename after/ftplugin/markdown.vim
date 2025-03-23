@@ -104,16 +104,24 @@ def RemoveAll()
   utils.UnsetBlock()
 
   const range_info = utils.IsInRange()
-  if empty(range_info)
+  const prop_info = highlight.IsOnProp()
+  if empty(range_info) && empty(prop_info)
     return
   endif
 
+  # Start removing the text props
+  if !empty(prop_info)
+    prop_remove({'id': prop_info.id, 'all': 0})
+    return
+  endif
+
+  # Text styles removal setup
   const target = keys(range_info)[0]
   var text_styles = copy(constants.TEXT_STYLES_DICT)
   unlet text_styles[ 'markdownLinkText']
-  echom keys(text_styles)
+
   if index(keys(text_styles), target) != -1
-      utils.RemoveSurrounding()
+    utils.RemoveSurrounding()
   elseif target == 'markdownLinkText'
     links.RemoveLink()
   endif
@@ -283,9 +291,6 @@ if use_default_mappings
 
   # ---------- Highlight --------------------------
   if !hasmapto('<Plug>MarkdownAddHighlight')
-    xnoremap <localleader>ha <Plug>MarkdownAddHighlight
-  endif
-  if !hasmapto('<Plug>MarkdownClearHighlight')
-    xnoremap <localleader>hd <Plug>MarkdownClearHighlight
+    xnoremap <localleader>h <Plug>MarkdownAddHighlight
   endif
 endif
