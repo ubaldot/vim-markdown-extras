@@ -391,6 +391,17 @@ def g:Test_SurroundSmart_one_line_1()
   actual_value = getline(18, 20)
   assert_equal(expected_value, actual_value)
 
+  # Test underline, quick and dirty
+  expected_value = [
+    'alias consequatur aut <u>perferendis</u> doloribus asperiores repellat.'
+  ]
+  cursor(34, 26)
+  setcharpos("'[", [0, 34, 23, 0])
+  setcharpos("']", [0, 34, 33, 0])
+  utils.SurroundSmart('htmlUnderline')
+  actual_value = [getline(34)]
+  assert_equal(expected_value, actual_value)
+
   :%bw!
   Cleanup_testfile(src_name_2)
 enddef

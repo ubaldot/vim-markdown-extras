@@ -201,10 +201,14 @@ if empty(maparg('<Plug>MarkdownCode'))
         \ <ScriptCmd>SetSurroundOpFunc('MarkdownCode')<cr>g@
 endif
 
+if empty(maparg('<Plug>MarkdownUnderline'))
+  noremap <script> <buffer> <Plug>MarkdownUnderline
+        \ <ScriptCmd>SetSurroundOpFunc('htmlUnderline')<cr>g@
+endif
+
 def SetHighlightOpFunc()
   &l:opfunc = function(highlight.AddProp)
 enddef
-
 
 if empty(maparg('<Plug>MarkdownAddHighlight'))
   noremap <script> <buffer> <Plug>MarkdownAddHighlight
@@ -266,6 +270,11 @@ if use_default_mappings
   if !hasmapto('<Plug>MarkdownCode')
     nnoremap <buffer> <localleader>c <Plug>MarkdownCode
     xnoremap <buffer> <localleader>c <Plug>MarkdownCode
+  endif
+
+  if !hasmapto('<Plug>MarkdownUnderline')
+    nnoremap <buffer> <localleader>u <Plug>MarkdownUnderline
+    xnoremap <buffer> <localleader>u <Plug>MarkdownUnderline
   endif
 
   if !hasmapto('<Plug>MarkdownCodeBlock')
