@@ -498,7 +498,9 @@ def g:Test_RemoveSurrounding_multi_line2()
     'voluptatibus maiores',
     ]
   cursor(32, 28)
-  utils.RemoveSurrounding()
+  # with passed argument
+  const range_info = utils.IsInRange()
+  utils.RemoveSurrounding(range_info)
   var actual_value = getline(32, 33)
   assert_equal(expected_value, actual_value)
 

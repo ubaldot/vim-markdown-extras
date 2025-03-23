@@ -35,8 +35,8 @@ export def FormatWithoutMoving(a: number = 0, b: number = 0)
   winrestview(view)
 enddef
 
-export def RemoveSurrounding()
-    const style_interval = IsInRange()
+export def RemoveSurrounding(range_info: dict<list<list<number>>> = {})
+    const style_interval = empty(range_info) ? IsInRange() : range_info
     if !empty(style_interval)
       const style = keys(style_interval)[0]
       const interval = values(style_interval)[0]

@@ -6,58 +6,10 @@ import autoload '../after/ftplugin/markdown.vim'
 
 export var links_dict = {}
 
-export def IsLink(): bool
-  # Check if the word under the cursor is a link
-  #
-  # Compare foo with [foo]. If they match, then what is inside the [] it
-  # possibly be a link. Next, it check if there is a (bla_bla) just after ].
-  # Link alias must be words.
-  # Assume that a link (or a filename) cannot be broken into multiple lines
-  var saved_curpos = getcurpos()
-  var is_link = false
-  var alias_link = utils.GetTextObject('i]').text
-
-  # Handle singularity if the cursor is on '[' or ']'
-  if alias_link == '['
-    norm! l
-    alias_link = utils.GetTextObject('i]').text
-  elseif alias_link == ']'
-    norm! h
-    alias_link = utils.GetTextObject('i]').text
-  endif
-
-  # Check if foo and [foo] match and if there is a [bla bla] after ].
-  var alias_link_bracket = utils.GetTextObject('a[').text
-  if alias_link == alias_link_bracket[1 : -2]
-    norm! f]
-    if getline('.')[col('.')] == '('
-        || getline('.')[col('.')] == '['
-      var line_open_parenthesis = line('.')
-      norm! l%
-      var line_close_parenthesis = line('.')
-      if line_open_parenthesis == line_close_parenthesis
-        # echo "Is a link"
-        is_link = true
-      else
-        # echo "Is not a link"
-        is_link = false
-      endif
-    else
-      # echo "Is not a link"
-      is_link = false
-    endif
-  else
-    # echo "Is not a link"
-    is_link = false
-  endif
-  setpos('.', saved_curpos)
-  return is_link
-enddef
-
-def IsLinkNew(): dict<list<list<number>>>
-  const found_range = utils.IsInRange()
-  if !empty(found_range) && keys(found_range)[0] == 'markdownLinkText'
-    return found_range
+def IsLink(): dict<list<list<number>>>
+  const range_info = utils.IsInRange()
+  if !empty(range_info) && keys(range_info)[0] == 'markdownLinkText'
+    return range_info
   else
     return {}
   endif
@@ -136,13 +88,15 @@ export def GenerateLinksDict()
   endfor
 enddef
 
-export def RemoveLink()
+export def RemoveLink(range_info: dict<list<list<number>>> = {})
   # Initialization
   if empty(links_dict)
     GenerateLinksDict()
   endif
+
+  const link_info = empty(range_info) ? IsLink() : range_info
   # TODO: it may not be the best but it works so far
-  if !empty(IsLinkNew())
+  if !empty(link_info)
       search('[')
       norm! "_da[
       search(']', 'bc')
@@ -166,8 +120,6 @@ export def CreateLink(type: string = '')
   var lB = line("']")
   var cB = type == 'line' ? len(getline(lB)) : col("']")
 
-  echom lA cA
-  echom lB cB
   # The regex reads:
   # Take all characters, including newlines, from (l0,c0) to (l1,c1 + 1)'
   const match_pattern = $'\%{lA}l\%{cA}c\_.*\%{lB}l\%{cB + 1}c'
@@ -204,7 +156,7 @@ export def HandleLink()
   endif
 
   # Execution
-  if !empty(IsLinkNew())
+  if !empty(IsLink())
     OpenLink()
   else
     echom "Create link"
@@ -263,7 +215,7 @@ export def AddLinkPopup()
   var refFiletype = 'txt'
   # TODO: only word are allowed as link aliases
   var current_word = expand('<cword>')
-  if !empty(IsLinkNew())
+  if !empty(IsLink())
     # Search from the current cursor position to the end of line
     var curr_col = col('.')
     var link_id = getline('.')

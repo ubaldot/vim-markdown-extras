@@ -121,7 +121,7 @@ def RemoveAll()
   unlet text_styles[ 'markdownLinkText']
 
   if index(keys(text_styles), target) != -1
-    utils.RemoveSurrounding()
+    utils.RemoveSurrounding(range_info)
   elseif target == 'markdownLinkText'
     links.RemoveLink()
   endif
@@ -201,15 +201,16 @@ if empty(maparg('<Plug>MarkdownCode'))
         \ <ScriptCmd>SetSurroundOpFunc('MarkdownCode')<cr>g@
 endif
 
+def SetHighlightOpFunc()
+  &l:opfunc = function(highlight.AddProp)
+enddef
+
+
 if empty(maparg('<Plug>MarkdownAddHighlight'))
   noremap <script> <buffer> <Plug>MarkdownAddHighlight
-        \ <esc><ScriptCmd>highlight.AddProp()<cr>
+        \ <ScriptCmd>SetHighlightOpFunc()<cr>g@
 endif
 
-if empty(maparg('<Plug>MarkdownClearHighlight'))
-  noremap <script> <buffer> <Plug>MarkdownClearHighlight
-        \ <esc><ScriptCmd>highlight.ClearProp()<cr>
-endif
 # ----------- TODO:TO BE REVIEWED ----------------------
 
 def SetCodeBlock(open_block: dict<string>,
@@ -276,21 +277,21 @@ if use_default_mappings
   if !hasmapto('<Plug>MarkdownToggleCheck')
     nnoremap <buffer> <silent> <localleader>x <Plug>MarkdownToggleCheck
   endif
-  # ---------- TODO: to be reviewed ------------------
+
+  # ---------- Links --------------------------
   if !hasmapto('<Plug>MarkdownAddLink')
     nnoremap <buffer> <localleader>l <Plug>MarkdownAddLink
     xnoremap <buffer> <localleader>l <Plug>MarkdownAddLink
   endif
-  # if !hasmapto('<Plug>MarkdownRemoveLink')
-  #   nnoremap <buffer> <silent> <backspace> <Plug>MarkdownRemoveLink
-  # endif
+  # ---------- Highlight --------------------------
+  if !hasmapto('<Plug>MarkdownAddHighlight')
+    nnoremap <localleader>h <Plug>MarkdownAddHighlight
+    xnoremap <localleader>h <Plug>MarkdownAddHighlight
+  endif
+
   # ------------------------------------------------------
   if !hasmapto('<Plug>MarkdownReferencePreview')
     nnoremap <buffer> <silent> K <Plug>MarkdownReferencePreview
   endif
 
-  # ---------- Highlight --------------------------
-  if !hasmapto('<Plug>MarkdownAddHighlight')
-    xnoremap <localleader>h <Plug>MarkdownAddHighlight
-  endif
 endif
