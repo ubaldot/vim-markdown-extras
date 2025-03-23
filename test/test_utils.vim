@@ -398,7 +398,7 @@ def g:Test_SurroundSmart_one_line_1()
   cursor(34, 26)
   setcharpos("'[", [0, 34, 23, 0])
   setcharpos("']", [0, 34, 33, 0])
-  utils.SurroundSmart('htmlUnderline')
+  utils.SurroundSmart('markdownUnderline')
   actual_value = [getline(34)]
   assert_equal(expected_value, actual_value)
 
@@ -550,23 +550,23 @@ def g:Test_set_code_block()
   cursor(3, 29)
   setcharpos("'[", [0, 3, 33, 0])
   setcharpos("']", [0, 6, 22, 0])
-  utils.SetBlock(CODEBLOCK_OPEN_DICT, CODEBLOCK_CLOSE_DICT)
+  utils.SetBlock()
   var actual_value = getline(3, 10)
-  assert_equal(expected_value, actual_value)
+  echom assert_equal(expected_value, actual_value)
 
-  # Check that it won't undo
+  # Check that it won't undo anything when inside a code block
   cursor(6, 10)
   setcharpos("'[", [0, 5, 21, 0])
   setcharpos("']", [0, 8, 10, 0])
-  utils.SetBlock(CODEBLOCK_OPEN_DICT, CODEBLOCK_CLOSE_DICT)
-  assert_equal(expected_value, actual_value)
+  utils.SetBlock()
+  echom assert_equal(expected_value, actual_value)
 
   # Check that it won't undo when on the border
   cursor(4, 2)
   setcharpos("'[", [0, 4, 2, 0])
   setcharpos("']", [0, 5, 10, 0])
-  utils.SetBlock(CODEBLOCK_OPEN_DICT, CODEBLOCK_CLOSE_DICT)
-  assert_equal(expected_value, actual_value)
+  utils.SetBlock()
+  echom assert_equal(expected_value, actual_value)
 
   unlet g:markdown_extras_config
 
@@ -588,8 +588,8 @@ def g:Test_unset_code_block()
   ]
   cursor(35, 1)
   utils.UnsetBlock()
-  var actual_value = getline(34, 37)
-  assert_equal(expected_value, actual_value)
+  var actual_value = getline(33, 36)
+  echom assert_equal(expected_value, actual_value)
 
   :%bw!
   Cleanup_testfile(src_name_1)

@@ -1,7 +1,17 @@
 vim9script
 
 # Conceal underlined text
-# syntax region UText start="<u>" end="</u>" concealends
+# \ start="<u>\S\@="
+# \ end="\S\@<=<\/u>\|^$"
+syntax region markdownUnderline
+    \ matchgroup=htmlTagName
+    \ start="<u>"
+    \ end="<\/u>\|^$"
+    \ contains=markdownLineStart,@Spell
+    \ concealends
+highlight def link markdownUnderline Underlined
+#
+#
 # Other possible options: 0x2B1C (white empty box)
 # 0x2705 Green checkbox
 # 0x2714 Only checkbox

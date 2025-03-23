@@ -6,7 +6,7 @@ import autoload '../after/ftplugin/markdown.vim'
 
 export var links_dict = {}
 
-def IsLink(): dict<list<list<number>>>
+export def IsLink(): dict<list<list<number>>>
   const range_info = utils.IsInRange()
   if !empty(range_info) && keys(range_info)[0] == 'markdownLinkText'
     return range_info
@@ -123,7 +123,7 @@ export def CreateLink(type: string = '')
   # The regex reads:
   # Take all characters, including newlines, from (l0,c0) to (l1,c1 + 1)'
   const match_pattern = $'\%{lA}l\%{cA}c\_.*\%{lB}l\%{cB + 1}c'
-  const match_id = matchadd('IncSearch', match_pattern)
+  const match_id = matchadd('Changed', match_pattern)
   redraw
 
   # popup_create HERE

@@ -100,12 +100,14 @@ if exists(':OutlineToggle') != 0
 endif
 
 def RemoveAll()
-  # TODO Brutal
-  utils.UnsetBlock()
-
+  # TODO could be refactored to increase speed, but it may not be necessary
   const range_info = utils.IsInRange()
   const prop_info = highlight.IsOnProp()
-  if empty(range_info) && empty(prop_info)
+  const syn_info = synIDattr(synID(line("."), col("."), 1), "name")
+
+  # If on plain text, do nothing, just execute a normal! <BS>
+  if empty(range_info) && empty(prop_info) && syn_info != 'markdownCodeBlock'
+    exe "norm! \<BS>"
     return
   endif
 
@@ -115,10 +117,16 @@ def RemoveAll()
     return
   endif
 
+  # Check markdownCodeBlocks
+  if syn_info == 'markdownCodeBlock'
+    utils.UnsetBlock(syn_info)
+    return
+  endif
+
   # Text styles removal setup
   const target = keys(range_info)[0]
   var text_styles = copy(constants.TEXT_STYLES_DICT)
-  unlet text_styles[ 'markdownLinkText']
+  unlet text_styles['markdownLinkText']
 
   if index(keys(text_styles), target) != -1
     utils.RemoveSurrounding(range_info)
@@ -203,7 +211,7 @@ endif
 
 if empty(maparg('<Plug>MarkdownUnderline'))
   noremap <script> <buffer> <Plug>MarkdownUnderline
-        \ <ScriptCmd>SetSurroundOpFunc('htmlUnderline')<cr>g@
+        \ <ScriptCmd>SetSurroundOpFunc('markdownUnderline')<cr>g@
 endif
 
 def SetHighlightOpFunc()
@@ -217,17 +225,13 @@ endif
 
 # ----------- TODO:TO BE REVIEWED ----------------------
 
-def SetCodeBlock(open_block: dict<string>,
-    close_block: dict<string>)
-
-  &l:opfunc = function(
-    utils.SetBlock, [open_block, close_block]
-  )
+def SetCodeBlock()
+  &l:opfunc = function(utils.SetBlock)
 enddef
 
 if empty(maparg('<Plug>MarkdownCodeBlock'))
   noremap <script> <buffer> <Plug>MarkdownCodeBlock
-        \ <ScriptCmd>SetCodeBlock(CODEBLOCK_DICT, CODEBLOCK_DICT)<cr>g@
+        \ <ScriptCmd>SetCodeBlock()<cr>g@
 endif
 # ------------------------------------------------------------
 

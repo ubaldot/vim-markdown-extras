@@ -520,9 +520,18 @@ export def IsInRange(): dict<list<list<number>>>
 enddef
 
 
-export def SetBlock(open_block: dict<string>,
-    close_block: dict<string>,
-    type: string = '')
+export def SetBlock(type: string = '')
+  # TODO: you may want to make this feature 'Smart' like 'SurroundSmart'. At
+  # the moment is more like 'SurroundSimple'.
+  #
+  # If we are overlapping another thing, don't do anything
+  const syn_info = synIDattr(synID(line("."), col("."), 1), "name")
+  if !empty(IsInRange())
+      || syn_info == 'markdownCodeDelimiter'
+      || syn_info == 'markdownCodeBlock'
+    return
+  endif
+
   # Put the selected text between open_block and close_block.
   var label = ''
   if exists('g:markdown_extras_config') != 0
@@ -532,13 +541,8 @@ export def SetBlock(open_block: dict<string>,
     label = input('Enter code-block language: ')
   endif
 
-  # TODO return or remove surrounding?
-  if !empty(IsInRange())
-      || getline('.') == $'{keys(open_block)[0] .. label}'
-      || getline('.') == $'{keys(close_block)[0]}'
-    return
-  endif
-
+  const open_block = constants.CODEBLOCK_OPEN_DICT
+  const close_block = constants.CODEBLOCK_CLOSE_DICT
 
   # We set cA=1 and cB = len(geline(B)) so we pretend that we are working
   # always line-wise
@@ -573,24 +577,27 @@ export def SetBlock(open_block: dict<string>,
     endwhile
 
     # Set last part
-    setline(lB, "  " .. strcharpart(lastline, 0, cB))
-    append(lB, [$'{keys(close_block)[0]}', strcharpart(lastline, cB)])
+    setline(lB, $'  {lastline}')
+    append(lB, [$'{keys(close_block)[0]}', ''])
   endif
 enddef
 
-export def UnsetBlock()
-  # TODO Replace with IsInRange() once vim-surround is fixed
-  # TODO we assume that when we call it, we are actually into a block
-  if synIDattr(synID(line("."), col("."), 1), "name") == 'markdownCodeBlock'
+export def UnsetBlock(syn_info: string = '')
+  const syn_str = empty(syn_info)
+    ? synIDattr(synID(line("."), col("."), 1), "name")
+    : syn_info
+  if syn_str == 'markdownCodeBlock'
     const pos_start = searchpos(values(constants.CODEBLOCK_OPEN_DICT)[0], 'nbW')
     const pos_end = searchpos(values(constants.CODEBLOCK_CLOSE_DICT)[0], 'nW')
 
     const lA = pos_start[0]
     const lB = pos_end[0]
     deletebufline('%', lA - 1)
-    deletebufline('%', lB)
+    deletebufline('%', lA - 1)
+    deletebufline('%', lB - 2)
+    deletebufline('%', lB - 2)
 
-    for line in range(lA - 1, lB - 1)
+    for line in range(lA - 1, lB - 2)
       setline(line, getline(line)->substitute('^\s*', '', 'g'))
     endfor
   endif
