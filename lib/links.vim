@@ -6,7 +6,7 @@ import autoload '../after/ftplugin/markdown.vim'
 
 export var links_dict = {}
 
-def SearchLink(backwards: bool = false)
+export def SearchLink(backwards: bool = false)
   const pattern = constants.LINK_OPEN_DICT['[']
   if !backwards
     search(pattern)
@@ -30,7 +30,7 @@ def GetLinkID(): number
   endif
   var reference_line = search('\s*#\+\s\+References', 'nw')
   if reference_line == 0
-      append(line('$'), ['', '## References', ''])
+      append(line('$'), ['', '## References'])
   endif
   var link_line = search(link, 'nw')
   var link_id = 0
@@ -150,24 +150,27 @@ enddef
 export def OpenLink()
     norm! f[l
     # Only work for [blabla][]
-    var link_id = utils.GetTextObject('i[').text
-    var link = links_dict[link_id]
-    if filereadable(link)
-      norm! gf
-    elseif IsURL(link)
-      norm! gx
+    # var link_id = xxx->matchstr('\[*\]\s*\[\zs\d\+\ze')
+    const link_id = utils.GetTextObject('i[').text
+    const link = links_dict[link_id]
+    if exists(':Open') != 0
+      exe $":Open {link}"
     else
-      utils.Echoerr($"File {link} does not exists!")
+      utils.Echowarn('You need a Vim version that has the :Open command')
     endif
 enddef
 
-
 export def GenerateLinksDict()
-  # Generate the links_dict but it requires that there is a
-  # Reference section at the end
-  var ref_start_line = search('\s*#\+\s\+References', 'nw')
-  # TODO: error message if not found!
-  var refs = getline(ref_start_line + 1, '$')
+  # Generate the links_dict by parsing the # References section,
+  # but it requires that there is a # Reference section at the end
+  #
+  # Cleanup the current links_dict
+  links_dict = {}
+  const references_line = search('\s*#\+\s\+References', 'nw')
+  if references_line == 0
+      append(line('$'), ['', '## References'])
+  endif
+  var refs = getline(references_line + 1, '$')
     ->filter('v:val =~ "^\\[\\d\\+\\]:\\s"')
   for item in refs
      var key = item->substitute('\[\(\d\+\)\].*', '\1', '')
@@ -177,11 +180,6 @@ export def GenerateLinksDict()
 enddef
 
 export def RemoveLink(range_info: dict<list<list<number>>> = {})
-  # Initialization
-  if empty(links_dict)
-    GenerateLinksDict()
-  endif
-
   const link_info = empty(range_info) ? IsLink() : range_info
   # TODO: it may not be the best but it works so far
   if !empty(link_info)
