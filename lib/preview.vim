@@ -59,26 +59,24 @@ def GetFileContent(filename: string): list<string>
       # file_content = readfile($'{expand(filename)}')
       file_content = readfile($'{filename}')
     else
-      file_content = ["Can't preview the file!", "Does file exist?"]
+      file_content = ["Can't preview the file!", "Does the file exist?"]
     endif
     var title = [filename, '------------------------']
     return extend(title, file_content)
 enddef
 
 export def PreviewPopup()
-  # Generate links_dict
-  links.GenerateLinksDict()
 
   var previewText = []
   var refFiletype = 'txt'
   # TODO: only word are allowed as link aliases
   var current_word = expand('<cword>')
-  if links.IsLink()
+  if !empty(links.IsLink())
     # Search from the current cursor position to the end of line
     var curr_col = col('.')
     var link_id = getline('.')
       ->matchstr($'\%>{curr_col}c\w\+\]\s*\[\s*\zs\d\+\ze\]')
-    var link_name = links.links_dict[link_id]
+    var link_name = b:markdown_extras_links[link_id]
     if links.IsURL(link_name)
       previewText = [link_name]
       refFiletype = 'txt'
@@ -86,15 +84,16 @@ export def PreviewPopup()
       previewText = GetFileContent(link_name)
       refFiletype = 'txt'
     endif
-  endif
 
-  popup_clear()
-  var winid = previewText->popup_atcursor({moved: 'any',
-           close: 'click',
-           fixed: true,
-           maxwidth: 80,
-           border: [0, 1, 0, 1],
-           borderchars: [' '],
-           filter: PreviewWinFilterKey})
-  win_execute(winid, $'setlocal ft={refFiletype}')
+    popup_clear()
+    var winid = previewText->popup_atcursor({moved: 'any',
+             close: 'click',
+             fixed: true,
+             maxwidth: 80,
+             maxheight: (&lines * 2) / 3,
+             border: [0, 1, 0, 1],
+             borderchars: [' '],
+             filter: PreviewWinFilterKey})
+    win_execute(winid, $'setlocal ft={refFiletype}')
+  endif
 enddef

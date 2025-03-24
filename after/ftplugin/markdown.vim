@@ -8,7 +8,7 @@ import autoload '../../lib/highlight.vim'
 import autoload '../../lib/constants.vim'
 
 def RefreshLinksDict()
-  b:links_dict = links.GenerateLinksDict()
+  b:markdown_extras_links = links.GenerateLinksDict()
 enddef
 
 RefreshLinksDict()

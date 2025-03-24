@@ -38,8 +38,8 @@ def GetLinkID(): number
   var link_id = 0
   if link_line == 0
     # Entirely new link
-    link_id = keys(b:links_dict)->map('str2nr(v:val)')->max() + 1
-    b:links_dict[$'{link_id}'] = link
+    link_id = keys(b:markdown_extras_links)->map('str2nr(v:val)')->max() + 1
+    b:markdown_extras_links[$'{link_id}'] = link
     # If it is the first link ever, leave a blank line
     if link_id == 1
       append(line('$'), '')
@@ -73,9 +73,9 @@ def LinksPopupCallback(match_id: number, type: string,  popup_id: number, idx: n
         return
       endif
     else
-      echom "b:links_dict: " .. b:links_dict
-      const keys_from_value = utils.KeysFromValue(b:links_dict, selection)
-      # For some reason, b:links_dict may be empty or messed up
+      echom "b:markdown_extras_links: " .. b:markdown_extras_links
+      const keys_from_value = utils.KeysFromValue(b:markdown_extras_links, selection)
+      # For some reason, b:markdown_extras_links may be empty or messed up
       if empty(keys_from_value)
         utils.Echoerr('Reference not found')
         matchdelete(match_id)
@@ -91,8 +91,8 @@ def LinksPopupCallback(match_id: number, type: string,  popup_id: number, idx: n
     execute $'norm! a[{link_id}]'
     if selection == "Create new link"
       norm! F]h
-      if !IsURL(b:links_dict[link_id]) && !filereadable(b:links_dict[link_id])
-        exe $'edit {b:links_dict[link_id]}'
+      if !IsURL(b:markdown_extras_links[link_id]) && !filereadable(b:markdown_extras_links[link_id])
+        exe $'edit {b:markdown_extras_links[link_id]}'
         # write
       endif
     endif
@@ -157,7 +157,7 @@ export def OpenLink()
     # Only work for [blabla][]
     # var link_id = xxx->matchstr('\[*\]\s*\[\zs\d\+\ze')
     const link_id = utils.GetTextObject('i[').text
-    const link = b:links_dict[link_id]
+    const link = b:markdown_extras_links[link_id]
     if filereadable(link)
       exe $'edit {link}'
     elseif exists(':Open') != 0
@@ -182,15 +182,15 @@ export def ConvertLinks()
     if strcharpart(getline(lA), cA, 2) =~ '('
       norm! f(l
       var link = utils.GetTextObject('i(').text
-      var link_id = keys(b:links_dict)->map((_, val) => str2nr(val))->max() +
+      var link_id = keys(b:markdown_extras_links)->map((_, val) => str2nr(val))->max() +
         1
       # Fix current line
       exe $"norm! ca([{link_id}]"
 
       # Fix dict
-      b:links_dict[link_id] = link
+      b:markdown_extras_links[link_id] = link
       var lastline = line('$')
-      append(lastline - 1, $'[{link_id}]: {link}')
+      append(lastline, $'[{link_id}]: {link}')
       # TODO Find last proper line
       # var line = search('\s*#\+\s*References', 'n') + 2
       # var lastline = -1
@@ -211,10 +211,10 @@ export def ConvertLinks()
 enddef
 
 export def GenerateLinksDict(): dict<string>
-  # Generate the b:links_dict by parsing the # References section,
+  # Generate the b:markdown_extras_links by parsing the # References section,
   # but it requires that there is a # Reference section at the end
   #
-  # Cleanup the current b:links_dict
+  # Cleanup the current b:markdown_extras_links
   var links_dict = {}
   const references_line = search('\s*#\+\s\+References', 'nw')
   if references_line == 0
@@ -274,7 +274,7 @@ export def CreateLink(type: string = '')
 
   links_popup_opts.callback =
     (popup_id, idx) => LinksPopupCallback(match_id, type, popup_id, idx)
-  popup_create(values(b:links_dict)->insert("Create new link"), links_popup_opts)
+  popup_create(values(b:markdown_extras_links)->insert("Create new link"), links_popup_opts)
 enddef
 
 
@@ -305,7 +305,7 @@ enddef
 #   # Build a list such that each item correspond to a link.
 #   # This to establish an order and a mapping between menu choice->list
 #   # element
-#   var items = values(b:links_dict)
+#   var items = values(b:markdown_extras_links)
 #   var links_list = []
 #   for val in items
 #     links_list->add(val)
@@ -326,7 +326,7 @@ enddef
 
 # TODO JUST ADDED!
 # export def AddLinkPopup()
-#   # Generate b:links_dict
+#   # Generate b:markdown_extras_links
 #   GenerateLinksDict()
 
 #   var previewText = []
@@ -338,7 +338,7 @@ enddef
 #     var curr_col = col('.')
 #     var link_id = getline('.')
 #       ->matchstr($'\%>{curr_col}c\w\+\]\s*\[\s*\zs\d\+\ze\]')
-#     var link_name = links.b:links_dict[link_id]
+#     var link_name = links.b:markdown_extras_links[link_id]
 #     if links.IsURL(link_name)
 #       previewText = [link_name]
 #       refFiletype = 'txt'
@@ -360,7 +360,7 @@ enddef
 # enddef
 
 # def g:Foo(A: any, L: any, P: any): list<string>
-#   return values(b:links_dict)
+#   return values(b:markdown_extras_links)
 # enddef
 
 # var x = input('foo: ', '', 'customlist,Foo')
