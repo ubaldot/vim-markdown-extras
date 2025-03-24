@@ -37,7 +37,7 @@ enddef
 
 export def KeysFromValue(dict: dict<string>, target_value: string): list<string>
  # Given a value, return all the keys associated to it
- return keys(filter(copy(dict), $'v:val == "{target_value}"'))
+ return keys(filter(copy(dict), $'v:val == "{escape(target_value, "\\")}"'))
 enddef
 
 export def RemoveSurrounding(range_info: dict<list<list<number>>> = {})

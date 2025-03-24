@@ -8,7 +8,7 @@ import autoload '../../lib/highlight.vim'
 import autoload '../../lib/constants.vim'
 
 # TODO put this in an autocmd?
-links.GenerateLinksDict()
+b:links_dict = links.GenerateLinksDict()
 
 # -------------- prettier ------------------------
 var use_prettier = true

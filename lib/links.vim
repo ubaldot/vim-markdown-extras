@@ -4,8 +4,6 @@ import autoload './constants.vim'
 import autoload './utils.vim'
 import autoload '../after/ftplugin/markdown.vim'
 
-export var links_dict = {}
-
 export def SearchLink(backwards: bool = false)
   const pattern = constants.LINK_OPEN_DICT['[']
   if !backwards
@@ -19,10 +17,14 @@ def GetLinkID(): number
   # When user add a new link, it either create a new ID and return it or it
   # just return an existing ID if the link already exists
   #
-  var link = input('Insert link: ', '', 'customlist,Foo')
+  var current_wildmenu = &wildmenu
+  set nowildmenu
+  var link = input("Create new link (you can use 'tab'): ", '', 'file')
   if empty(link)
+    &wildmenu = current_wildmenu
     return 0
   endif
+  &wildmenu = current_wildmenu
 
   # TODO: use full-path?
   if !IsURL(link)
@@ -36,8 +38,8 @@ def GetLinkID(): number
   var link_id = 0
   if link_line == 0
     # Entirely new link
-    link_id = keys(links_dict)->map('str2nr(v:val)')->max() + 1
-    links_dict[$'{link_id}'] = link
+    link_id = keys(b:links_dict)->map('str2nr(v:val)')->max() + 1
+    b:links_dict[$'{link_id}'] = link
     # If it is the first link ever, leave a blank line
     if link_id == 1
       append(line('$'), '')
@@ -71,8 +73,9 @@ def LinksPopupCallback(match_id: number, type: string,  popup_id: number, idx: n
         return
       endif
     else
-      const keys_from_value = utils.KeysFromValue(links_dict, selection)
-      # For some reason, links_dict may be empty or messed up
+      echom "b:links_dict: " .. b:links_dict
+      const keys_from_value = utils.KeysFromValue(b:links_dict, selection)
+      # For some reason, b:links_dict may be empty or messed up
       if empty(keys_from_value)
         utils.Echoerr('Reference not found')
         matchdelete(match_id)
@@ -88,8 +91,8 @@ def LinksPopupCallback(match_id: number, type: string,  popup_id: number, idx: n
     execute $'norm! a[{link_id}]'
     if selection == "Create new link"
       norm! F]h
-      if !IsURL(links_dict[link_id]) && !filereadable(links_dict[link_id])
-        exe $'edit {links_dict[link_id]}'
+      if !IsURL(b:links_dict[link_id]) && !filereadable(b:links_dict[link_id])
+        exe $'edit {b:links_dict[link_id]}'
         # write
       endif
     endif
@@ -152,7 +155,7 @@ export def OpenLink()
     # Only work for [blabla][]
     # var link_id = xxx->matchstr('\[*\]\s*\[\zs\d\+\ze')
     const link_id = utils.GetTextObject('i[').text
-    const link = links_dict[link_id]
+    const link = b:links_dict[link_id]
     if exists(':Open') != 0
       exe $":Open {link}"
     else
@@ -160,12 +163,12 @@ export def OpenLink()
     endif
 enddef
 
-export def GenerateLinksDict()
-  # Generate the links_dict by parsing the # References section,
+export def GenerateLinksDict(): dict<string>
+  # Generate the b:links_dict by parsing the # References section,
   # but it requires that there is a # Reference section at the end
   #
-  # Cleanup the current links_dict
-  links_dict = {}
+  # Cleanup the current b:links_dict
+  var links_dict = {}
   const references_line = search('\s*#\+\s\+References', 'nw')
   if references_line == 0
       append(line('$'), ['', '## References'])
@@ -177,6 +180,7 @@ export def GenerateLinksDict()
      var value = item->substitute('^\[\d\+]\:\s*\(.*\)', '\1', '')
      links_dict[key] = value
   endfor
+  return links_dict
 enddef
 
 export def RemoveLink(range_info: dict<list<list<number>>> = {})
@@ -198,7 +202,7 @@ export def CreateLink(type: string = '')
     return
   endif
 
-  GenerateLinksDict()
+  # GenerateLinksDict()
   # line and column of point A
   var lA = line("'[")
   var cA = type == 'line' ? 1 : col("'[")
@@ -215,7 +219,7 @@ export def CreateLink(type: string = '')
 
   links_popup_opts.callback =
     (popup_id, idx) => LinksPopupCallback(match_id, type, popup_id, idx)
-  popup_create(values(links_dict)->insert("Create new link"), links_popup_opts)
+  popup_create(values(b:links_dict)->insert("Create new link"), links_popup_opts)
 enddef
 
 
@@ -241,68 +245,68 @@ def OpenLinkPopup(links_list: list<string>, popup_id: number, choice: number)
 enddef
 
 # TODO: we need a mapping for this
-export def g:ReferencesPopup()
-  GenerateLinksDict()
-  # Build a list such that each item correspond to a link.
-  # This to establish an order and a mapping between menu choice->list
-  # element
-  var items = values(links_dict)
-  var links_list = []
-  for val in items
-    links_list->add(val)
-  endfor
-  if !empty(items)
-    var choice = links_list->popup_menu({
-      title: ' References ',
-      borderchars: ['─', '│', '─', '│', '╭', '╮', '╯', '╰'],
-      callback: (popup_id, choice) => OpenLinkPopup(links_list, popup_id, choice) })
-  else
-    utils.Echowarn('No references found!')
-  endif
-enddef
+# export def g:ReferencesPopup()
+#   GenerateLinksDict()
+#   # Build a list such that each item correspond to a link.
+#   # This to establish an order and a mapping between menu choice->list
+#   # element
+#   var items = values(b:links_dict)
+#   var links_list = []
+#   for val in items
+#     links_list->add(val)
+#   endfor
+#   if !empty(items)
+#     var choice = links_list->popup_menu({
+#       title: ' References ',
+#       borderchars: ['─', '│', '─', '│', '╭', '╮', '╯', '╰'],
+#       callback: (popup_id, choice) => OpenLinkPopup(links_list, popup_id, choice) })
+#   else
+#     utils.Echowarn('No references found!')
+#   endif
+# enddef
 
 # TODO: make a function for consolidating the references
 # (SanitizeReferences())
 
 
 # TODO JUST ADDED!
-export def AddLinkPopup()
-  # Generate links_dict
-  GenerateLinksDict()
+# export def AddLinkPopup()
+#   # Generate b:links_dict
+#   GenerateLinksDict()
 
-  var previewText = []
-  var refFiletype = 'txt'
-  # TODO: only word are allowed as link aliases
-  var current_word = expand('<cword>')
-  if !empty(IsLink())
-    # Search from the current cursor position to the end of line
-    var curr_col = col('.')
-    var link_id = getline('.')
-      ->matchstr($'\%>{curr_col}c\w\+\]\s*\[\s*\zs\d\+\ze\]')
-    var link_name = links.links_dict[link_id]
-    if links.IsURL(link_name)
-      previewText = [link_name]
-      refFiletype = 'txt'
-    else
-      previewText = GetFileContent(link_name)
-      refFiletype = 'txt'
-    endif
-  endif
+#   var previewText = []
+#   var refFiletype = 'txt'
+#   # TODO: only word are allowed as link aliases
+#   var current_word = expand('<cword>')
+#   if !empty(IsLink())
+#     # Search from the current cursor position to the end of line
+#     var curr_col = col('.')
+#     var link_id = getline('.')
+#       ->matchstr($'\%>{curr_col}c\w\+\]\s*\[\s*\zs\d\+\ze\]')
+#     var link_name = links.b:links_dict[link_id]
+#     if links.IsURL(link_name)
+#       previewText = [link_name]
+#       refFiletype = 'txt'
+#     else
+#       previewText = GetFileContent(link_name)
+#       refFiletype = 'txt'
+#     endif
+#   endif
 
-  popup_clear()
-  var winid = previewText->popup_atcursor({moved: 'any',
-           close: 'click',
-           fixed: true,
-           maxwidth: 80,
-           border: [0, 1, 0, 1],
-           borderchars: [' '],
-           filter: PreviewWinFilterKey})
-  win_execute(winid, $'setlocal ft={refFiletype}')
-enddef
+#   popup_clear()
+#   var winid = previewText->popup_atcursor({moved: 'any',
+#            close: 'click',
+#            fixed: true,
+#            maxwidth: 80,
+#            border: [0, 1, 0, 1],
+#            borderchars: [' '],
+#            filter: PreviewWinFilterKey})
+#   win_execute(winid, $'setlocal ft={refFiletype}')
+# enddef
 
-def g:Foo(A: any, L: any, P: any): list<string>
-  return values(links_dict)
-enddef
+# def g:Foo(A: any, L: any, P: any): list<string>
+#   return values(b:links_dict)
+# enddef
 
 # var x = input('foo: ', '', 'customlist,Foo')
 
