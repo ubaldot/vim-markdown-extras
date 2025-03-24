@@ -62,20 +62,11 @@ def Cleanup_testfile(src_name: string)
    delete(src_name)
 enddef
 
-def g:Test_CR_hacked_test()
-  Generate_testfile(lines_1, src_name_1)
-
-  echo src_name_1
-  exe $"edit {src_name_1}"
-
-  # :%bw!
-  # Cleanup_testfile(src_name_1)
-enddef
 
 # Tests start here
-def g:XXXTest_CR_hacked()
+def g:Test_CR_hacked()
   Generate_testfile(lines_1, src_name_1)
-
+  vnew
   exe $"edit {src_name_1}"
   setlocal spell spelllang=la
 
@@ -160,7 +151,7 @@ def g:XXXTest_CR_hacked()
 enddef
 
 
-def g:XXXTest_CR_hacked_linebreaks()
+def g:Test_CR_hacked_linebreaks()
   # OBS! normal shall be without ! because we are testing <CR> which is
   # hacked!
   Generate_testfile(lines_1, src_name_1)
@@ -207,7 +198,7 @@ def g:XXXTest_CR_hacked_linebreaks()
   Cleanup_testfile(src_name_1)
 enddef
 
-def g:XXXTest_check_uncheck_todo_keybinding()
+def g:Test_check_uncheck_todo_keybinding()
 
   Generate_testfile(lines_1, src_name_1)
   exe $"edit {src_name_1}"
