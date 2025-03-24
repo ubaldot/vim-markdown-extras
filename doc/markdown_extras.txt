@@ -63,3 +63,4 @@ USAGE                                               *markdown-extras-usage*
 COMMANDS                                         *markdown-extras-commands*
 
 :MDERefreshLinksDict      Refresh the `b:links_dict` variable.
+:MDEConvertLinks          Convert inline links into reference-style links

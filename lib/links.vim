@@ -142,6 +142,8 @@ var links_popup_opts = {
   }
 
 export def IsLink(): dict<list<list<number>>>
+  # If the word under cursor is a link, then it returns info about
+  # it. Otherwise it won't return anything.
   const range_info = utils.IsInRange()
   if !empty(range_info) && keys(range_info)[0] == 'markdownLinkText'
     return range_info
@@ -156,11 +158,56 @@ export def OpenLink()
     # var link_id = xxx->matchstr('\[*\]\s*\[\zs\d\+\ze')
     const link_id = utils.GetTextObject('i[').text
     const link = b:links_dict[link_id]
-    if exists(':Open') != 0
+    if filereadable(link)
+      exe $'edit {link}'
+    elseif exists(':Open') != 0
       exe $":Open {link}"
     else
       utils.Echowarn('You need a Vim version that has the :Open command')
     endif
+enddef
+
+export def ConvertLinks()
+  # TODO this pattern is a bit flaky
+  const pattern = '\[*\]\s\?('
+  const saved_view = winsaveview()
+  cursor(1, 1)
+  var lA = -1
+  var cA = -1
+  var curr_pos = [lA, -cA]
+  while curr_pos != [0, 0]
+    curr_pos = searchpos(pattern, 'W')
+    lA = curr_pos[0]
+    cA = curr_pos[1]
+    if strcharpart(getline(lA), cA, 2) =~ '('
+      norm! f(l
+      var link = utils.GetTextObject('i(').text
+      var link_id = keys(b:links_dict)->map((_, val) => str2nr(val))->max() +
+        1
+      # Fix current line
+      exe $"norm! ca([{link_id}]"
+
+      # Fix dict
+      b:links_dict[link_id] = link
+      var lastline = line('$')
+      append(lastline - 1, $'[{link_id}]: {link}')
+      # TODO Find last proper line
+      # var line = search('\s*#\+\s*References', 'n') + 2
+      # var lastline = -1
+      # while getline(line) =~ '^\s*\[*\]: ' && line <= line('$')
+      #   echom line
+      #   if line == line('$')
+      #     lastline = line - 1
+      #   elseif getline(line) !~ '^\[*\]: '
+      #     lastline = line - 1
+      #     break
+      #   endif
+      #   line += 1
+      # endwhile
+      # append(lastline, $'[{link_id}]: {link}')
+    endif
+  endwhile
+    winrestview(saved_view)
 enddef
 
 export def GenerateLinksDict(): dict<string>
@@ -173,12 +220,20 @@ export def GenerateLinksDict(): dict<string>
   if references_line == 0
       append(line('$'), ['', '## References'])
   endif
-  var refs = getline(references_line + 1, '$')
-    ->filter('v:val =~ "^\\[\\d\\+\\]:\\s"')
-  for item in refs
-     var key = item->substitute('\[\(\d\+\)\].*', '\1', '')
-     var value = item->substitute('^\[\d\+]\:\s*\(.*\)', '\1', '')
-     links_dict[key] = value
+  for l in range(references_line + 1, line('$'))
+    var ref = getline(l)
+    if !empty(ref)
+      var key = ref->matchstr('\[\zs\d\+\ze\]')
+      if !empty(key)
+      var value = ref->matchstr('\[\d\+]:\s*\zs.*')
+      if empty(value)
+        value = trim(getline(l + 1))
+      endif
+      links_dict[key] = value
+      # echom "key: " .. key
+      # echom "value: " .. value
+      endif
+    endif
   endfor
   return links_dict
 enddef

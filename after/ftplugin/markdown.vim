@@ -7,15 +7,13 @@ import autoload '../../lib/utils.vim'
 import autoload '../../lib/highlight.vim'
 import autoload '../../lib/constants.vim'
 
-# TODO put this in an autocmd?
-
 def RefreshLinksDict()
   b:links_dict = links.GenerateLinksDict()
 enddef
 
 RefreshLinksDict()
-command! MDERefreshLinksDict RefreshLinksDict()
-
+command! -buffer -nargs=0 MDERefreshLinksDict RefreshLinksDict()
+command! -buffer -nargs=0 MDEConvertLinks links.ConvertLinks()
 
 # -------------- prettier ------------------------
 var use_prettier = true
