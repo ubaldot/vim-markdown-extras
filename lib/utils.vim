@@ -474,9 +474,15 @@ export def IsInRange(): dict<list<list<number>>>
     # We search for a markdown delimiter or an htmlTag.
     while current_style != $'{text_style}Delimiter'
         && current_style != 'htmlTag'
+      && open_delim_pos != [0, 0]
       open_delim_pos = searchpos($'\V{open_delim}', 'bW')
       current_style = synIDattr(synID(line("."), col("."), 1), "name")
     endwhile
+
+    # To avoid infinite loops if some weird delimited text is highlighted
+    if open_delim_pos == [0, 0]
+      return {}
+    endif
     open_delim_pos[1] += len(open_delim)
 
     # Search end delimiter.

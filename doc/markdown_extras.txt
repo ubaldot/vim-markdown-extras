@@ -57,3 +57,9 @@ filling it with he various keys.
         "marked_checkbox" Glyphs to display for marked checkboxes. Requires
                           "use_nerdfonts" set to `true` and 'concealevel'
                           greater than 0.
+==============================================================================
+USAGE                                               *markdown-extras-usage*
+
+COMMANDS                                         *markdown-extras-commands*
+
+:MDERefreshLinksDict      Refresh the `b:links_dict` variable.

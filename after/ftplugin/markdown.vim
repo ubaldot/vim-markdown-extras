@@ -8,7 +8,14 @@ import autoload '../../lib/highlight.vim'
 import autoload '../../lib/constants.vim'
 
 # TODO put this in an autocmd?
-b:links_dict = links.GenerateLinksDict()
+
+def RefreshLinksDict()
+  b:links_dict = links.GenerateLinksDict()
+enddef
+
+RefreshLinksDict()
+command! MDERefreshLinksDict RefreshLinksDict()
+
 
 # -------------- prettier ------------------------
 var use_prettier = true
@@ -312,3 +319,5 @@ if use_default_mappings
     nnoremap <buffer> <silent> K <Plug>MarkdownReferencePreview
   endif
 endif
+
+## References
