@@ -6,6 +6,15 @@ import autoload '../after/ftplugin/markdown.vim'
 
 export var links_dict = {}
 
+def SearchLink(backwards: bool = false)
+  const pattern = constants.LINK_OPEN_DICT['[']
+  if !backwards
+    search(pattern)
+  else
+    search(pattern, 'b')
+  endif
+enddef
+
 def GetLinkID(): number
   # When user add a new link, it either create a new ID and return it or it
   # just return an existing ID if the link already exists
@@ -53,7 +62,7 @@ enddef
 
 def LinksPopupCallback(match_id: number, type: string,  popup_id: number, idx: number)
   if idx > 0
-    var selection = getbufline(winbufnr(popup_id), idx)[0]
+    const selection = getbufline(winbufnr(popup_id), idx)[0]
     var link_id = -1
     if selection == "Create new link"
       link_id = GetLinkID()
@@ -62,8 +71,14 @@ def LinksPopupCallback(match_id: number, type: string,  popup_id: number, idx: n
         return
       endif
     else
-      # TODO: find keys based on selected value
-      link_id = idx - 1
+      const keys_from_value = utils.KeysFromValue(links_dict, selection)
+      # For some reason, links_dict may be empty or messed up
+      if empty(keys_from_value)
+        utils.Echoerr('Reference not found')
+        matchdelete(match_id)
+        return
+      endif
+      link_id = str2nr(keys_from_value[0])
     endif
 
     utils.SurroundSmart("markdownLinkText", type)
@@ -132,7 +147,7 @@ export def IsLink(): dict<list<list<number>>>
   endif
 enddef
 
-def OpenLink()
+export def OpenLink()
     norm! f[l
     # Only work for [blabla][]
     var link_id = utils.GetTextObject('i[').text
@@ -209,22 +224,6 @@ enddef
 # TODO
 def CleanupReferences()
   echoerr Not Implemented!
-enddef
-
-export def HandleLink()
-  # Initialization
-  if empty(links_dict)
-    GenerateLinksDict()
-  endif
-
-  # Execution
-  if !empty(IsLink())
-    OpenLink()
-  else
-    echom "Create link"
-    CreateLink()
-    echom links_dict
-  endif
 enddef
 
 # --------------------- Popups --------------------------------------------

@@ -94,22 +94,18 @@ setreg("o", "- [ ] ")
 
 # Redefinition of <cr>
 inoremap <buffer> <silent> <CR> <ScriptCmd>funcs.CR_Hacked()<CR>
+# nnoremap <buffer> <expr> <CR> empty(links.IsLink())
+#       \ ? <ScriptCmd>SetLinkOpFunc()<cr>g@iw
+#       \ : <ScriptCmd>links.OpenLink()<cr>
+
+nnoremap <buffer> <expr> <CR> empty(links.IsLink())
+      \ ? '<ScriptCmd>SetLinkOpFunc()<CR>g@iw'
+      \ : '<ScriptCmd>links.OpenLink()<CR>'
+
 
 if exists(':OutlineToggle') != 0
   nnoremap <buffer> <silent> <localleader>o <Cmd>OutlineToggle ^- [ <cr>
 endif
-
-# TODO: REMOVE ME
-def Foo(backwards: bool = false)
-  const pattern = constants.LINK_OPEN_DICT['[']
-  if !backwards
-    search(pattern)
-  else
-    search(pattern, 'b')
-  endif
-enddef
-nnoremap <buffer> <localleader>n <scriptcmd>Foo()<cr>
-nnoremap <buffer> <localleader>p <scriptcmd>Foo(true)<cr>
 
 def RemoveAll()
   # TODO could be refactored to increase speed, but it may not be necessary
@@ -146,16 +142,12 @@ def RemoveAll()
     links.RemoveLink()
   endif
 enddef
-
-# TODO: to be finished
 nnoremap <buffer> <BS> <ScriptCmd>RemoveAll()<cr>
 
 if empty(maparg('<Plug>MarkdownToggleCheck'))
   noremap <script> <buffer> <Plug>MarkdownToggleCheck
         \ <ScriptCmd>funcs.ToggleMark()<cr>
 endif
-#
-# TODO: to be reviewed
 
 def SetLinkOpFunc()
   &l:opfunc = function(links.CreateLink)
@@ -165,10 +157,17 @@ if empty(maparg('<Plug>MarkdownAddLink'))
   noremap <script> <buffer> <Plug>MarkdownAddLink
         \ <ScriptCmd>SetLinkOpFunc()<cr>g@
 endif
-if empty(maparg('<Plug>MarkdownRemoveLink'))
-  noremap <script> <buffer> <Plug>MarkdownRemoveLink
-        \ <ScriptCmd>links.RemoveLink()<cr>
+
+if empty(maparg('<Plug>MarkdownGotoLinkForward'))
+  noremap <script> <buffer> <Plug>MarkdownGotoLinkForward
+        \ <ScriptCmd>links.SearchLink()<cr>
 endif
+
+if empty(maparg('<Plug>MarkdownGotoLinkBackwards'))
+  noremap <script> <buffer> <Plug>MarkdownGotoLinkBackwards
+        \ <ScriptCmd>links.SearchLink(true)<cr>
+endif
+
 # -------------------------------------------
 
 if empty(maparg('<Plug>MarkdownReferencePreview'))
@@ -185,10 +184,7 @@ if exists('g:markdown_extras_config')
 endif
 
 def SetSurroundOpFunc(style: string)
-
-  &l:opfunc = function(
-    Surround, [style]
-  )
+  &l:opfunc = function(Surround, [style])
 enddef
 
 if empty(maparg('<Plug>MarkdownBold'))
@@ -235,8 +231,6 @@ if empty(maparg('<Plug>MarkdownAddHighlight'))
         \ <ScriptCmd>SetHighlightOpFunc()<cr>g@
 endif
 
-# ----------- TODO:TO BE REVIEWED ----------------------
-
 def SetCodeBlock()
   &l:opfunc = function(utils.SetBlock)
 enddef
@@ -263,20 +257,10 @@ if use_default_mappings
     xnoremap <buffer> <localleader>b <Plug>MarkdownBold
   endif
 
-  # if !hasmapto('<Plug>MarkdownBoldUnderscore')
-  #   nnoremap <buffer> <localleader>b <Plug>MarkdownBoldUnderscore
-  #   xnoremap <buffer> <localleader>b <Plug>MarkdownBoldUnderscore
-  # endif
-
   if !hasmapto('<Plug>MarkdownItalic')
     nnoremap <buffer> <localleader>i <Plug>MarkdownItalic
     xnoremap <buffer> <localleader>i <Plug>MarkdownItalic
   endif
-
-  # if !hasmapto('<Plug>MarkdownItalic')
-  #   nnoremap <buffer> <localleader>i_ <Plug>MarkdownItalicUnderscore
-  #   xnoremap <buffer> <localleader>i_ <Plug>MarkdownItalicUnderscore
-  # endif
 
   if !hasmapto('<Plug>MarkdownStrike')
     nnoremap <buffer> <localleader>s <Plug>MarkdownStrike
@@ -308,6 +292,15 @@ if use_default_mappings
     nnoremap <buffer> <localleader>l <Plug>MarkdownAddLink
     xnoremap <buffer> <localleader>l <Plug>MarkdownAddLink
   endif
+
+  if !hasmapto('<Plug>MarkdownGotoLinkForward')
+    nnoremap <buffer> <silent> <localleader>n <Plug>MarkdownGotoLinkForward
+  endif
+
+  if !hasmapto('<Plug>MarkdownGotoLinkBackwards')
+    nnoremap <buffer> <silent> <localleader>N <Plug>MarkdownGotoLinkBackwards
+  endif
+
   # ---------- Highlight --------------------------
   if !hasmapto('<Plug>MarkdownAddHighlight')
     nnoremap <localleader>h <Plug>MarkdownAddHighlight

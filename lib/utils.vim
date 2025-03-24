@@ -35,6 +35,11 @@ export def FormatWithoutMoving(a: number = 0, b: number = 0)
   winrestview(view)
 enddef
 
+export def KeysFromValue(dict: dict<string>, target_value: string): list<string>
+ # Given a value, return all the keys associated to it
+ return keys(filter(copy(dict), $'v:val == "{target_value}"'))
+enddef
+
 export def RemoveSurrounding(range_info: dict<list<list<number>>> = {})
     const style_interval = empty(range_info) ? IsInRange() : range_info
     if !empty(style_interval)
