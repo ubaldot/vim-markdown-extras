@@ -336,9 +336,10 @@ export def PreviewPopup()
   var current_word = expand('<cword>')
   if !empty(IsLink())
     # Search from the current cursor position to the end of line
-    var curr_col = col('.')
-    var link_id = getline('.')
-      ->matchstr($'\%>{curr_col}c\w\+\]\s*\[\s*\zs\d\+\ze\]')
+    var saved_curpos = getcurpos()
+    norm! f[l
+    var link_id = utils.GetTextObject('i[').text
+    echom link_id
     var link_name = b:markdown_extras_links[link_id]
     if IsURL(link_name)
       previewText = [link_name]
@@ -358,5 +359,6 @@ export def PreviewPopup()
              borderchars: [' '],
              filter: PreviewWinFilterKey})
     win_execute(winid, $'setlocal ft={refFiletype}')
+    setpos('.', saved_curpos)
   endif
 enddef
