@@ -4,6 +4,34 @@ import autoload './constants.vim'
 import autoload './utils.vim'
 import autoload '../after/ftplugin/markdown.vim'
 
+export def RefreshLinksDict(): dict<string>
+  # Generate the b:markdown_extras_links by parsing the # References section,
+  # but it requires that there is a # Reference section at the end
+  #
+  # Cleanup the current b:markdown_extras_links
+  var links_dict = {}
+  const references_line = search('\s*#\+\s\+References', 'nw')
+  if references_line == 0
+      append(line('$'), ['', '## References'])
+  endif
+  for l in range(references_line + 1, line('$'))
+    var ref = getline(l)
+    if !empty(ref)
+      var key = ref->matchstr('\[\zs\d\+\ze\]')
+      if !empty(key)
+      var value = ref->matchstr('\[\d\+]:\s*\zs.*')
+      if empty(value)
+        value = trim(getline(l + 1))
+      endif
+      links_dict[key] = value
+      # echom "key: " .. key
+      # echom "value: " .. value
+      endif
+    endif
+  endfor
+  return links_dict
+enddef
+
 export def SearchLink(backwards: bool = false)
   const pattern = constants.LINK_OPEN_DICT['[']
   if !backwards
@@ -16,7 +44,9 @@ enddef
 def GetLinkID(): number
   # When user add a new link, it either create a new ID and return it or it
   # just return an existing ID if the link already exists
-  #
+
+  b:markdown_extras_links = RefreshLinksDict()
+
   var current_wildmenu = &wildmenu
   set nowildmenu
   var link = input("Create new link (you can use 'tab'): ", '', 'file')
@@ -73,7 +103,6 @@ def LinksPopupCallback(match_id: number, type: string,  popup_id: number, idx: n
         return
       endif
     else
-      echom "b:markdown_extras_links: " .. b:markdown_extras_links
       const keys_from_value = utils.KeysFromValue(b:markdown_extras_links, selection)
       # For some reason, b:markdown_extras_links may be empty or messed up
       if empty(keys_from_value)
@@ -156,6 +185,8 @@ export def OpenLink()
     norm! f[l
     # Only work for [blabla][]
     # var link_id = xxx->matchstr('\[*\]\s*\[\zs\d\+\ze')
+
+    b:markdown_extras_links = RefreshLinksDict()
     const link_id = utils.GetTextObject('i[').text
     const link = b:markdown_extras_links[link_id]
     if filereadable(link)
@@ -169,6 +200,8 @@ enddef
 
 export def ConvertLinks()
   # TODO this pattern is a bit flaky
+
+  b:markdown_extras_links = RefreshLinksDict()
   const pattern = '\[*\]\s\?('
   const saved_view = winsaveview()
   cursor(1, 1)
@@ -210,33 +243,6 @@ export def ConvertLinks()
     winrestview(saved_view)
 enddef
 
-export def GenerateLinksDict(): dict<string>
-  # Generate the b:markdown_extras_links by parsing the # References section,
-  # but it requires that there is a # Reference section at the end
-  #
-  # Cleanup the current b:markdown_extras_links
-  var links_dict = {}
-  const references_line = search('\s*#\+\s\+References', 'nw')
-  if references_line == 0
-      append(line('$'), ['', '## References'])
-  endif
-  for l in range(references_line + 1, line('$'))
-    var ref = getline(l)
-    if !empty(ref)
-      var key = ref->matchstr('\[\zs\d\+\ze\]')
-      if !empty(key)
-      var value = ref->matchstr('\[\d\+]:\s*\zs.*')
-      if empty(value)
-        value = trim(getline(l + 1))
-      endif
-      links_dict[key] = value
-      # echom "key: " .. key
-      # echom "value: " .. value
-      endif
-    endif
-  endfor
-  return links_dict
-enddef
 
 export def RemoveLink(range_info: dict<list<list<number>>> = {})
   const link_info = empty(range_info) ? IsLink() : range_info
@@ -257,7 +263,8 @@ export def CreateLink(type: string = '')
     return
   endif
 
-  # GenerateLinksDict()
+  b:markdown_extras_links = RefreshLinksDict()
+
   # line and column of point A
   var lA = line("'[")
   var cA = type == 'line' ? 1 : col("'[")
@@ -277,108 +284,79 @@ export def CreateLink(type: string = '')
   popup_create(values(b:markdown_extras_links)->insert("Create new link"), links_popup_opts)
 enddef
 
+# -------- Preview functions --------------------------------
+def PreviewWinFilterKey(previewWin: number, key: string): bool
+  var keyHandled = false
 
-# TODO
-def CleanupReferences()
-  echoerr Not Implemented!
+  if key == "\<C-E>"
+      || key == "\<C-D>"
+      || key == "\<C-F>"
+      || key == "\<PageDown>"
+      || key == "\<C-Y>"
+      || key == "\<C-U>"
+      || key == "\<C-B>"
+      || key == "\<PageUp>"
+      || key == "\<C-Home>"
+      || key == "\<C-End>"
+    # scroll the hover popup window
+    win_execute(previewWin, $'normal! {key}')
+    keyHandled = true
+  endif
+
+  if key == "\<Esc>"
+    previewWin->popup_close()
+    keyHandled = true
+  endif
+
+  return keyHandled
 enddef
 
-# --------------------- Popups --------------------------------------------
-
-def OpenLinkPopup(links_list: list<string>, popup_id: number, choice: number)
-    var link = links_list[choice - 1]
-    if filereadable(link)
-      exe $'edit {link}'
-    elseif exists(':Open') != 0
-      exe $'Open {link}'
-    elseif IsURL(link)
-      # TODO: I have :Open everywhere but on macos
-      silent exe $'!{g:start_cmd} -a safari.app "{link}"'
+def GetFileContent(filename: string): list<string>
+    var file_content = []
+    if bufexists(filename)
+      file_content = getbufline(filename, 1, '$')
+    # TODO: check if you can remove the expand()
+    elseif filereadable($'{filename}')
+      # file_content = readfile($'{expand(filename)}')
+      file_content = readfile($'{filename}')
     else
-      echoerr $"File {link} does not exists!"
+      file_content = ["Can't preview the file!", "Does the file exist?"]
     endif
+    var title = [filename, '']
+    return extend(title, file_content)
 enddef
 
-# TODO: we need a mapping for this
-# export def g:ReferencesPopup()
-#   GenerateLinksDict()
-#   # Build a list such that each item correspond to a link.
-#   # This to establish an order and a mapping between menu choice->list
-#   # element
-#   var items = values(b:markdown_extras_links)
-#   var links_list = []
-#   for val in items
-#     links_list->add(val)
-#   endfor
-#   if !empty(items)
-#     var choice = links_list->popup_menu({
-#       title: ' References ',
-#       borderchars: ['─', '│', '─', '│', '╭', '╮', '╯', '╰'],
-#       callback: (popup_id, choice) => OpenLinkPopup(links_list, popup_id, choice) })
-#   else
-#     utils.Echowarn('No references found!')
-#   endif
-# enddef
+export def PreviewPopup()
 
-# TODO: make a function for consolidating the references
-# (SanitizeReferences())
+  b:markdown_extras_links = RefreshLinksDict()
 
+  var previewText = []
+  var refFiletype = 'txt'
+  # TODO: only word are allowed as link aliases
+  var current_word = expand('<cword>')
+  if !empty(IsLink())
+    # Search from the current cursor position to the end of line
+    var curr_col = col('.')
+    var link_id = getline('.')
+      ->matchstr($'\%>{curr_col}c\w\+\]\s*\[\s*\zs\d\+\ze\]')
+    var link_name = b:markdown_extras_links[link_id]
+    if IsURL(link_name)
+      previewText = [link_name]
+      refFiletype = 'txt'
+    else
+      previewText = GetFileContent(link_name)
+      refFiletype = 'txt'
+    endif
 
-# TODO JUST ADDED!
-# export def AddLinkPopup()
-#   # Generate b:markdown_extras_links
-#   GenerateLinksDict()
-
-#   var previewText = []
-#   var refFiletype = 'txt'
-#   # TODO: only word are allowed as link aliases
-#   var current_word = expand('<cword>')
-#   if !empty(IsLink())
-#     # Search from the current cursor position to the end of line
-#     var curr_col = col('.')
-#     var link_id = getline('.')
-#       ->matchstr($'\%>{curr_col}c\w\+\]\s*\[\s*\zs\d\+\ze\]')
-#     var link_name = links.b:markdown_extras_links[link_id]
-#     if links.IsURL(link_name)
-#       previewText = [link_name]
-#       refFiletype = 'txt'
-#     else
-#       previewText = GetFileContent(link_name)
-#       refFiletype = 'txt'
-#     endif
-#   endif
-
-#   popup_clear()
-#   var winid = previewText->popup_atcursor({moved: 'any',
-#            close: 'click',
-#            fixed: true,
-#            maxwidth: 80,
-#            border: [0, 1, 0, 1],
-#            borderchars: [' '],
-#            filter: PreviewWinFilterKey})
-#   win_execute(winid, $'setlocal ft={refFiletype}')
-# enddef
-
-# def g:Foo(A: any, L: any, P: any): list<string>
-#   return values(b:markdown_extras_links)
-# enddef
-
-# var x = input('foo: ', '', 'customlist,Foo')
-
-
-# def CustomComplete(findstart: number, base: string): any
-#     if findstart
-#         return match(getline('.'), '\S\+$')  # Find the start of the word
-#     else
-#         var candidates = ['apple', 'applecaca', 'banana', 'blueberry', 'blackberry', 'grape', 'grapefruit']
-#         var filtered = copy(candidates)->filter((_, val) => val =~# printf('^%s', base))
-#         return map(filtered, Bar)
-#     endif
-# enddef
-
-# def Bar(idx: number, val: any): any
-#   return {word: val, menu: '[Custom]'}
-# enddef
-
-# setlocal completefunc=CustomComplete
-# inoremap X <C-X><C-U>
+    popup_clear()
+    var winid = previewText->popup_atcursor({moved: 'any',
+             close: 'click',
+             fixed: true,
+             maxwidth: 80,
+             maxheight: (&lines * 2) / 3,
+             border: [0, 1, 0, 1],
+             borderchars: [' '],
+             filter: PreviewWinFilterKey})
+    win_execute(winid, $'setlocal ft={refFiletype}')
+  endif
+enddef

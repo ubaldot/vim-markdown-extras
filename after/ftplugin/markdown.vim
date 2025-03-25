@@ -1,18 +1,12 @@
 vim9script
 
 import autoload "../../lib/funcs.vim"
-import autoload "../../lib/preview.vim"
 import autoload "../../lib/links.vim"
 import autoload '../../lib/utils.vim'
 import autoload '../../lib/highlight.vim'
 import autoload '../../lib/constants.vim'
 
-def RefreshLinksDict()
-  b:markdown_extras_links = links.GenerateLinksDict()
-enddef
-
-RefreshLinksDict()
-command! -buffer -nargs=0 MDERefreshLinksDict RefreshLinksDict()
+b:markdown_extras_links = links.RefreshLinksDict()
 command! -buffer -nargs=0 MDEConvertLinks links.ConvertLinks()
 
 # -------------- prettier ------------------------
@@ -99,55 +93,17 @@ setreg("o", "- [ ] ")
 
 # Redefinition of <cr>
 inoremap <buffer> <silent> <CR> <ScriptCmd>funcs.CR_Hacked()<CR>
-# nnoremap <buffer> <expr> <CR> empty(links.IsLink())
-#       \ ? <ScriptCmd>SetLinkOpFunc()<cr>g@iw
-#       \ : <ScriptCmd>links.OpenLink()<cr>
-
 nnoremap <buffer> <expr> <CR> empty(links.IsLink())
       \ ? '<ScriptCmd>SetLinkOpFunc()<CR>g@iw'
       \ : '<ScriptCmd>links.OpenLink()<CR>'
 
+# Redefinition of <BS>
+nnoremap <buffer> <BS> <ScriptCmd>funcs.RemoveAll()<cr>
 
 if exists(':OutlineToggle') != 0
   nnoremap <buffer> <silent> <localleader>o <Cmd>OutlineToggle ^- [ <cr>
 endif
 
-def RemoveAll()
-  # TODO could be refactored to increase speed, but it may not be necessary
-  const range_info = utils.IsInRange()
-  const prop_info = highlight.IsOnProp()
-  const syn_info = synIDattr(synID(line("."), col("."), 1), "name")
-
-  # If on plain text, do nothing, just execute a normal! <BS>
-  if empty(range_info) && empty(prop_info) && syn_info != 'markdownCodeBlock'
-    exe "norm! \<BS>"
-    return
-  endif
-
-  # Start removing the text props
-  if !empty(prop_info)
-    prop_remove({'id': prop_info.id, 'all': 0})
-    return
-  endif
-
-  # Check markdownCodeBlocks
-  if syn_info == 'markdownCodeBlock'
-    utils.UnsetBlock(syn_info)
-    return
-  endif
-
-  # Text styles removal setup
-  const target = keys(range_info)[0]
-  var text_styles = copy(constants.TEXT_STYLES_DICT)
-  unlet text_styles['markdownLinkText']
-
-  if index(keys(text_styles), target) != -1
-    utils.RemoveSurrounding(range_info)
-  elseif target == 'markdownLinkText'
-    links.RemoveLink()
-  endif
-enddef
-nnoremap <buffer> <BS> <ScriptCmd>RemoveAll()<cr>
 
 if empty(maparg('<Plug>MarkdownToggleCheck'))
   noremap <script> <buffer> <Plug>MarkdownToggleCheck
@@ -177,7 +133,7 @@ endif
 
 if empty(maparg('<Plug>MarkdownReferencePreview'))
   noremap <script> <buffer> <Plug>MarkdownReferencePreview
-        \  <ScriptCmd>preview.PreviewPopup()<cr>
+        \  <ScriptCmd>links.PreviewPopup()<cr>
 endif
 
 # Text styles

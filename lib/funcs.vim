@@ -93,3 +93,39 @@ export def CR_Hacked()
   startinsert
 
 enddef
+
+export def RemoveAll()
+  # TODO could be refactored to increase speed, but it may not be necessary
+  const range_info = utils.IsInRange()
+  const prop_info = highlight.IsOnProp()
+  const syn_info = synIDattr(synID(line("."), col("."), 1), "name")
+
+  # If on plain text, do nothing, just execute a normal! <BS>
+  if empty(range_info) && empty(prop_info) && syn_info != 'markdownCodeBlock'
+    exe "norm! \<BS>"
+    return
+  endif
+
+  # Start removing the text props
+  if !empty(prop_info)
+    prop_remove({'id': prop_info.id, 'all': 0})
+    return
+  endif
+
+  # Check markdownCodeBlocks
+  if syn_info == 'markdownCodeBlock'
+    utils.UnsetBlock(syn_info)
+    return
+  endif
+
+  # Text styles removal setup
+  const target = keys(range_info)[0]
+  var text_styles = copy(constants.TEXT_STYLES_DICT)
+  unlet text_styles['markdownLinkText']
+
+  if index(keys(text_styles), target) != -1
+    utils.RemoveSurrounding(range_info)
+  elseif target == 'markdownLinkText'
+    links.RemoveLink()
+  endif
+enddef
