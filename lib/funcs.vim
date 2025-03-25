@@ -1,8 +1,13 @@
 vim9script
 
+import autoload './constants.vim'
+import autoload './utils.vim'
+import autoload './highlight.vim'
+import autoload './links.vim'
+
 export def ToggleMark()
   # Toggle checkbox marks in todo lists
-  #
+
   var line = getline('.')
   if match(line, '\[\s*\]') != -1
     setline('.', substitute(line, '\[\s*\]', '[x]', ''))
