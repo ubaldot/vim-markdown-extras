@@ -5,6 +5,27 @@ import autoload './utils.vim'
 import autoload './highlight.vim'
 import autoload './links.vim'
 
+var visited_buffers = []
+var visited_buffer_max_length = 100
+
+export def GoToPrevVisitedBuffer()
+  if len(visited_buffers) > 1
+    remove(visited_buffers, -1)
+    exe $"buffer {visited_buffers[-1]}"
+  endif
+  # echom visited_buffers
+enddef
+
+export def AddVisitedBuffer()
+    if empty(visited_buffers) || bufnr() != visited_buffers[-1]
+      if len(visited_buffers) > visited_buffer_max_length
+        remove(visited_buffers, 0)
+      endif
+      add(visited_buffers, bufnr())
+    endif
+    # echom visited_buffers
+enddef
+
 export def ToggleMark()
   # Toggle checkbox marks in todo lists
 

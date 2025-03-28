@@ -9,6 +9,8 @@ import autoload '../../lib/constants.vim'
 b:markdown_extras_links = links.RefreshLinksDict()
 command! -buffer -nargs=0 MDEConvertLinks links.ConvertLinks()
 
+nnoremap <buffer> <backspace> <ScriptCmd>funcs.GoToPrevVisitedBuffer()<cr>
+
 # -------------- prettier ------------------------
 var use_prettier = true
 if exists('g:markdown_extras_config') != 0
@@ -97,8 +99,6 @@ nnoremap <buffer> <expr> <CR> empty(links.IsLink())
       \ ? '<ScriptCmd>SetLinkOpFunc()<CR>g@iw'
       \ : '<ScriptCmd>links.OpenLink()<CR>'
 
-# Redefinition of <BS>
-nnoremap <buffer> <BS> <ScriptCmd>funcs.RemoveAll()<cr>
 
 if exists(':OutlineToggle') != 0
   nnoremap <buffer> <silent> <localleader>o <Cmd>OutlineToggle ^- [ <cr>
@@ -183,6 +183,11 @@ if empty(maparg('<Plug>MarkdownUnderline'))
         \ <ScriptCmd>SetSurroundOpFunc('markdownUnderline')<cr>g@
 endif
 
+if empty(maparg('<Plug>MarkdownRemove'))
+  noremap <script> <buffer> <Plug>MarkdownRemove
+        \ <ScriptCmd>funcs.RemoveAll()<cr>
+endif
+
 def SetHighlightOpFunc()
   &l:opfunc = function(highlight.AddProp)
 enddef
@@ -248,6 +253,10 @@ if use_default_mappings
     nnoremap <buffer> <silent> <localleader>x <Plug>MarkdownToggleCheck
   endif
 
+  # ---------- Remove all --------------------------
+  if !hasmapto('<Plug>MarkdownRemove')
+    nnoremap <localleader>d <Plug>MarkdownRemove
+  endif
   # ---------- Links --------------------------
   if !hasmapto('<Plug>MarkdownAddLink')
     nnoremap <buffer> <localleader>l <Plug>MarkdownAddLink

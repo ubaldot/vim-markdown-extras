@@ -5,6 +5,7 @@ vim9script noclear
 # License: BSD-3
 
 import autoload './../lib/utils.vim'
+import autoload './../lib/funcs.vim'
 
 
 if !has('vim9script') ||  v:version < 900
@@ -24,3 +25,8 @@ if exists('g:markdown_extras_loaded')
   finish
 endif
 g:markdown_extras_loaded = true
+
+augroup MARKDOWN_EXTRAS_VISITED_BUFFER
+    autocmd!
+    autocmd BufEnter *.md funcs.AddVisitedBuffer()
+augroup END
