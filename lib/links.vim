@@ -13,9 +13,11 @@ var prompt_text: string
 
 var fuzzy_search: bool
 
+var popup_width: number
+var links_popup_opts: dict<any>
+
 def InitScriptLocalVars()
   # Set script-local variables
-
   main_id = -1
   prompt_id = -1
 
@@ -33,6 +35,20 @@ def InitScriptLocalVars()
   if empty(prop_type_get('PopupToolsMatched'))
     prop_type_add('PopupToolsMatched', {highlight: 'WarningMsg'})
   endif
+
+  popup_width = (&columns * 2) / 3
+  links_popup_opts = {
+      pos: 'center',
+      border: [1, 1, 1, 1],
+      borderchars:  ['─', '│', '─', '│', '├', '┤', '╯', '╰'],
+      minwidth: popup_width,
+      maxwidth: popup_width,
+      scrollbar: 0,
+      cursorline: 1,
+      mapping: 0,
+      wrap: 0,
+      drag: 0,
+    }
 enddef
 
 export def RefreshLinksDict(): dict<string>
@@ -159,21 +175,6 @@ def LinksPopupCallback(match_id: number, type: string,  popup_id: number, idx: n
   endif
   matchdelete(match_id)
 enddef
-
-const popup_width = (&columns * 2) / 3
-var links_popup_opts = {
-    pos: 'center',
-    border: [1, 1, 1, 1],
-    borderchars:  ['─', '│', '─', '│', '├', '┤', '╯', '╰'],
-    minwidth: popup_width,
-    maxwidth: popup_width,
-    scrollbar: 0,
-    cursorline: 1,
-    mapping: 0,
-    wrap: 0,
-    drag: 0,
-    callback: LinksPopupCallback,
-  }
 
 export def IsLink(): dict<list<list<number>>>
   # If the word under cursor is a link, then it returns info about
@@ -508,7 +509,6 @@ def GetFileContent(filename: string): list<string>
 enddef
 
 export def PreviewPopup()
-
   b:markdown_extras_links = RefreshLinksDict()
 
   var previewText = []

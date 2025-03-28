@@ -73,7 +73,6 @@ export def RemoveSurrounding(range_info: dict<list<list<number>>> = {})
       # vim-surround
       const lineB = getline(lB)
       if  cB < len(lineB)
-        echom "FOO"
         # You have delimters
         newline = strcharpart(lineB, 0, cB)
               \ .. strcharpart(lineB,
