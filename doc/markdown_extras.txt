@@ -57,6 +57,9 @@ filling it with he various keys.
         "marked_checkbox" Glyphs to display for marked checkboxes. Requires
                           "use_nerdfonts" set to `true` and 'concealevel'
                           greater than 0.
+        "fuzzy_search"    Fuzzy or exact search in the links popup.
+                          Default: true.
+
 ==============================================================================
 USAGE                                               *markdown-extras-usage*
 

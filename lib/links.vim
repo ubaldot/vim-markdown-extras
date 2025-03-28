@@ -4,6 +4,37 @@ import autoload './constants.vim'
 import autoload './utils.vim'
 import autoload '../after/ftplugin/markdown.vim'
 
+var main_id: number
+var prompt_id: number
+
+var prompt_cursor: string
+var prompt_sign: string
+var prompt_text: string
+
+var fuzzy_search: bool
+
+def InitScriptLocalVars()
+  # Set script-local variables
+
+  main_id = -1
+  prompt_id = -1
+
+  prompt_cursor = '▏'
+  prompt_sign = '> '
+  prompt_text = ''
+
+  if exists('g:markdown_extras_config')
+      && has_key(g:markdown_extras_config, 'fuzzy_search')
+    fuzzy_search = g:markdown_extras_config['fuzzy_search']
+  else
+    fuzzy_search = true
+  endif
+
+  if empty(prop_type_get('PopupToolsMatched'))
+    prop_type_add('PopupToolsMatched', {highlight: 'WarningMsg'})
+  endif
+enddef
+
 export def RefreshLinksDict(): dict<string>
   # Generate the b:markdown_extras_links by parsing the # References section,
   # but it requires that there is a # Reference section at the end
@@ -129,36 +160,11 @@ def LinksPopupCallback(match_id: number, type: string,  popup_id: number, idx: n
   matchdelete(match_id)
 enddef
 
-def LinksPopupFilter(popup_id: number, key: string): bool
-  # TODO: add try-catch
-  if key == "\<esc>"
-    popup_close(popup_id, -1)
-  elseif key == "\<cr>"
-    popup_close(popup_id, getcurpos(popup_id)[1])
-  elseif index(["j", "\<tab>", "\<C-n>", "\<Down>", "\<ScrollWheelDown>"], key) != -1
-    var ln = getcurpos(popup_id)[1]
-    win_execute(popup_id, "normal! j")
-    if ln == getcurpos(popup_id)[1]
-      win_execute(popup_id, "normal! gg")
-    endif
-  elseif index(["k", "\<S-Tab>", "\<C-p>", "\<Up>", "\<ScrollWheelUp>"], key) != -1
-    var ln = getcurpos(popup_id)[1]
-    win_execute(popup_id, "normal! k")
-    if ln == getcurpos(popup_id)[1]
-      win_execute(popup_id, "normal! G")
-    endif
-  endif
-  return true
-enddef
-
 const popup_width = (&columns * 2) / 3
-const popup_height = (&lines * 2) / 3
 var links_popup_opts = {
-    title: ' links: ',
     pos: 'center',
     border: [1, 1, 1, 1],
-    borderchars:  ['─', '│', '─', '│', '╭', '╮', '╯', '╰'],
-    maxheight: popup_height,
+    borderchars:  ['─', '│', '─', '│', '├', '┤', '╯', '╰'],
     minwidth: popup_width,
     maxwidth: popup_width,
     scrollbar: 0,
@@ -166,7 +172,6 @@ var links_popup_opts = {
     mapping: 0,
     wrap: 0,
     drag: 0,
-    filter: LinksPopupFilter,
     callback: LinksPopupCallback,
   }
 
@@ -257,7 +262,174 @@ export def RemoveLink(range_info: dict<list<list<number>>> = {})
   endif
 enddef
 
+def ClosePopups()
+  # This function tear down everything
+  popup_close(main_id, -1)
+  popup_close(prompt_id, -1)
+  # RestoreCursor()
+  prop_type_delete('PopupToolsMatched')
+enddef
+
+def PopupFilter(id: number,
+    key: string,
+    results: list<string>,
+    ): bool
+
+  var maxheight = popup_getoptions(main_id).maxheight
+
+  if key == "\<esc>"
+    ClosePopups()
+    return true
+  endif
+
+  # For debugging
+  # echom 'Pressed key: ' .. key
+  echo ''
+  # You never know what the user can type... Let's use a try-catch
+  try
+    if key == "\<CR>"
+      popup_close(main_id, getcurpos(main_id)[1])
+      ClosePopups()
+    elseif index(["\<Right>", "\<PageDown>"], key) != -1
+      win_execute(main_id, 'normal! ' .. maxheight .. "\<C-d>")
+    elseif index(["\<Left>", "\<PageUp>"], key) != -1
+      win_execute(main_id, 'normal! ' .. maxheight .. "\<C-u>")
+    elseif key == "\<Home>"
+      win_execute(main_id, "normal! gg")
+    elseif key == "\<End>"
+      win_execute(main_id, "normal! G")
+    elseif index(["\<tab>", "\<C-n>", "\<Down>", "\<ScrollWheelDown>"], key)
+        != -1
+      var ln = getcurpos(main_id)[1]
+      win_execute(main_id, "normal! j")
+      if ln == getcurpos(main_id)[1]
+        win_execute(main_id, "normal! gg")
+      endif
+    elseif index(["\<S-Tab>", "\<C-p>", "\<Up>", "\<ScrollWheelUp>"], key) !=
+        -1
+      var ln = getcurpos(main_id)[1]
+      win_execute(main_id, "normal! k")
+      if ln == getcurpos(main_id)[1]
+        win_execute(main_id, "normal! G")
+      endif
+    # The real deal: take a single, printable character
+    elseif key =~ '^\p$' || keytrans(key) ==# "<BS>" || key == "\<c-u>"
+      if key =~ '^\p$'
+        prompt_text ..= key
+      elseif keytrans(key) ==# "<BS>"
+        if len(prompt_text) > 0
+          prompt_text = prompt_text[: -2]
+        endif
+      elseif key == "\<c-u>"
+        prompt_text = ""
+      endif
+
+      popup_settext(prompt_id, $'{prompt_sign}{prompt_text}{prompt_cursor}')
+
+      # What you pass to popup_settext(main_id, ...) is a list of strings with
+      # text properties attached, e.g.
+      #
+      # [
+      #   { "text": "filename.txt",
+      #     "props": [ {"col": 2, "length": 1, "type": "PopupToolsMatched"},
+      #     ... ]
+      #   },
+      #   { "text": "another_file.txt",
+      #     "props": [ {"col": 1, "length": 1, "type": "PopupToolsMatched"},
+      #     ... ]
+      #   },
+      #   ...
+      # ]
+      #
+      var filtered_results_full = []
+      var filtered_results: list<dict<any>>
+
+      if !empty(prompt_text)
+        if fuzzy_search
+          filtered_results_full = results->matchfuzzypos(prompt_text)
+          var pos = filtered_results_full[1]
+          filtered_results = filtered_results_full[0]
+            ->map((ii, match) => ({
+              text: match,
+              props: pos[ii]->copy()->map((_, col) => ({
+                col: col + 1,
+                length: 1,
+                type: 'PopupToolsMatched'
+              }))}))
+        else
+          filtered_results_full = copy(results)
+            ->map((_, text) => matchstrpos(text,
+                  \ '\V' .. $"{escape(prompt_text, '\')}"))
+            ->map((idx, match_info) => [results[idx], match_info[1],
+              match_info[2]])
+
+          filtered_results = copy(filtered_results_full)
+            ->map((_, val) => ({
+              text: val[0],
+              props: val[1] >= 0 && val[2] >= 0
+                ? [{
+                  type: 'PopupToolsMatched',
+                  col: val[1] + 1,
+                  end_col: val[2] + 1
+                }]
+                : []
+            }))
+            ->filter("!empty(v:val.props)")
+        endif
+      endif
+
+      var opts = popup_getoptions(prompt_id)
+      var num_hits = !empty(filtered_results)
+        ? len(filtered_results)
+        : len(results)
+      popup_setoptions(prompt_id, opts)
+
+      if !empty(prompt_text)
+        popup_settext(main_id, filtered_results)
+      else
+        popup_settext(main_id, results)
+      endif
+    else
+      utils.Echowarn('Unknown key')
+    endif
+  catch
+    ClosePopups()
+    utils.Echoerr('Internal error')
+  endtry
+
+  return true
+enddef
+
+def ShowPromptPopup(links: list<string>)
+  # This is the UI thing
+  var main_id_core_line = popup_getpos(main_id).core_line
+  var main_id_core_col = popup_getpos(main_id).core_col
+  var main_id_core_width = popup_getpos(main_id).core_width
+
+  # var base_title = $'{search_type}:'
+  var opts = {
+    title: " links: ",
+    minwidth: main_id_core_width,
+    maxwidth: main_id_core_width,
+    line: main_id_core_line - 3,
+    col: main_id_core_col - 1,
+    borderchars: ['─', '│', '─', '│', '╭', '╮', '╯', '╰'],
+    border: [1, 1, 0, 1],
+    mapping: 0,
+    scrollbar: 0,
+    wrap: 0,
+    drag: 0,
+  }
+
+  # Filter
+  opts.filter = (id, key) => PopupFilter(id, key, links)
+
+  prompt_text = ""
+  prompt_id = popup_create([prompt_sign .. prompt_cursor], opts)
+enddef
+
 export def CreateLink(type: string = '')
+  InitScriptLocalVars()
 
   if getcharpos("'[") == getcharpos("']")
     return
@@ -281,7 +453,16 @@ export def CreateLink(type: string = '')
 
   links_popup_opts.callback =
     (popup_id, idx) => LinksPopupCallback(match_id, type, popup_id, idx)
-  popup_create(values(b:markdown_extras_links)->insert("Create new link"), links_popup_opts)
+
+  var links = values(b:markdown_extras_links)->insert("Create new link")
+  var popup_height = min([len(links), (&lines * 2) / 3])
+  links_popup_opts.minheight = popup_height
+  links_popup_opts.maxheight = popup_height
+  main_id = popup_create(links, links_popup_opts)
+
+  # if len(links) > 1
+    ShowPromptPopup(links)
+  # endif
 enddef
 
 # -------- Preview functions --------------------------------
