@@ -166,14 +166,14 @@ def g:Test_CR_hacked_linebreaks()
   # OBS! normal is without ! to prevent bypassing mappings
   execute "normal 7ggi-\<space>foo\<space>bar\<esc>bi\<enter>"
 
-  echom assert_match(expected_line_7, getline(7))
-  echom assert_match(expected_line_8, getline(8))
+  assert_match(expected_line_7, getline(7))
+  assert_match(expected_line_8, getline(8))
 
   # 2. enter in the lhs of the item symbol
   execute "normal I\<enter>"
-  echom assert_match(expected_line_7, getline(7))
-  echom assert_match('- ', getline(8))
-  echom assert_match(expected_line_8, getline(9))
+  assert_match(expected_line_7, getline(7))
+  assert_match('- ', getline(8))
+  assert_match(expected_line_8, getline(9))
 
   # 3. test numbered list
   var text = "    3. ciao sono io, amore mio"
@@ -182,17 +182,23 @@ def g:Test_CR_hacked_linebreaks()
   append(18, text)
   cursor(19, 22)
   execute "normal i\<cr>"
-  echom assert_match(expected_line_19, getline(19))
-  echom assert_match(expected_line_20, getline(20))
+  assert_match(expected_line_19, getline(19))
+  assert_match(expected_line_20, getline(20))
 
   # 4. Add number above
   execute "normal I\<cr>"
   expected_line_20 = "    4. "
   var expected_line_21 = "    5. amore mio"
 
-  echom assert_match(expected_line_19, getline(19))
-  echom assert_match(expected_line_20, getline(20))
-  echom assert_match(expected_line_21, getline(21))
+  assert_match(expected_line_19, getline(19))
+  assert_match(expected_line_20, getline(20))
+  assert_match(expected_line_21, getline(21))
+
+  execute "normal wwi\<cr>"
+  expected_line_21 = "    5. amore "
+  var expected_line_22 = "    6. mio"
+  assert_match(expected_line_21, getline(21))
+  assert_match(expected_line_22, getline(22))
 
   :%bw!
   Cleanup_testfile(src_name_1)
@@ -205,12 +211,14 @@ def g:Test_check_uncheck_todo_keybinding()
   setlocal spell spelllang=la
 
   execute "silent norm! Go\<cr>-\<space>[\<space>]\<space>foo"
-  echom assert_true(getline(line('.')) =~ '^- \[ \] ')
+  assert_true(getline(line('.')) =~ '^- \[ \] ')
   execute $"silent norm! \<Plug>MarkdownToggleCheck"
-  echom assert_true(getline('.') =~ '- \[x\] ')
+  assert_true(getline('.') =~ '- \[x\] ')
   execute $"silent norm! \<Plug>MarkdownToggleCheck"
-  echom assert_true(getline('.') =~ '- \[ \] ')
+  assert_true(getline('.') =~ '- \[ \] ')
 
   :%bw!
   Cleanup_testfile(src_name_1)
 enddef
+
+## References

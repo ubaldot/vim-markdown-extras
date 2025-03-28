@@ -31,8 +31,8 @@ export def CR_Hacked()
   var current_line = getline('.')
 
   # Check if the current line is an item.
-  # Scan the current line through the less general regex (a regex can be
-  # contained in another regex)
+  # OBS! The following scan the current line through the less general regex (a
+  # regex can be contained in another regex)
   var is_item = false
   for variant in [variant_1, variant_2, variant_3, variant_4]
     if current_line =~ $'^\s*{variant}\s*'
@@ -44,12 +44,8 @@ export def CR_Hacked()
   # If the current line is not in an item list, act as normal,
   # i.e. <cr> = \n, otherwise split the current line depending on where is the
   # cursor
-  var this_line = is_item
-    ? strcharpart(getline('.'), 0, col('.') - 1)
-    : getline('.')
-  var next_line = is_item
-    ? strcharpart(getline('.'), col('.') - 1)
-    : ''
+  var this_line = strcharpart(getline('.'), 0, col('.') - 1)
+  var next_line = strcharpart(getline('.'), col('.') - 1)
 
   # double <cr> equal to finish the itemization
   if this_line =~
