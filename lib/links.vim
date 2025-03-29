@@ -58,24 +58,23 @@ export def RefreshLinksDict(): dict<string>
   # Cleanup the current b:markdown_extras_links
   var links_dict = {}
   const references_line = search('\s*#\+\s\+References', 'nw')
-  if references_line == 0
-      append(line('$'), ['', '## References'])
+  if references_line != 0
+    for l in range(references_line + 1, line('$'))
+      var ref = getline(l)
+      if !empty(ref)
+        var key = ref->matchstr('\[\zs\d\+\ze\]')
+        if !empty(key)
+        var value = ref->matchstr('\[\d\+]:\s*\zs.*')
+        if empty(value)
+          value = trim(getline(l + 1))
+        endif
+        links_dict[key] = value
+        # echom "key: " .. key
+        # echom "value: " .. value
+        endif
+      endif
+    endfor
   endif
-  for l in range(references_line + 1, line('$'))
-    var ref = getline(l)
-    if !empty(ref)
-      var key = ref->matchstr('\[\zs\d\+\ze\]')
-      if !empty(key)
-      var value = ref->matchstr('\[\d\+]:\s*\zs.*')
-      if empty(value)
-        value = trim(getline(l + 1))
-      endif
-      links_dict[key] = value
-      # echom "key: " .. key
-      # echom "value: " .. value
-      endif
-    endif
-  endfor
   return links_dict
 enddef
 
@@ -434,6 +433,10 @@ enddef
 
 export def CreateLink(type: string = '')
   InitScriptLocalVars()
+  const references_line = search('\s*#\+\s\+References', 'nw')
+  if references_line == 0
+      append(line('$'), ['', '## References'])
+  endif
 
   if getcharpos("'[") == getcharpos("']")
     return
