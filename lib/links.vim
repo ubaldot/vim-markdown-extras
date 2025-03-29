@@ -139,7 +139,10 @@ export def IsURL(link: string): bool
     return false
 enddef
 
-def LinksPopupCallback(match_id: number, type: string,  popup_id: number, idx: number)
+def LinksPopupCallback(match_id: number,
+    type: string,
+    popup_id: number,
+    idx: number)
   if idx > 0
     const selection = getbufline(winbufnr(popup_id), idx)[0]
     var link_id = -1
@@ -150,7 +153,8 @@ def LinksPopupCallback(match_id: number, type: string,  popup_id: number, idx: n
         return
       endif
     else
-      const keys_from_value = utils.KeysFromValue(b:markdown_extras_links, selection)
+      const keys_from_value =
+        utils.KeysFromValue(b:markdown_extras_links, selection)
       # For some reason, b:markdown_extras_links may be empty or messed up
       if empty(keys_from_value)
         utils.Echoerr('Reference not found')
@@ -167,7 +171,8 @@ def LinksPopupCallback(match_id: number, type: string,  popup_id: number, idx: n
     execute $'norm! a[{link_id}]'
     if selection == "Create new link"
       norm! F]h
-      if !IsURL(b:markdown_extras_links[link_id]) && !filereadable(b:markdown_extras_links[link_id])
+      if !IsURL(b:markdown_extras_links[link_id])
+          && !filereadable(b:markdown_extras_links[link_id])
         exe $'edit {b:markdown_extras_links[link_id]}'
         # write
       endif
@@ -221,8 +226,8 @@ export def ConvertLinks()
     if strcharpart(getline(lA), cA, 2) =~ '('
       norm! f(l
       var link = utils.GetTextObject('i(').text
-      var link_id = keys(b:markdown_extras_links)->map((_, val) => str2nr(val))->max() +
-        1
+      var link_id = keys(b:markdown_extras_links)
+        ->map((_, val) => str2nr(val))->max() + 1
       # Fix current line
       exe $"norm! ca([{link_id}]"
 
@@ -283,8 +288,6 @@ def PopupFilter(id: number,
     return true
   endif
 
-  # For debugging
-  # echom 'Pressed key: ' .. key
   echo ''
   # You never know what the user can type... Let's use a try-catch
   try
@@ -497,9 +500,7 @@ def GetFileContent(filename: string): list<string>
     var file_content = []
     if bufexists(filename)
       file_content = getbufline(filename, 1, '$')
-    # TODO: check if you can remove the expand()
     elseif filereadable($'{filename}')
-      # file_content = readfile($'{expand(filename)}')
       file_content = readfile($'{filename}')
     else
       file_content = ["Can't preview the file!", "Does the file exist?"]
@@ -512,9 +513,6 @@ export def PreviewPopup()
   b:markdown_extras_links = RefreshLinksDict()
 
   var previewText = []
-  var refFiletype = 'txt'
-  # TODO: only word are allowed as link aliases
-  var current_word = expand('<cword>')
   if !empty(IsLink())
     # Search from the current cursor position to the end of line
     var saved_curpos = getcurpos()
@@ -522,12 +520,15 @@ export def PreviewPopup()
     var link_id = utils.GetTextObject('i[').text
     echom link_id
     var link_name = b:markdown_extras_links[link_id]
+    # TODO At the moment only .md files have syntax highlight.
+    var refFiletype = $'{fnamemodify(link_name, ":e")}' == 'md'
+      ? 'markdown'
+      : 'text'
     if IsURL(link_name)
       previewText = [link_name]
-      refFiletype = 'txt'
+      refFiletype = 'text'
     else
       previewText = GetFileContent(link_name)
-      refFiletype = 'txt'
     endif
 
     popup_clear()
@@ -539,7 +540,31 @@ export def PreviewPopup()
              border: [0, 1, 0, 1],
              borderchars: [' '],
              filter: PreviewWinFilterKey})
-    win_execute(winid, $'setlocal ft={refFiletype}')
+
+    # TODO: Set syntax highlight
+    # if !IsURL(link_name)
+    #   var old_synmaxcol = &synmaxcol
+    #   &synmaxcol = 300
+    #   var buf_extension = $'{fnamemodify(link_name, ":e")}'
+    #   var found_filetypedetect_cmd =
+    #     autocmd_get({group: 'filetypedetect'})
+    #     ->filter($'v:val.pattern =~ "*\\.{buf_extension}$"')
+    #   echom found_filetypedetect_cmd
+    #   var set_filetype_cmd = ''
+    #   if empty(found_filetypedetect_cmd)
+    #     if index([$"{$HOME}/.vimrc", $"{$HOME}/.gvimrc"], expand(link_name)) != -1
+    #      set_filetype_cmd = '&filetype = "vim"'
+    #     else
+    #      set_filetype_cmd = '&filetype = ""'
+    #     endif
+    #   else
+    #     set_filetype_cmd = found_filetypedetect_cmd[0].cmd
+    #   endif
+    #   win_execute(winid, set_filetype_cmd)
+    #   &synmaxcol = old_synmaxcol
+    # endif
+
+    win_execute(winid, $"setlocal ft={refFiletype}")
     setpos('.', saved_curpos)
   endif
 enddef
