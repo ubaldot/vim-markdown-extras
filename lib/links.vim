@@ -275,16 +275,18 @@ def ClosePopups()
   # This function tear down everything
   popup_close(main_id, -1)
   popup_close(prompt_id, -1)
+  popup_clear()
   # RestoreCursor()
   prop_type_delete('PopupToolsMatched')
 enddef
 
-def PopupFilter(id: number,
+export def PopupFilter(id: number,
     key: string,
+    slave_id: number,
     results: list<string>,
     ): bool
 
-  var maxheight = popup_getoptions(main_id).maxheight
+  var maxheight = popup_getoptions(slave_id).maxheight
 
   if key == "\<esc>"
     ClosePopups()
@@ -295,29 +297,29 @@ def PopupFilter(id: number,
   # You never know what the user can type... Let's use a try-catch
   try
     if key == "\<CR>"
-      popup_close(main_id, getcurpos(main_id)[1])
+      popup_close(slave_id, getcurpos(slave_id)[1])
       ClosePopups()
     elseif index(["\<Right>", "\<PageDown>"], key) != -1
-      win_execute(main_id, 'normal! ' .. maxheight .. "\<C-d>")
+      win_execute(slave_id, 'normal! ' .. maxheight .. "\<C-d>")
     elseif index(["\<Left>", "\<PageUp>"], key) != -1
-      win_execute(main_id, 'normal! ' .. maxheight .. "\<C-u>")
+      win_execute(slave_id, 'normal! ' .. maxheight .. "\<C-u>")
     elseif key == "\<Home>"
-      win_execute(main_id, "normal! gg")
+      win_execute(slave_id, "normal! gg")
     elseif key == "\<End>"
-      win_execute(main_id, "normal! G")
+      win_execute(slave_id, "normal! G")
     elseif index(["\<tab>", "\<C-n>", "\<Down>", "\<ScrollWheelDown>"], key)
         != -1
-      var ln = getcurpos(main_id)[1]
-      win_execute(main_id, "normal! j")
-      if ln == getcurpos(main_id)[1]
-        win_execute(main_id, "normal! gg")
+      var ln = getcurpos(slave_id)[1]
+      win_execute(slave_id, "normal! j")
+      if ln == getcurpos(slave_id)[1]
+        win_execute(slave_id, "normal! gg")
       endif
     elseif index(["\<S-Tab>", "\<C-p>", "\<Up>", "\<ScrollWheelUp>"], key) !=
         -1
-      var ln = getcurpos(main_id)[1]
-      win_execute(main_id, "normal! k")
-      if ln == getcurpos(main_id)[1]
-        win_execute(main_id, "normal! G")
+      var ln = getcurpos(slave_id)[1]
+      win_execute(slave_id, "normal! k")
+      if ln == getcurpos(slave_id)[1]
+        win_execute(slave_id, "normal! G")
       endif
     # The real deal: take a single, printable character
     elseif key =~ '^\p$' || keytrans(key) ==# "<BS>" || key == "\<c-u>"
@@ -331,9 +333,9 @@ def PopupFilter(id: number,
         prompt_text = ""
       endif
 
-      popup_settext(prompt_id, $'{prompt_sign}{prompt_text}{prompt_cursor}')
+      popup_settext(id, $'{prompt_sign}{prompt_text}{prompt_cursor}')
 
-      # What you pass to popup_settext(main_id, ...) is a list of strings with
+      # What you pass to popup_settext(slave_id, ...) is a list of strings with
       # text properties attached, e.g.
       #
       # [
@@ -385,16 +387,16 @@ def PopupFilter(id: number,
         endif
       endif
 
-      var opts = popup_getoptions(prompt_id)
+      var opts = popup_getoptions(id)
       var num_hits = !empty(filtered_results)
         ? len(filtered_results)
         : len(results)
-      popup_setoptions(prompt_id, opts)
+      popup_setoptions(id, opts)
 
       if !empty(prompt_text)
-        popup_settext(main_id, filtered_results)
+        popup_settext(slave_id, filtered_results)
       else
-        popup_settext(main_id, results)
+        popup_settext(slave_id, results)
       endif
     else
       utils.Echowarn('Unknown key')
@@ -407,19 +409,21 @@ def PopupFilter(id: number,
   return true
 enddef
 
-def ShowPromptPopup(links: list<string>)
+export def ShowPromptPopup(slave_id: number, links: list<string>, title: string)
+  # This could be called by other scripts and its id may be undefined.
+  InitScriptLocalVars()
   # This is the UI thing
-  var main_id_core_line = popup_getpos(main_id).core_line
-  var main_id_core_col = popup_getpos(main_id).core_col
-  var main_id_core_width = popup_getpos(main_id).core_width
+  var slave_id_core_line = popup_getpos(slave_id).core_line
+  var slave_id_core_col = popup_getpos(slave_id).core_col
+  var slave_id_core_width = popup_getpos(slave_id).core_width
 
   # var base_title = $'{search_type}:'
   var opts = {
-    title: " links: ",
-    minwidth: main_id_core_width,
-    maxwidth: main_id_core_width,
-    line: main_id_core_line - 3,
-    col: main_id_core_col - 1,
+    title: title,
+    minwidth: slave_id_core_width,
+    maxwidth: slave_id_core_width,
+    line: slave_id_core_line - 3,
+    col: slave_id_core_col - 1,
     borderchars: ['─', '│', '─', '│', '╭', '╮', '╯', '╰'],
     border: [1, 1, 0, 1],
     mapping: 0,
@@ -429,7 +433,7 @@ def ShowPromptPopup(links: list<string>)
   }
 
   # Filter
-  opts.filter = (id, key) => PopupFilter(id, key, links)
+  opts.filter = (id, key) => PopupFilter(id, key, slave_id, links)
 
   prompt_text = ""
   prompt_id = popup_create([prompt_sign .. prompt_cursor], opts)
@@ -472,7 +476,7 @@ export def CreateLink(type: string = '')
   main_id = popup_create(links, links_popup_opts)
 
   # if len(links) > 1
-    ShowPromptPopup(links)
+    ShowPromptPopup(main_id, links, " links: ")
   # endif
 enddef
 

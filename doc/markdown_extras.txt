@@ -60,6 +60,9 @@ filling it with he various keys.
         "fuzzy_search"    Fuzzy or exact search in the links popup.
                           Default: true.
 
+                                          *g:markdown_extras_indices*
+g:markdown_extras_indices List containing the path of indices files.
+                          Default: empty
 ==============================================================================
 USAGE                                               *markdown-extras-usage*
 
