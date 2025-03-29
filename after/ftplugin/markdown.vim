@@ -12,12 +12,6 @@ b:markdown_extras_links = links.RefreshLinksDict()
 # Convert links inline links [mylink](blabla) to referenced links [mylink][3]
 command! -buffer -nargs=0 MDEConvertLinks links.ConvertLinks()
 
-if exists('g:markdown_extras_indices')
-  command! -buffer -nargs=0 MDEIndices indices.ShowIndices()
-endif
-
-g:markdown_extras_indices = ['foo', 'bar']
-
 # Jump back to the previous file
 nnoremap <buffer> <backspace> <ScriptCmd>funcs.GoToPrevVisitedBuffer()<cr>
 
