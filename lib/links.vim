@@ -209,9 +209,13 @@ export def OpenLink()
 enddef
 
 export def ConvertLinks()
-  # TODO this pattern is a bit flaky
+  const references_line = search('\s*#\+\s\+References', 'nw')
+  if references_line == 0
+      append(line('$'), ['', '## References'])
+  endif
 
   b:markdown_extras_links = RefreshLinksDict()
+  # TODO this pattern is a bit flaky
   const pattern = '\[*\]\s\?('
   const saved_view = winsaveview()
   cursor(1, 1)
