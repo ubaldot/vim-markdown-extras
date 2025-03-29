@@ -7,9 +7,40 @@ import autoload '../../lib/highlight.vim'
 import autoload '../../lib/constants.vim'
 
 b:markdown_extras_links = links.RefreshLinksDict()
+
+# Convert links inline links [mylink](blabla) to referenced links [mylink][3]
 command! -buffer -nargs=0 MDEConvertLinks links.ConvertLinks()
 
+# Jump back to the previous file
 nnoremap <buffer> <backspace> <ScriptCmd>funcs.GoToPrevVisitedBuffer()<cr>
+
+# ---- auto-completion --------------
+def MyOmniFunc(findstart: number, base: string): any
+    # Define the dictionary
+    b:markdown_extras_links = links.RefreshLinksDict()
+
+    if findstart == 1
+        # Find the start of the word
+        var line = getline('.')
+        var start = col('.')
+        while start > 1 && getline('.')[start - 1] =~ '\d'
+            start -= 1
+        endwhile
+        return start
+    else
+        var matches = []
+        for key in keys(b:markdown_extras_links)
+            add(matches, {word: key, menu: b:markdown_extras_links[key]})
+        endfor
+        return {words: matches}
+    endif
+enddef
+
+# Set the custom omnifunction
+setlocal completeopt=menu,menuone,noselect
+setlocal omnifunc=MyOmniFunc
+
+inoremap <buffer> [ [<C-x><C-o>
 
 # -------------- prettier ------------------------
 var use_prettier = true
