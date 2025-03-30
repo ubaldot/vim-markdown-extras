@@ -71,11 +71,11 @@ def g:Test_IsLink()
   Generate_testfile(lines_1, src_name_1)
   exe $"edit {src_name_1}"
   cursor(5, 2)
-  echom assert_true(empty(links.IsLink()))
+  assert_true(empty(links.IsLink()))
 
   cursor(7, 33)
   const expected_value = {'markdownLinkText': [[7, 32], [7, 34]]}
-  echom assert_equal(expected_value, links.IsLink())
+  assert_equal(expected_value, links.IsLink())
 
   :%bw!
   Cleanup_testfile(src_name_1)
@@ -101,10 +101,10 @@ def g:Test_ConvertLinks()
             '[8]: https://somewhere.com'
           ]
 
-  echom assert_equal(expected_line_6, getline(6))
-  echom assert_equal(expected_lines_9_10, getline(9, 10))
-  echom assert_equal(expected_line_18, getline(18))
-  echom assert_equal(expected_lines_26_29, getline(26, 29))
+  assert_equal(expected_line_6, getline(6))
+  assert_equal(expected_lines_9_10, getline(9, 10))
+  assert_equal(expected_line_18, getline(18))
+  assert_equal(expected_lines_26_29, getline(26, 29))
 
   :%bw!
   Cleanup_testfile(src_name_1)
@@ -120,7 +120,7 @@ def g:Test_RefreshLinksDict()
     '3': 'https://example.com/test',
     '4': 'https://example.com/more'}
 
-  echom assert_equal(expected_value, links.RefreshLinksDict())
+  assert_equal(expected_value, links.RefreshLinksDict())
 
   :%bw!
   Cleanup_testfile(src_name_1)
@@ -134,22 +134,22 @@ def g:Test_RemoveLink()
   cursor(6, 12)
   const expected_value_line_6 = 'And here is an inline link: [bar] (ciao_ciao).'
   links.RemoveLink()
-  echom assert_equal(expected_value_line_6, getline(6))
+  assert_equal(expected_value_line_6, getline(6))
 
   cursor(7, 33)
   links.RemoveLink()
   const expected_value_line_7 = 'Another reference-style link: baz.'
-  echom assert_equal(expected_value_line_7, getline(7))
+  assert_equal(expected_value_line_7, getline(7))
 
   cursor(16, 10)
   links.RemoveLink()
   const expected_value_line_16 = '- Click here for more info.'
-  echom assert_equal(expected_value_line_16, getline(16))
+  assert_equal(expected_value_line_16, getline(16))
 
   cursor(17, 12)
   links.RemoveLink()
   const expected_value_line_17 = '- Visit this site for details.'
-  echom assert_equal(expected_value_line_17, getline(17))
+  assert_equal(expected_value_line_17, getline(17))
 
   :%bw!
   Cleanup_testfile(src_name_1)
