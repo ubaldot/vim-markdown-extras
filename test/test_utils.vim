@@ -127,6 +127,10 @@ const lines_2 =<< trim END
       Itaque earum rerum hic *tenetur a sapiente `delectus`, ut aut reiciendis
       voluptatibus maiores*
       alias consequatur aut perferendis doloribus asperiores repellat.
+
+        > Itaque earum rerum hic *tenetur a sapiente `delectus`, ut aut reiciendis
+            > voluptatibus maiores*
+       > alias consequatur aut perferendis doloribus asperiores repellat.
 END
 
 def Generate_testfile(lines: list<string>, src_name: string)
@@ -590,6 +594,49 @@ def g:Test_unset_code_block()
   utils.UnsetBlock()
   var actual_value = getline(33, 36)
   echom assert_equal(expected_value, actual_value)
+
+  :%bw!
+  Cleanup_testfile(src_name_1)
+enddef
+
+def g:Test_set_quote_block()
+  vnew
+  Generate_testfile(lines_2, src_name_2)
+  exe $"edit {src_name_2}"
+  setlocal spell spelllang=la
+
+  var expected_value = [
+    '> ab illo inventore veritatis et quasi architecto beatae vitae dicta',
+    '> sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit',
+    '> aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos',
+    '> qui ratione voluptatem sequi nesciunt.',
+    ]
+  cursor(3, 29)
+  setcharpos("'[", [0, 3, 10, 0])
+  setcharpos("']", [0, 6, 10, 0])
+  utils.SetQuoteBlock()
+  var actual_value = getline(3, 6)
+  echom assert_equal(expected_value, actual_value)
+
+  :%bw!
+  Cleanup_testfile(src_name_1)
+enddef
+
+def g:Test_unset_quote_block()
+  vnew
+  Generate_testfile(lines_2, src_name_2)
+  exe $"edit {src_name_2}"
+  setlocal spell spelllang=la
+
+  var expected_value = [
+  '  Itaque earum rerum hic *tenetur a sapiente `delectus`, ut aut reiciendis',
+  '      voluptatibus maiores*',
+  ' alias consequatur aut perferendis doloribus asperiores repellat.'
+    ]
+  cursor(37, 20)
+  utils.UnsetQuoteBlock()
+  var actual_value = getline(36, 38)
+  assert_equal(expected_value, actual_value)
 
   :%bw!
   Cleanup_testfile(src_name_1)

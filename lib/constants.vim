@@ -30,6 +30,9 @@ const STRIKE_CLOSE_REGEX = '\v\S((\\|\~)@<!|(\\\~))@<=\~\~(\~)@!|^$'
 # TODO: CODEBLOCK REGEX COULD BE IMPROVED
 const CODEBLOCK_OPEN_REGEX = '^```'
 const CODEBLOCK_CLOSE_REGEX = '^```$'
+# TODO: QUOTEBLOCK REGEX COULD BE IMPROVED
+const QUOTEBLOCK_OPEN_REGEX = '^\s*>\s\+'
+const QUOTEBLOCK_CLOSE_REGEX = $'^\.*\({QUOTEBLOCK_OPEN_REGEX}\)\@!'
 
 # TODO: investigate and match with syntax
 const UNDERLINE_OPEN_REGEX = "<u\>"
@@ -128,4 +131,7 @@ export const UNDERLINE_CLOSE_DICT = {[TEXT_STYLES_DICT.markdownUnderline.close_d
   # cannot include it here.
 export const CODEBLOCK_OPEN_DICT = {'```': CODEBLOCK_OPEN_REGEX}
 export const CODEBLOCK_CLOSE_DICT = {'```': CODEBLOCK_CLOSE_REGEX}
+
+export const QUOTEBLOCK_OPEN_DICT = {'> ': QUOTEBLOCK_OPEN_REGEX}
+export const QUOTEBLOCK_CLOSE_DICT = {'> ': QUOTEBLOCK_CLOSE_REGEX}
 # --------- End Constants ---------------------------------

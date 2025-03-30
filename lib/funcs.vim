@@ -48,7 +48,7 @@ export def CR_Hacked()
   var variant_2 = '-\s\+\(\[\)\@!' # - bla bla bla
   var variant_3 = '\*\s\+' # * bla bla bla
   var variant_4 = '\d\+\.\s\+' # 123. bla bla bla
-  var variant_5 = '>\s' # Quoted block
+  var variant_5 = '>\s\+' # Quoted block
 
   var current_line = getline('.')
 
@@ -125,9 +125,11 @@ export def RemoveAll()
   const range_info = utils.IsInRange()
   const prop_info = highlight.IsOnProp()
   const syn_info = synIDattr(synID(line("."), col("."), 1), "name")
+  const is_quote_block = getline('.') =~ '^>\s'
 
   # If on plain text, do nothing, just execute a normal! <BS>
-  if empty(range_info) && empty(prop_info) && syn_info != 'markdownCodeBlock'
+  if empty(range_info) && empty(prop_info)
+        && syn_info != 'markdownCodeBlock' && !is_quote_block
     exe "norm! \<BS>"
     return
   endif
@@ -145,13 +147,20 @@ export def RemoveAll()
   endif
 
   # Text styles removal setup
-  const target = keys(range_info)[0]
-  var text_styles = copy(constants.TEXT_STYLES_DICT)
-  unlet text_styles['markdownLinkText']
+  if !empty(range_info)
+    const target = keys(range_info)[0]
+    var text_styles = copy(constants.TEXT_STYLES_DICT)
+    unlet text_styles['markdownLinkText']
 
-  if index(keys(text_styles), target) != -1
-    utils.RemoveSurrounding(range_info)
-  elseif target == 'markdownLinkText'
-    links.RemoveLink()
+    if index(keys(text_styles), target) != -1
+      utils.RemoveSurrounding(range_info)
+    elseif target == 'markdownLinkText'
+      links.RemoveLink()
+    endif
+    return
+  endif
+
+  if is_quote_block
+    utils.UnsetQuoteBlock()
   endif
 enddef

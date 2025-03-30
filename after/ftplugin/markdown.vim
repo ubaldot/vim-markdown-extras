@@ -237,6 +237,16 @@ if empty(maparg('<Plug>MarkdownCodeBlock'))
   noremap <script> <buffer> <Plug>MarkdownCodeBlock
         \ <ScriptCmd>SetCodeBlock()<cr>g@
 endif
+
+
+def SetQuoteBlockOpFunc()
+  &l:opfunc = function(utils.SetQuoteBlock)
+enddef
+
+if empty(maparg('<Plug>MarkdownQuoteBlock'))
+  noremap <script> <buffer> <Plug>MarkdownQuoteBlock
+        \ <ScriptCmd>SetQuoteBlockOpFunc()<cr>g@
+endif
 # ------------------------------------------------------------
 
 # use_default_mappings
@@ -278,6 +288,11 @@ if use_default_mappings
   if !hasmapto('<Plug>MarkdownCodeBlock')
     nnoremap <buffer> <localleader>f <Plug>MarkdownCodeBlock
     xnoremap <buffer> <localleader>f <Plug>MarkdownCodeBlock
+  endif
+
+  if !hasmapto('<Plug>MarkdownQuoteBlock')
+    nnoremap <buffer> <localleader>q <Plug>MarkdownQuoteBlock
+    xnoremap <buffer> <localleader>q <Plug>MarkdownQuoteBlock
   endif
 
   # Toggle checkboxes
