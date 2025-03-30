@@ -17,7 +17,7 @@ var popup_width: number
 var links_popup_opts: dict<any>
 
 const references_comment =
-  "<!-- DO NOT REMOVE vim-markdown-extras references  DO NOT REMOVE-->"
+  "<!-- DO NOT REMOVE vim-markdown-extras references DO NOT REMOVE-->"
 
 def InitScriptLocalVars()
   # Set script-local variables
