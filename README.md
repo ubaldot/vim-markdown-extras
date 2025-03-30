@@ -1,7 +1,6 @@
 # vim-markdown-extras
 
-This plugin adds some spice to the bundled `ft-markdown-plugin`, such as:
-
+This plugin adds some spice to the bundled [vim-markdown][3], such as:
 
 - Easy toggle italic, bold, strike-through, code delimiters,
 - Easy to add/jump/remove/preview links,
@@ -144,3 +143,4 @@ BSD-3.
 
 [1]: https://pandoc.org
 [2]: https://prettier.io
+[3]: https://github.com/tpope/vim-markdown
