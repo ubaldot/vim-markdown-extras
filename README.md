@@ -40,6 +40,10 @@ to remove it.
 
 Next, try to do the same with arbitrary motion and by replacing `b` with `i`
 for italics, `s` for strike-through, `c` for code, etc.
+
+You can also highlight text with `<localleader>h`. However, the highlight is
+not persistent. As usual, you can remove the highlight with `<localleader>d`.
+
 See `markdown-extras-mappings` for all the possible text styles.
 
 ## Links
@@ -53,8 +57,8 @@ newly created link. Hit `K`. Then, hit `<enter>` again to open the link.
 The link can also be external URL:s, e.g. `https://example.com`.
 
 Next, create some new links and use `<localleader>n` and `<localleader>N` to
-locate their position in the current buffer. When on a link, hit
-`<localleader>d` to remove it.
+locate their position in the current buffer. When on a link text, hit
+`<localleader>d` to remove the link.
 
 Although you can hit `<enter>` to link a word, more generlly you can
 use `<localleader>l` plus some motion to create links.
