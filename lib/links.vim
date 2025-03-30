@@ -16,7 +16,8 @@ var fuzzy_search: bool
 var popup_width: number
 var links_popup_opts: dict<any>
 
-const references_comment = "<!-- vim-markdown-extras references start -->"
+const references_comment =
+  "<!-- DO NOT REMOVE vim-markdown-extras references  DO NOT REMOVE-->"
 
 def InitScriptLocalVars()
   # Set script-local variables
