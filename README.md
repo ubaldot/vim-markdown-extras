@@ -100,10 +100,6 @@ However, sometimes you want to render & open the rendered file at once, and
 for this reason you have `:MDEMake`. Try to run call such a command and hit
     `<tab>` to see possible targets.
 
-> [!Note]
->
-> The rendered file will automatically open if your Vim has the `:Open` command.
-
 You can pass arguments to `pandoc` via the key
 `pandoc_args` of the `g:markdown_extras_config` dictionary.
 You could for example set the following:
@@ -114,6 +110,10 @@ You could for example set the following:
   [$'--css="{$HOME}/dotfiles/my_css_style.css"',
       $'--lua-filter="{$HOME}/dotfiles/emoji-admonitions.lua"']
 ```
+
+> [!Note]
+>
+> The rendered file will automatically open if your Vim has the `:Open` command.
 
 ## Indices
 
