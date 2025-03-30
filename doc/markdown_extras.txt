@@ -18,7 +18,16 @@ CONTENTS                                            *markdown-extras-contents*
 ==============================================================================
 INTRODUCTION                                    *markdown-extras-introduction*
 
-This plugin adds some spice to the bundled |ft-markdown-plugin|.
+This plugin adds some spice to the bundled |ft-markdown-plugin|, such as:
+
+- Easy toggle italic, bold, strike-through, code delimiters,
+- Easy to add/jump/remove/preview links,
+- Toggle quoted and code blocks,
+- Format with |gq| and on save,
+- Render with `pandoc`,
+- Easy configuration and usage
+- ... and more.
+
 
 ==============================================================================
 REQUIREMENTS                                    *markdown-extras-requirements*

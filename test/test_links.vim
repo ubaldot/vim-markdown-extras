@@ -30,7 +30,7 @@ const lines_1 =<< trim END
     - Click [here][4] for more info.
     - Visit [this site](https://somewhere.com) for details.
 
-    ## References
+    <!-- vim-markdown-extras references start -->
 
     [1]: https://example.com/foo
     [2]: https://example.com/baz
