@@ -26,10 +26,6 @@ if exists('g:markdown_extras_loaded')
 endif
 g:markdown_extras_loaded = true
 
-if exists('g:markdown_extras_indices')
-  command! -buffer -nargs=0 MDEIndices indices.ShowIndices()
-endif
-
 augroup MARKDOWN_EXTRAS_VISITED_BUFFER
     autocmd!
     autocmd BufEnter *.md funcs.AddVisitedBuffer()

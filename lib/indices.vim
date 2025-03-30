@@ -14,7 +14,7 @@ def IndicesCallback(id: number, idx: number)
 enddef
 
 export def ShowIndices()
-  if !empty('g:markdown_extras_indices')
+  if exists('g:markdown_extras_indices') != 0 && !empty('g:markdown_extras_indices')
     const popup_width = (&columns * 2) / 3
     const popup_height = min([len(g:markdown_extras_indices), &lines / 2])
     var opts = {
