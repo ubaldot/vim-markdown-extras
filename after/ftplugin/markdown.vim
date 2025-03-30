@@ -116,7 +116,7 @@ if use_pandoc && executable('pandoc')
 
   # Usage :Make, :Make pdf, :Make docx, etc
   command! -nargs=? -buffer -complete=customlist,MakeCompleteList
-        \ Make Make(<f-args>)
+        \ MDEMake Make(<f-args>)
 endif
 # ------------------- End pandoc ------------------------------------
 
@@ -163,8 +163,8 @@ endif
 
 # -------------------------------------------
 
-if empty(maparg('<Plug>MarkdownReferencePreview'))
-  noremap <script> <buffer> <Plug>MarkdownReferencePreview
+if empty(maparg('<Plug>MarkdownLinkPreview'))
+  noremap <script> <buffer> <Plug>MarkdownLinkPreview
         \  <ScriptCmd>links.PreviewPopup()<cr>
 endif
 
@@ -224,8 +224,8 @@ def SetHighlightOpFunc()
   &l:opfunc = function(highlight.AddProp)
 enddef
 
-if empty(maparg('<Plug>MarkdownAddHighlight'))
-  noremap <script> <buffer> <Plug>MarkdownAddHighlight
+if empty(maparg('<Plug>MarkdownHighlight'))
+  noremap <script> <buffer> <Plug>MarkdownHighlight
         \ <ScriptCmd>SetHighlightOpFunc()<cr>g@
 endif
 
@@ -319,15 +319,13 @@ if use_default_mappings
   endif
 
   # ---------- Highlight --------------------------
-  if !hasmapto('<Plug>MarkdownAddHighlight')
-    nnoremap <localleader>h <Plug>MarkdownAddHighlight
-    xnoremap <localleader>h <Plug>MarkdownAddHighlight
+  if !hasmapto('<Plug>MarkdownHighlight')
+    nnoremap <localleader>h <Plug>MarkdownHighlight
+    xnoremap <localleader>h <Plug>MarkdownHighlight
   endif
 
   # ------------------------------------------------------
-  if !hasmapto('<Plug>MarkdownReferencePreview')
-    nnoremap <buffer> <silent> K <Plug>MarkdownReferencePreview
+  if !hasmapto('<Plug>MarkdownLinkPreview')
+    nnoremap <buffer> <silent> K <Plug>MarkdownLinkPreview
   endif
 endif
-
-## References

@@ -1,7 +1,7 @@
 *markdown-extras*
 
 Author: ubaldot (ubaldo DOT tiberi AT gmail DOT com)
-For Vim version 9.0 and above
+For Vim version 9.0 and above.
 
 ==============================================================================
 CONTENTS                                            *markdown-extras-contents*
@@ -9,63 +9,272 @@ CONTENTS                                            *markdown-extras-contents*
     1. Introduction ......... |markdown-extras-introduction|
     2. Requirements ......... |markdown-extras-requirements|
     3. Usage ................ |markdown-extras-usage|
-         3.1 Commands ....... |markdown-extras-commands|
-         3.2 Mappings ....... |markdown-extras-mappings|
-    4. Configuration ........ |markdown-extras-configuration|
-    8. License .............. |markdown-extras-license|
+    4. Commands ............. |markdown-extras-commands|
+    5. Mappings ............. |markdown-extras-mappings|
+    6. Configuration ........ |markdown-extras-configuration|
+    7. License .............. |markdown-extras-license|
 
 
 ==============================================================================
 INTRODUCTION                                    *markdown-extras-introduction*
 
-Bla bla
+This plugin adds some spice to the bundled |ft-markdown-plugin|.
 
 ==============================================================================
 REQUIREMENTS                                    *markdown-extras-requirements*
 
 Vim 9.0 is required.
+You must set a |localleader| key and your |vimrc| shall include the following
+lines:
+>
+  filetype indent plugin on
+  syntax on
+<
 To enable the rendering feature, you need to install `pandoc`.
-To enable the formatting feature, you need to install `prettier`.
+To automatically open the rendered files, Vim must have the |:Open| command.
+To enable the formatting feature, you need to install `prettier` or any other
+formatting program of your choice.
+
+==============================================================================
+USAGE                                            *markdown-extras-usage*
+
+To best way to describe how to operate it, let's go through some examples.
+
+TEXT-STYLES
+
+Open a markdown file and place the cursor on a word.
+Hit `<localleader>biw` to change the text-style inside-the-word
+to bold (`iw` is a text-objext).
+Then, while letting the cursor on the bold text, hit `<localleader>d`
+to remove it.
+
+Next, try to do the same with arbitrary motion or with some visual selections.
+See |markdown-extras-mappings| for all the possible text styles.
+
+LINKS
+
+Now, go on a word and hit |<enter>|. Select `Create new link` from the popup
+menu and point to an existing file or just type a new file name.
+If you created a new file, fill it in with some text and save it.
+Hit |<backspace>| to go back to the previous file and place the cursor to the
+newly created link. Hit |K|. Then, hit |<enter>| again to open the link.
+The link can also be external URL:s, e.g. `https://example.com`.
+
+Next, create some new links and use `<localleader>n` and `<localleader>N` to
+locate their position in the current buffer. When on a link, hit
+`<localleader>d` to remove it.
+
+Note: Although you can hit |<enter>| to link a word, more generlly you can
+use `<localleader>l` plus some motion to create links.
+
+You can also dynamically refer to links while typing. Go in insert mode and
+type `[` to see a list of all available links.
+
+Note: the links management only applies to links reported in the `## References`
+Section.
+
+In case you are working on a markdown file with mixed inline and
+reference-style links, you can convert the former to the latter by using
+|:MDEConvertLinks| command. All the newly created links will be placed under
+the `## References` Section.
+
+LISTS
+
+You can create lists or enumerations as usual. However, the behavior of the
+|<enter>| key is hacked to mimic the behavior of Microsoft products and
+respect possible nesting. Although there are many reasons to stick with the
+bundled |ft-markdown-plugin| behavior when it comes to lists,
+my use-cases and preferences require a different behavior. At the end Vim is a
+matter of customizing everything to your workflow, no? :)
+
+You can create to-do lists as you would do in normal markdown, by starting
+lines with `- [ ]` . When in normal mode, you can check/uncheck the item in the
+to-do list with `<localleader>x`.
+
+Note: If you have `vim-outline` installed, then you can use `<localleader>o` to
+display the unchecked items of the to-do list in a scratch buffer.
+
+FORMATTING
+
+|gq| will use `prettier`, provided that you have such program installed.
+That is, if you use |gq| plus motion, or if you visually select some text and
+then hit |gq|, then `prettier` will only prettify such a portion of text. You
+can also prettify the whole buffer on save, see |markdown-extras-config|.
+
+In reality, you can also use other external programs.
+In that case the local value of |formatprg| will be set to the value
+of `g:markdown_extras_config['formatprg']`. See |markdown-extras-config| and
+|formatprg|.
+
+Note: `formatprg` key may be removed from the configuration dictionary in
+future releases as one could directly set locally |formatprg|.
+
+RENDERING
+
+If you have `pandoc` installed, then |vim-markdown-extras| sets |compiler-pandoc|.
+You can then use |:make| to render your buffer with `pandoc`.
+See |compiler-pandoc| for more info.
+
+However, sometimes you just want to quickly render & open the rendered file
+with some fixed options for `pandoc`. For this reason, you can use |:MDEMake| to
+render and open the rendered file at once. Just type |:MDEMake| and hit |<tab>|
+for possible rendering targets. The rendered file will automatically open
+  provided that you your Vim version has the |:Open| command.
+
+You can also pass arguments to `pandoc` via the key
+`pandoc_args` of the |g:markdown_extras_config| dictionary.
+You could for example set the following:
+>
+  g:markdown_extras_config = {}
+  g:markdown_extras_config['pandoc_args'] =
+    [$'--css="{$HOME}/dotfiles/my_css_style.css"',
+    $'--lua-filter="{$HOME}/dotfiles/emoji-admonitions.lua"']
+<
+INDICES
+
+As the plugin can be used for note-taking, it may be desirable to access
+different indices in an ergonomic way. This can be achieved with the
+|g:markdown_extras_indices| list in combination with the |:MDEIndices|
+command.
 
 ==============================================================================
 CONFIGURATION       *markdown-extras-configuration* *g:markdown_extras_config*
 
-The plug configuration is done through `g:markdown_extras_config` dictionary.
+The plug configuration is done through |g:markdown_extras_config| dictionary.
 Be sure to create the empty dictionary `g:markdown_extras_config = {}` before
 filling it with he various keys.
 
       Available keys:
-        "use_pandoc"      Set to `true` if you want to use |compiler-pandoc|.
+        "use_pandoc"      Set to |true| if you want to use |compiler-pandoc|.
                           `pandoc` needs to be installed separately.
-                          Default `true`.
+                          Default |true|.
         "pandoc_args"     List of arguments to be passed to |compiler-pandoc|.
-                          The format shall be list<str>,
-                          e.g. `g:markdown_extras_config['pandoc_args'] =
+                          Example:
+                          >
+                          g:markdown_extras_config['pandoc_args'] =
                             ['--css="path/to/my_css_style.css"', '--metadata',
                             'key=value']`
+<
                           Such a value is copied to |b:pandoc_compiler_args|.
-        "use_prettier"    Set to `true` if you want to use `prettier` formatter.
+  "use_default_mappings"  Set to |true| to use the default mappings as
+                          described in |markdown-extras-mappings|.
+                          Default |true|.
+        "use_prettier"    Set to |true| if you want to use `prettier` formatter.
                           `prettier` needs to be installed separately.
-                          Default `true`.
+                          Default |true|.
         "use_nerd_fonts"  To set eye-candy check-boxes. Require some nerd-font
-                          installed. Default false.
+                          installed. Default |false|.
         "smart_textstyle" Whenever possible, text styles are kept
-                          consistent. Default `true`.
+                          consistent. Default |true|.
         "empty_checkbox"  Glyphs to display for empty checkboxes. Requires
-                          "use_nerdfonts" set to `true` and 'concealevel'
+                          "use_nerdfonts" set to |true| and 'concealevel'
                           greater than 0.
         "marked_checkbox" Glyphs to display for marked checkboxes. Requires
-                          "use_nerdfonts" set to `true` and 'concealevel'
+                          "use_nerdfonts" set to |true| and 'concealevel'
                           greater than 0.
         "fuzzy_search"    Fuzzy or exact search in the links popup.
-                          Default: true.
+                          Default: |true|.
+
 
                                           *g:markdown_extras_indices*
 g:markdown_extras_indices List containing the path of indices files.
                           Default: empty
-==============================================================================
-USAGE                                               *markdown-extras-usage*
 
+==============================================================================
 COMMANDS                                         *markdown-extras-commands*
 
-:MDEConvertLinks          Convert inline links into reference-style links
+                                                        *:MDEConvertLinks*
+:MDEConvertLinks    Convert inline links into reference-style links.
+
+                                                            *:MDEIndices*
+:MDEIndices         Open a popup with all the filenames included in
+                    |g:markdown_extras_indices|.
+
+                                                            *:MDEMake*
+:MDEMake            Invoke |:make| and |:Open| the rendered file. It requires
+                    `pandoc`. Its behavior can be further customized through
+                    the |g:markdown_extras_config| dictionary.
+
+==============================================================================
+MAPPINGS                                         *markdown-extras-mappings*
+
+Note: all the key-bindings that require a motion can also be used in visual
+mode. For example, you can set the following:
+>
+ nnoremap <buffer> B <Plug>MarkdownBold
+ xnoremap <buffer> B <Plug>MarkdownBold
+<
+and use e.g. `Bi(` in normal mode to make bold all the text inside the
+parenthesis, or you can visually select some text and the hit `B` to make the
+selection bold.
+
+<Plug>MarkdownToggleCheck         Toggle checkbox in to-do lists.
+                                  Default: `<localleader>x`
+<Plug>MarkdownAddLink             Create a link. The key-binding shall be
+                                  followed by a motion.
+                                  Default: `<localleader>l{motion}`
+<Plug>MarkdownGotoLinkForward     Jump to the next link in the current buffer.
+                                  Default: `<localleader>n`
+<Plug>MarkdownGotoLinkBackwards   Jump to the previous link in the current buffer.
+                                  Default: `<localleader>N`
+<Plug>MarkdownLinkPreview         Preview the link under cursor content in a
+                                  popup window.
+                                  Default: `K`
+<Plug>MarkdownBold                Change text style to bold with ** delimiter.
+                                  Default: `<localleader>b{motion}`
+<Plug>MarkdownItalic              Change text style to italic with * delimiter.
+                                  Default: `<localleader>i{motion}`
+<Plug>MarkdownBoldUnderscore      Change text style to bold with __ delimiter.
+                                  Default: None
+<Plug>MarkdownItalicUnderscore    Change text style to italic with _ delimiter.
+                                  Default: None
+<Plug>MarkdownStrike              Change text style to strike-trhough.
+                                  Default: `<localleader>s{motion}`
+<Plug>MarkdownCode                Change text style to code.
+                                  Default: `<localleader>c{motion}`
+<Plug>MarkdownUnderline           Change text style to underlined.
+                                  Default: `<localleader>u{motion}`
+<Plug>MarkdownRemove              Remove text-styles, links, highlights, etc.
+                                  Default: `<localleader>d`
+<Plug>MarkdownAddHighlight        Highlight text. Note highlighting is not
+                                  persistent.
+                                  Default: `<localleader>h{motion}`
+<Plug>MarkdownCodeBlock           Set code-block.
+                                  Default: `<localleader>f{motion}`
+<Plug>MarkdownQuoteBlock          Set quote-block.
+                                  Default: `<localleader>q{motion}`
+
+==============================================================================
+LICENSE                                         *markdown-extras-license*
+
+BSD 3-Clause License
+
+Copyright (c) 2025, Ubaldo Tiberi.
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+* Redistributions of source code must retain the above copyright notice, this
+  list of conditions and the following disclaimer.
+
+* Redistributions in binary form must reproduce the above copyright notice,
+  this list of conditions and the following disclaimer in the documentation
+  and/or other materials provided with the distribution.
+
+* Neither the name of the copyright holder nor the names of its
+  contributors may be used to endorse or promote products derived from
+  this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+ vim:tw=78:ts=8:noet:ft=help:norl:
