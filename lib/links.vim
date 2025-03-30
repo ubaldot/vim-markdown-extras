@@ -16,6 +16,8 @@ var fuzzy_search: bool
 var popup_width: number
 var links_popup_opts: dict<any>
 
+const references_comment = "<!-- vim-markdown-extras references start -->"
+
 def InitScriptLocalVars()
   # Set script-local variables
   main_id = -1
@@ -57,7 +59,7 @@ export def RefreshLinksDict(): dict<string>
   #
   # Cleanup the current b:markdown_extras_links
   var links_dict = {}
-  const references_line = search('\s*#\+\s\+References', 'nw')
+  const references_line = search(references_comment, 'nw')
   if references_line != 0
     for l in range(references_line + 1, line('$'))
       var ref = getline(l)
@@ -106,9 +108,9 @@ def GetLinkID(): number
   if !IsURL(link)
     link = fnamemodify(link, ':p')
   endif
-  var reference_line = search('\s*#\+\s\+References', 'nw')
+  var reference_line = search(references_comment, 'nw')
   if reference_line == 0
-      append(line('$'), ['', '## References'])
+      append(line('$'), ['', references_comment])
   endif
   var link_line = search(link, 'nw')
   var link_id = 0
@@ -209,9 +211,9 @@ export def OpenLink()
 enddef
 
 export def ConvertLinks()
-  const references_line = search('\s*#\+\s\+References', 'nw')
+  const references_line = search(references_comment, 'nw')
   if references_line == 0
-      append(line('$'), ['', '## References'])
+      append(line('$'), ['', references_comment])
   endif
 
   b:markdown_extras_links = RefreshLinksDict()
@@ -447,9 +449,9 @@ enddef
 
 export def CreateLink(type: string = '')
   InitScriptLocalVars()
-  const references_line = search('\s*#\+\s\+References', 'nw')
+  const references_line = search(references_comment, 'nw')
   if references_line == 0
-      append(line('$'), ['', '## References'])
+      append(line('$'), ['', references_comment])
   endif
 
   if getcharpos("'[") == getcharpos("']")

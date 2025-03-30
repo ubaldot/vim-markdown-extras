@@ -70,13 +70,13 @@ use `<localleader>l` plus some motion to create links.
 You can also dynamically refer to links while typing. Go in insert mode and
 type `[` to see a list of all available links.
 
-Note: the links management only applies to links reported in the `## References`
-Section.
+Note: the links management only applies to links reported after the line with
+ "<!-- vim-markdown-extras references start -->" comment.
 
 In case you are working on a markdown file with mixed inline and
 reference-style links, you can convert the former to the latter by using
-|:MDEConvertLinks| command. All the newly created links will be placed under
-the `## References` Section.
+|:MDEConvertLinks| command. All the newly created links will be placed after
+the "<!-- vim-markdown-extras references start -->" comment line.
 
 LISTS
 
