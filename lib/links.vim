@@ -262,8 +262,14 @@ export def RemoveLink(range_info: dict<list<list<number>>> = {})
   const link_info = empty(range_info) ? IsLink() : range_info
   # TODO: it may not be the best but it works so far
   if !empty(link_info)
-      search('[')
-      norm! "_da[
+      var symbol = utils.IsLess(searchpos('[', 'n'), searchpos('(', 'n'))
+        ? '['
+        : '('
+      # Remove actual link
+      search(symbol)
+      exe $'norm! "_da{symbol}'
+
+      # Remove text link
       search(']', 'bc')
       norm! "_x
       search('[', 'bc')
