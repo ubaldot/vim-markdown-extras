@@ -140,7 +140,7 @@ a look at `:h markdown-extras`.
 
 BSD-3.
 
-<!-- DO NOT REMOVE vim-markdown-extras references  DO NOT REMOVE-->
+<!-- DO NOT REMOVE vim-markdown-extras references DO NOT REMOVE-->
 
 [1]: https://pandoc.org
 [2]: https://prettier.io
