@@ -144,6 +144,13 @@ def g:Test_CR_hacked()
   expected_line = ''
   assert_match(expected_line, getline(26))
 
+  # Test quoted blocks
+  cursor(26, 1)
+  silent exe "normal i>\<space>hello\<space>world\<CR>"
+              .. "today\<space>is\<cr>"
+              .. "beautiful\<cr>\<cr>"
+  const expected_text_26_29 = ['> hello world', '> today is', '> beautiful', '']
+  assert_equal(expected_text_26_29, getline(26, 29))
   # redraw!
   # sleep 3
   :%bw!

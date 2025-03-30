@@ -48,6 +48,7 @@ export def CR_Hacked()
   var variant_2 = '-\s\+\(\[\)\@!' # - bla bla bla
   var variant_3 = '\*\s\+' # * bla bla bla
   var variant_4 = '\d\+\.\s\+' # 123. bla bla bla
+  var variant_5 = '>\s' # Quoted block
 
   var current_line = getline('.')
 
@@ -55,7 +56,7 @@ export def CR_Hacked()
   # OBS! The following scan the current line through the less general regex (a
   # regex can be contained in another regex)
   var is_item = false
-  for variant in [variant_1, variant_2, variant_3, variant_4]
+  for variant in [variant_1, variant_2, variant_3, variant_4, variant_5]
     if current_line =~ $'^\s*{variant}\s*'
       is_item = true
       break
@@ -70,7 +71,8 @@ export def CR_Hacked()
 
   # double <cr> equal to finish the itemization
   if this_line =~
-      $'^\s*\({variant_1}\|{variant_2}\|{variant_3}\|{variant_4}\)\s*$'
+      $'^\s*\({variant_1}\|{variant_2}\|{variant_3}'
+            .. $'\|{variant_4}\|{variant_5}\)\s*$'
       && next_line =~ '^\s*$'
     this_line = ''
     is_item = false
@@ -87,6 +89,8 @@ export def CR_Hacked()
       item_symbol = $"{current_line->matchstr($'^\s*{variant_2}')}"
     elseif current_line =~ $'^\s*{variant_3}'
       item_symbol = $"{current_line->matchstr($'^\s*{variant_3}')}"
+    elseif current_line =~ $'^\s*{variant_5}'
+      item_symbol = $"{current_line->matchstr($'^\s*{variant_5}')}"
     elseif current_line =~ $'^\s*{variant_4}'
       # Get rid of the trailing '.' and convert to number
       var curr_nr = str2nr(
