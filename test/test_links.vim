@@ -89,25 +89,23 @@ def g:Test_ConvertLinks()
   exe "MDEConvertLinks"
 
   const expected_line_6 = 'And here [is][5] an inline link: [bar] [6].'
-  const expected_lines_9_10 = [
-  'More text to demonstrate mixed links. Here is another inline link: ',
-  '[example][7].'
-  ]
-  const expected_line_18 = '- Visit [this site][8] for details.'
-  const expected_lines_26_29 = [
+  const expected_line_9 =  'More text to demonstrate mixed links. '
+  .. 'Here is another inline link: [example][7].'
+  const expected_line_17 = '- Visit [this site][8] for details.'
+  const expected_lines_25_28 = [
             '[5]: foo_foo',
             '[6]: ciao_ciao',
             '[7]: https://example.com',
             '[8]: https://somewhere.com'
           ]
 
-  assert_equal(expected_line_6, getline(6))
-  assert_equal(expected_lines_9_10, getline(9, 10))
-  assert_equal(expected_line_18, getline(18))
-  assert_equal(expected_lines_26_29, getline(26, 29))
+ echom  assert_equal(expected_line_6, getline(6))
+ echom  assert_equal(expected_line_9, getline(9))
+ echom  assert_equal(expected_line_17, getline(17))
+ echom  assert_equal(expected_lines_25_28, getline(25, 28))
 
-  :%bw!
-  Cleanup_testfile(src_name_1)
+  # :%bw!
+  # Cleanup_testfile(src_name_1)
 enddef
 
 def g:Test_RefreshLinksDict()
