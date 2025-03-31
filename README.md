@@ -103,8 +103,8 @@ You can format text as usual by using `gq`.
 Here `gq` uses `prettier`, provided that you have it installed.
 That is, if you use `gq` plus motion, or if you visually select some text and
 then hit `gq`, then `prettier` will only prettify such a portion of text. You
-can also prettify the whole buffer on save, see `:h markdown-extras-config` how
-to do that.
+can also prettify the whole buffer on save by setting
+`g:markdown_extras_config['format_on_save'] = true` in your `.vimrc`.
 
 ### Rendering
 
@@ -120,7 +120,7 @@ You can pass arguments to `pandoc` via the key
 You could for example set the following:
 
 ```
-    g:markdown_extras_config = {}
+  g:markdown_extras_config = {}
   g:markdown_extras_config['pandoc_args'] =
   [$'--css="{$HOME}/dotfiles/my_css_style.css"',
       $'--lua-filter="{$HOME}/dotfiles/emoji-admonitions.lua"']
