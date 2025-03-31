@@ -135,7 +135,7 @@ You could for example set the following:
 As the plugin can be used for note-taking, it may be desirable to access
 different indices in an ergonomic way. This can be achieved with the
 `g:markdown_extras_indices` list in combination with the `:MDEIndices`
-command. `g:markdown_extras_indices` is nothing, but a list of files.
+command. Note that `g:markdown_extras_indices` is nothing, but a list of files.
 
 For more information about key-bindings, configuration, etc. take
 a look at `:h markdown-extras`.
