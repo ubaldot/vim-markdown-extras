@@ -39,13 +39,13 @@ to bold (`iw` is a text-objext).
 Then, while letting the cursor on the bold text, hit `<localleader>d`
 to remove it.
 
-Next, try to do the same with arbitrary motion and by replacing `b` with `i`
-for italics, `s` for strike-through, `c` for code, etc.
+Next, try to do the same with arbitrary text-objects or in Visual mode by
+replacing `b` with `i` for italics, `s` for strike-through, `c` for code, etc.
 
 You can also highlight text with `<localleader>h`. However, the highlight is
 not persistent. As usual, you can remove the highlight with `<localleader>d`.
 
-See `markdown-extras-mappings` for all the possible text styles.
+See `:h markdown-extras-mappings` for all the possible text styles.
 
 ### Links
 
@@ -71,7 +71,7 @@ In case you are working on a markdown file with mixed inline and
 reference-style links, you can convert the former to the latter by using
 `:MDEConvertLinks` command. All the newly created links will be placed after
 the `<!-- DO NOT REMOVE vim-markdown-extras references  DO NOT REMOVE-->`
-comment line.
+comment line. The reference identifiers are numbers.
 
 > [!Note]
 >
@@ -90,7 +90,7 @@ matter of customizing everything to your workflow, no? :)
 
 You can create to-do lists as you would do in normal markdown, by starting
 lines with `- [ ]` . When in normal mode, you can check/uncheck the item in the
-to-do list with `<localleader>x`.
+to-do list with `<localleader>x` in normal mode.
 
 > [!Note]
 >
@@ -103,7 +103,7 @@ You can format text as usual by using `gq`.
 Here `gq` uses `prettier`, provided that you have it installed.
 That is, if you use `gq` plus motion, or if you visually select some text and
 then hit `gq`, then `prettier` will only prettify such a portion of text. You
-can also prettify the whole buffer on save, see `markdown-extras-config` how
+can also prettify the whole buffer on save, see `:h markdown-extras-config` how
 to do that.
 
 ### Rendering
@@ -135,7 +135,7 @@ You could for example set the following:
 As the plugin can be used for note-taking, it may be desirable to access
 different indices in an ergonomic way. This can be achieved with the
 `g:markdown_extras_indices` list in combination with the `:MDEIndices`
-command.
+command. `g:markdown_extras_indices` is nothing, but a list of files.
 
 For more information about key-bindings, configuration, etc. take
 a look at `:h markdown-extras`.
@@ -158,7 +158,7 @@ limitations:
   identifiers, but I won't guarantee that everything will work fine.
 
 - The link management system heavily relies on the content below the
-  "<!-- DO NOT REMOVE vim-markdown-extras references DO NOT REMOVE -->"
+  `<!-- DO NOT REMOVE vim-markdown-extras references DO NOT REMOVE -->`
   comment. That comment must be unique. Attempting to pick links randomly
   scattered throughout the buffer using regular expressions would most likely
   lead to the issue described in the first bullet point.
