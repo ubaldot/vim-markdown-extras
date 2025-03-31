@@ -227,5 +227,3 @@ def g:Test_check_uncheck_todo_keybinding()
   :%bw!
   Cleanup_testfile(src_name_1)
 enddef
-
-## References

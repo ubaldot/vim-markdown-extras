@@ -55,6 +55,7 @@ export def CR_Hacked()
   # Check if the current line is an item.
   # OBS! The following scan the current line through the less general regex (a
   # regex can be contained in another regex)
+  # TODO: search back the previous \n
   var is_item = false
   for variant in [variant_1, variant_2, variant_3, variant_4, variant_5]
     if current_line =~ $'^\s*{variant}\s*'

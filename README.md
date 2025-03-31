@@ -70,13 +70,13 @@ type `[` to see a list of all available links.
 In case you are working on a markdown file with mixed inline and
 reference-style links, you can convert the former to the latter by using
 `:MDEConvertLinks` command. All the newly created links will be placed after
-the `<!-- DO NOT REMOVE vim-markdown-extras references  DO NOT REMOVE-->`
+the `<!-- DO NOT REMOVE vim-markdown-extras references DO NOT REMOVE-->`
 comment line. The reference identifiers are numbers.
 
 > [!Note]
 >
 > The links management only applies to links reported after the
-> `<!-- DO NOT REMOVE vim-markdown-extras references  DO NOT REMOVE-->`
+> `<!-- DO NOT REMOVE vim-markdown-extras references DO NOT REMOVE-->`
 > comment line. Such a line shall be unique in the buffer.
 
 ### Lists
