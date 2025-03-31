@@ -12,7 +12,8 @@ CONTENTS                                            *markdown-extras-contents*
     4. Commands ............. |markdown-extras-commands|
     5. Mappings ............. |markdown-extras-mappings|
     6. Configuration ........ |markdown-extras-configuration|
-    7. License .............. |markdown-extras-license|
+    7. Limitations .......... |markdown-extras-limitations|
+    8. License .............. |markdown-extras-license|
 
 
 ==============================================================================
@@ -20,14 +21,12 @@ INTRODUCTION                                    *markdown-extras-introduction*
 
 This plugin adds some spice to the bundled |ft-markdown-plugin|, such as:
 
-- Easy toggle italic, bold, strike-through, code delimiters,
+- Easy toggle italic, bold, strike-through, code text-styles,
 - Easy to add/jump/remove/preview links,
 - Toggle quoted and code blocks,
 - Format with |gq| and on save,
 - Render with `pandoc`,
-- Easy configuration and usage
 - ... and more.
-
 
 ==============================================================================
 REQUIREMENTS                                    *markdown-extras-requirements*
@@ -252,6 +251,31 @@ selection bold.
                                   Default: `<localleader>f{motion}`
 <Plug>MarkdownQuoteBlock          Set quote-block.
                                   Default: `<localleader>q{motion}`
+
+
+==============================================================================
+LIMITATIONS                                       *markdown-extras-limitations*
+
+Nothing is perfect, and this plugin is no exception. Here are some random
+limitations:
+
+- Markdown is not a regular language, and many features rely on regular
+  expressions. This means there will always be corner cases where some features
+  fail. Parsing non-regular languages requires more advanced tools like
+  Tree-sitter. However, it is generally not a good idea to "punish" all use
+  cases with slow and memory-hungry solutions just for a few edge cases that
+  likely occur very sporadically. I prefer efficiency and speed for most use
+  cases, and for the others... well, patience!
+
+- The plugin somewhat forces the use of reference-style links where the
+  reference identifier is a number. You could try using strings as reference
+  identifiers, but I won't guarantee that everything will work fine.
+
+- The link management system heavily relies on the content below the
+  "<!-- DO NOT REMOVE vim-markdown-extras references DO NOT REMOVE -->"
+  comment. That comment must be unique. Attempting to pick links randomly
+  scattered throughout the buffer using regular expressions would most likely
+  lead to the issue described in the first bullet point.
 
 ==============================================================================
 LICENSE                                         *markdown-extras-license*

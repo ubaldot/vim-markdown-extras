@@ -60,7 +60,7 @@ export def RefreshLinksDict(): dict<string>
   #
   # Cleanup the current b:markdown_extras_links
   var links_dict = {}
-  const references_line = search(references_comment, 'nw')
+  const references_line = search($'^{references_comment}', 'nw')
   if references_line != 0
     for l in range(references_line + 1, line('$'))
       var ref = getline(l)
@@ -109,7 +109,7 @@ def GetLinkID(): number
   if !IsURL(link)
     link = fnamemodify(link, ':p')
   endif
-  var reference_line = search(references_comment, 'nw')
+  var reference_line = search($'^{references_comment}', 'nw')
   if reference_line == 0
       append(line('$'), ['', references_comment])
   endif
@@ -212,7 +212,7 @@ export def OpenLink()
 enddef
 
 export def ConvertLinks()
-  const references_line = search(references_comment, 'nw')
+  const references_line = search($'^{references_comment}', 'nw')
   if references_line == 0
       append(line('$'), ['', references_comment])
   endif
@@ -450,7 +450,7 @@ enddef
 
 export def CreateLink(type: string = '')
   InitScriptLocalVars()
-  const references_line = search(references_comment, 'nw')
+  const references_line = search($'^{references_comment}', 'nw')
   if references_line == 0
       append(line('$'), ['', references_comment])
   endif

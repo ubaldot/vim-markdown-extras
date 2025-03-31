@@ -2,12 +2,11 @@
 
 This plugin adds some spice to the bundled [vim-markdown][3], such as:
 
-- Easy toggle italic, bold, strike-through, code delimiters,
+- Easy toggle italic, bold, strike-through, code text-styles,
 - Easy to add/jump/remove/preview links,
 - Toggle quoted and code blocks,
 - Format with `gq` and on save,
 - Render with `pandoc`,
-- Easy configuration and usage
 - ... and more.
 
 # Requirements
@@ -20,17 +19,19 @@ lines:
     filetype indent plugin on
     syntax on
 ```
-To enable the rendering feature, you need to install [pandoc][1].
-To automatically open the rendered files, Vim must have the `:Open` command.
 
-To enable the formatting feature, you need to install [prettier][2] or any other
-formatting program of your choice.
+The following is not mandatory, but you want to enable the rendering feature,
+you need to install [pandoc][1]. To automatically open the rendered files, Vim
+must have the `:Open` command.
+
+Along the same line, to enable the formatting feature, you need to install
+[prettier][2] or any other formatting program of your choice.
 
 # Usage
 
 To best way to describe how to operate it, let's go through some examples.
 
-## Text-styles
+### Text-styles
 
 Open a markdown file and place the cursor on a word.
 Hit `<localleader>biw` to change the text-style inside-the-word
@@ -46,7 +47,7 @@ not persistent. As usual, you can remove the highlight with `<localleader>d`.
 
 See `markdown-extras-mappings` for all the possible text styles.
 
-## Links
+### Links
 
 Now, place the cursor on a word and hit `<enter>`.
 Select `Create new link` from the popup menu and point to an existing
@@ -76,14 +77,14 @@ comment line.
 >
 > The links management only applies to links reported after the
 > `<!-- DO NOT REMOVE vim-markdown-extras references  DO NOT REMOVE-->`
-> comment line.
+> comment line. Such a line shall be unique in the buffer.
 
-## Lists
+### Lists
 
 You can create lists or enumerations as usual. However, the behavior of the
 `<enter>` key is hacked to mimic the behavior of Microsoft products and
 respect possible nesting. Although there are many reasons to stick with the
-bundled `ft-markdown-plugin` behavior when it comes to lists,
+bundled [vim-markdown][3] behavior when it comes to lists,
 my use-cases and preferences require a different behavior. At the end Vim is a
 matter of customizing everything to your workflow, no? :)
 
@@ -96,7 +97,7 @@ to-do list with `<localleader>x`.
 > If you have `vim-outline` installed, then you can use `<localleader>o` to
 > display the unchecked items of the to-do list in a scratch buffer.
 
-## Formatting
+### Formatting
 
 You can format text as usual by using `gq`.
 Here `gq` uses `prettier`, provided that you have it installed.
@@ -105,7 +106,7 @@ then hit `gq`, then `prettier` will only prettify such a portion of text. You
 can also prettify the whole buffer on save, see `markdown-extras-config` how
 to do that.
 
-## Rendering
+### Rendering
 
 You can then use `:make` to render your buffer with `pandoc`, provided that
 you have `pandoc` installed.
@@ -129,7 +130,7 @@ You could for example set the following:
 >
 > The rendered file will automatically open if your Vim has the `:Open` command.
 
-## Indices
+### Indices
 
 As the plugin can be used for note-taking, it may be desirable to access
 different indices in an ergonomic way. This can be achieved with the
@@ -139,7 +140,30 @@ command.
 For more information about key-bindings, configuration, etc. take
 a look at `:h markdown-extras`.
 
-## License
+### Limitations
+
+Nothing is perfect, and this plugin is no exception. Here are some random
+limitations:
+
+- Markdown is not a regular language, and many features rely on regular
+  expressions. This means there will always be corner cases where some features
+  fail. Parsing non-regular languages requires more advanced tools like
+  Tree-sitter. However, it is generally not a good idea to "punish" all use
+  cases with slow and memory-hungry solutions just for a few edge cases that
+  likely occur very sporadically. I prefer efficiency and speed for most use
+  cases, and for the others... well, patience!
+
+- The plugin somewhat forces the use of reference-style links where the
+  reference identifier is a number. You could try using strings as reference
+  identifiers, but I won't guarantee that everything will work fine.
+
+- The link management system heavily relies on the content below the
+  "<!-- DO NOT REMOVE vim-markdown-extras references DO NOT REMOVE -->"
+  comment. That comment must be unique. Attempting to pick links randomly
+  scattered throughout the buffer using regular expressions would most likely
+  lead to the issue described in the first bullet point.
+
+### License
 
 BSD-3.
 
