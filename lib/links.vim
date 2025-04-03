@@ -265,27 +265,27 @@ enddef
 export def RemoveLink(range_info: dict<list<list<number>>> = {})
   const link_info = empty(range_info) ? IsLink() : range_info
   # TODO: it may not be the best but it works so far
-  echom "link_info: " .. string(link_info)
   if !empty(link_info)
-    # TODO: bug distance ahead from the cursor position
-
-      var symbol = utils.IsLess(searchpos('[', 'n'), searchpos('(', 'n'))
-        ? '['
-        : '('
+      # Find the closest between [ and (
+      var symbol = ''
+      if searchpos('[', 'nW') == [0, 0]
+        symbol = '('
+      elseif searchpos('(', 'nW') == [0, 0]
+        symbol = '['
+      else
+        symbol = utils.IsLess(searchpos('[', 'nW'), searchpos('(', 'nW'))
+          ? '['
+          : '('
+      endif
       # Remove actual link
-      #
-      echom "pos [: " .. string(searchpos('[', 'n'))
-      echom "pos (: " .. string(searchpos('(', 'n'))
-      echom utils.IsLess(searchpos('[', 'n'), searchpos('(', 'n'))
-      echom "symbol: " .. symbol
       search(symbol)
-      # exe $'norm! "_da{symbol}'
+      exe $'norm! "_da{symbol}'
 
-      # # Remove text link
-      # search(']', 'bc')
-      # norm! "_x
-      # search('[', 'bc')
-      # norm! "_x
+      # Remove text link
+      search(']', 'bc')
+      norm! "_x
+      search('[', 'bc')
+      norm! "_x
   endif
 enddef
 
