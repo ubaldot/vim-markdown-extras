@@ -85,8 +85,9 @@ You can create lists or enumerations as usual. However, the behavior of the
 `<enter>` key is hacked to mimic the behavior of Microsoft products and
 respect possible nesting. Although there are many reasons to stick with the
 bundled [vim-markdown][3] behavior when it comes to lists,
-my use-cases and preferences require a different behavior. At the end Vim is a
-matter of customizing everything to your workflow, no? :)
+my use-cases and preferences require a different behavior.
+If you want the normal behavior, then set
+`g:markdown_extras_config['hack_CR'] = false` in your `.vimrc`.
 
 You can create to-do lists as you would do in normal markdown, by starting
 lines with `- [ ]` . When in normal mode, you can check/uncheck the item in the
