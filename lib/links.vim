@@ -205,6 +205,7 @@ export def OpenLink()
     if filereadable(link)
       exe $'edit {link}'
     elseif exists(':Open') != 0
+      echom link
       exe $":Open {link}"
     else
       utils.Echowarn('You need a Vim version that has the :Open command')

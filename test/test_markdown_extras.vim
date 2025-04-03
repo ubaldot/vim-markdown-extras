@@ -227,3 +227,27 @@ def g:Test_check_uncheck_todo_keybinding()
   :%bw!
   Cleanup_testfile(src_name_1)
 enddef
+
+def g:Test_CR_hacked_wrapped_lines()
+  # OBS! normal shall be without ! because we are testing <CR> which is
+  # hacked!
+  Generate_testfile(lines_1, src_name_1)
+  vnew
+  exe $"edit {src_name_1}"
+  setlocal spell spelllang=la
+  setlocal textwidth=78
+
+  const long_line = 'Itaque earum rerum hic *tenetur a sapiente `delectus`, '
+   ..  'ut aut reiciendis voluptatibus maiores*'
+  const expected_lines_36_38 = [
+  '- Itaque earum rerum hic *tenetur a sapiente `delectus`, ut aut reiciendis',
+  '  voluptatibus maiores*',
+  '- hello'
+  ]
+
+  execute $"silent norm Go\<cr>-\<space>{long_line}\<cr>hello"
+  echom assert_equal(expected_lines_36_38, getline(36, 38))
+
+  :%bw!
+  Cleanup_testfile(src_name_1)
+enddef

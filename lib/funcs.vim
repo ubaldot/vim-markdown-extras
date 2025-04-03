@@ -43,45 +43,14 @@ export def CR_Hacked()
   # Check if the current line starts with '- [ ]' or '- '
   # OBS! If there are issues, check 'formatlistpat' value for markdown
   # filetype
-
   var variant_1 = '-\s\[\(\s*\|x\)*\]\s\+' # - [ ] bla bla bla
   var variant_2 = '-\s\+\(\[\)\@!' # - bla bla bla
   var variant_3 = '\*\s\+' # * bla bla bla
   var variant_4 = '\d\+\.\s\+' # 123. bla bla bla
   var variant_5 = '>\s\+' # Quoted block
 
-  var current_line = getline('.')
-
-  # Check if the current line is an item.
-  # OBS! The following scan the current line through the less general regex (a
-  # regex can be contained in another regex)
-  # TODO: search back the previous \n
-  var is_item = false
-  for variant in [variant_1, variant_2, variant_3, variant_4, variant_5]
-    if current_line =~ $'^\s*{variant}\s*'
-      is_item = true
-      break
-    endif
-  endfor
-
-  # If the current line is not in an item list, act as normal,
-  # i.e. <cr> = \n, otherwise split the current line depending on where is the
-  # cursor
-  var this_line = strcharpart(getline('.'), 0, col('.') - 1)
-  var next_line = strcharpart(getline('.'), col('.') - 1)
-
-  # double <cr> equal to finish the itemization
-  if this_line =~
-      $'^\s*\({variant_1}\|{variant_2}\|{variant_3}'
-            .. $'\|{variant_4}\|{variant_5}\)\s*$'
-      && next_line =~ '^\s*$'
-    this_line = ''
-    is_item = false
-  endif
-
-  # Handle different cases if the current line is an item of a list
-  var item_symbol = ''
-  if is_item
+  def GetItemSymbol(current_line: string): string
+    var item_symbol = ''
     if current_line =~ $'^\s*{variant_1}'
       # If - [x], the next item should be - [ ] anyway.
       item_symbol = $"{current_line->matchstr($'^\s*{variant_1}')
@@ -99,18 +68,59 @@ export def CR_Hacked()
       )
       item_symbol = $"{current_line->matchstr($'^\s*{variant_4}')
             \ ->substitute(string(curr_nr), string(curr_nr + 1), '')}"
+    # elseif current_line =~ $'^\s\+'
+    #   item_symbol = $"{current_line->matchstr($'^\s\+')}"
     endif
+    return item_symbol
+  enddef
 
-    # The following is in case the cursor is on the lhs of the item_symbol
-    if col('.') < len(item_symbol)
-      if current_line =~ $'^\s*{variant_4}'
-        this_line = $"{current_line->matchstr($'^\s*{variant_4}')}"
-        next_line = strcharpart(current_line, len(item_symbol))
-      else
-        this_line = item_symbol
-        next_line = strcharpart(current_line, len(item_symbol))
+  # Break line at cursor position
+  var this_line = strcharpart(getline('.'), 0, col('.') - 1)
+  var next_line = strcharpart(getline('.'), col('.') - 1)
+
+  # Check if the current line is an item.
+  # OBS! The following scan the current line through the less general regex (a
+  # regex can be contained in another regex)
+  # TODO: search back the previous \n
+  # var is_item = false
+  # for variant in [variant_1, variant_2, variant_3, variant_4, variant_5]
+  #   if current_line =~ $'^\s*{variant}\s*'
+  #     is_item = true
+  #     break
+  #   endif
+  # endfor
+
+  # Handle different cases if the current line is an item of a list
+  var line_nr = line('.')
+  var current_line = getline(line_nr)
+  var item_symbol = GetItemSymbol(current_line)
+  if current_line =~ '^\s\{2,}'
+    while current_line !~ '^\s*$' && line_nr != 0 && empty(item_symbol)
+      line_nr -= 1
+      current_line = getline(line_nr)
+      item_symbol = GetItemSymbol(current_line)
+      echom item_symbol
+      if !empty(item_symbol)
+        break
       endif
+    endwhile
+  endif
+
+  # The following is in case the cursor is on the lhs of the item_symbol
+  if col('.') < len(item_symbol)
+    if current_line =~ $'^\s*{variant_4}'
+      this_line = $"{current_line->matchstr($'^\s*{variant_4}')}"
+      next_line = strcharpart(current_line, len(item_symbol))
+    else
+      this_line = item_symbol
+      next_line = strcharpart(current_line, len(item_symbol))
     endif
+  endif
+
+  # double <cr> equal to finish the itemization
+  if getline('.') == item_symbol || getline('.') =~ '^\s*\d\+\.\s*$'
+    this_line = ''
+    item_symbol = ''
   endif
 
   # Add the correct lines
