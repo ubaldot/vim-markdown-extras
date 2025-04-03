@@ -251,3 +251,31 @@ def g:Test_CR_hacked_wrapped_lines()
   :%bw!
   Cleanup_testfile(src_name_1)
 enddef
+
+
+def g:Test_CR_hacked_preserve_indent()
+  # OBS! normal shall be without ! because we are testing <CR> which is
+  # hacked!
+  Generate_testfile(lines_1, src_name_1)
+  vnew
+  exe $"edit {src_name_1}"
+  setlocal spell spelllang=la
+
+  const test_string = "\<space>\<space>\<space>\<space>\<space>today\<space>is"
+    .. "\<space>a\<cr>beautiful\<space>day"
+
+  const expected_lines_35_39 = [
+        '',
+        '     today is a',
+        '     beautiful day',
+        '',
+        'ciao',
+  ]
+
+  execute $"silent norm Go\<cr>{test_string}\<cr>\<cr>ciao"
+
+  echom assert_equal(expected_lines_35_39, getline(35, 39))
+
+  :%bw!
+  Cleanup_testfile(src_name_1)
+enddef

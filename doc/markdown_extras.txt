@@ -182,6 +182,8 @@ filling it with he various keys.
                           greater than 0.
         "fuzzy_search"    Fuzzy or exact search in the links popup.
                           Default: |true|.
+        "hack_CR"         Set to |false| for the standard behavior of <CR>.
+                          Default: |true|.
 
 
                                           *g:markdown_extras_indices*

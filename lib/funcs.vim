@@ -68,8 +68,6 @@ export def CR_Hacked()
       )
       item_symbol = $"{current_line->matchstr($'^\s*{variant_4}')
             \ ->substitute(string(curr_nr), string(curr_nr + 1), '')}"
-    # elseif current_line =~ $'^\s\+'
-    #   item_symbol = $"{current_line->matchstr($'^\s\+')}"
     endif
     return item_symbol
   enddef
@@ -104,6 +102,12 @@ export def CR_Hacked()
         break
       endif
     endwhile
+  endif
+
+  # if item_symbol = '' it may still mean that we are not in an item list but
+  # yet we have an indendent line, hence, we must preserve the leading spaces
+  if empty(item_symbol)
+    item_symbol = $"{getline('.')->matchstr($'^\s\+')}"
   endif
 
   # The following is in case the cursor is on the lhs of the item_symbol

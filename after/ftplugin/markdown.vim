@@ -128,11 +128,11 @@ setreg("o", "- [ ] ")
 
 # Redefinition of <cr>. Unmap if user does not want it.
 inoremap <buffer> <silent> <CR> <ScriptCmd>funcs.CR_Hacked()<CR>
-# if !exists('g:markdown_extras_config')
-#     && has_key(g:markdown_extras_config, 'hack_CR')
-#     && !g:markdown_extras_config['hack_CR']
-#   iunmap <buffer> <cr>
-# endif
+if exists('g:markdown_extras_config')
+    && has_key(g:markdown_extras_config, 'hack_CR')
+    && !g:markdown_extras_config['hack_CR']
+  iunmap <buffer> <cr>
+endif
 
 nnoremap <buffer> <expr> <CR> empty(links.IsLink())
       \ ? '<ScriptCmd>SetLinkOpFunc()<CR>g@iw'
