@@ -262,22 +262,30 @@ export def ConvertLinks()
 enddef
 
 
-export def RemoveLink(range_info: dict<list<list<number>>> = {})
+export def g:RemoveLink(range_info: dict<list<list<number>>> = {})
   const link_info = empty(range_info) ? IsLink() : range_info
   # TODO: it may not be the best but it works so far
+  echom "link_info: " .. string(link_info)
   if !empty(link_info)
+    # TODO: bug distance ahead from the cursor position
+
       var symbol = utils.IsLess(searchpos('[', 'n'), searchpos('(', 'n'))
         ? '['
         : '('
       # Remove actual link
+      #
+      echom "pos [: " .. string(searchpos('[', 'n'))
+      echom "pos (: " .. string(searchpos('(', 'n'))
+      echom utils.IsLess(searchpos('[', 'n'), searchpos('(', 'n'))
+      echom "symbol: " .. symbol
       search(symbol)
-      exe $'norm! "_da{symbol}'
+      # exe $'norm! "_da{symbol}'
 
-      # Remove text link
-      search(']', 'bc')
-      norm! "_x
-      search('[', 'bc')
-      norm! "_x
+      # # Remove text link
+      # search(']', 'bc')
+      # norm! "_x
+      # search('[', 'bc')
+      # norm! "_x
   endif
 enddef
 
@@ -294,11 +302,13 @@ export def PopupFilter(id: number,
     key: string,
     slave_id: number,
     results: list<string>,
+    match_id: number,
     ): bool
 
   var maxheight = popup_getoptions(slave_id).maxheight
 
   if key == "\<esc>"
+    matchdelete(match_id)
     ClosePopups()
     return true
   endif
@@ -419,7 +429,7 @@ export def PopupFilter(id: number,
   return true
 enddef
 
-export def ShowPromptPopup(slave_id: number, links: list<string>, title: string)
+export def ShowPromptPopup(slave_id: number, links: list<string>, title: string, match_id: number)
   # This could be called by other scripts and its id may be undefined.
   InitScriptLocalVars()
   # This is the UI thing
@@ -443,7 +453,7 @@ export def ShowPromptPopup(slave_id: number, links: list<string>, title: string)
   }
 
   # Filter
-  opts.filter = (id, key) => PopupFilter(id, key, slave_id, links)
+  opts.filter = (id, key) => PopupFilter(id, key, slave_id, links, match_id)
 
   prompt_text = ""
   prompt_id = popup_create([prompt_sign .. prompt_cursor], opts)
@@ -470,6 +480,10 @@ export def CreateLink(type: string = '')
   var lB = line("']")
   var cB = type == 'line' ? len(getline(lB)) : col("']")
 
+  if getregion(getpos("'["), getpos("']"))[0] =~ '^\s*$'
+    return
+  endif
+
   # The regex reads:
   # Take all characters, including newlines, from (l0,c0) to (l1,c1 + 1)'
   const match_pattern = $'\%{lA}l\%{cA}c\_.*\%{lB}l\%{cB + 1}c'
@@ -486,7 +500,7 @@ export def CreateLink(type: string = '')
   main_id = popup_create(links, links_popup_opts)
 
   # if len(links) > 1
-    ShowPromptPopup(main_id, links, " links: ")
+    ShowPromptPopup(main_id, links, " links: ", match_id)
   # endif
 enddef
 

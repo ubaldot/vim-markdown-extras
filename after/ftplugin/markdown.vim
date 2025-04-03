@@ -134,11 +134,9 @@ nnoremap <buffer> <expr> <CR> empty(links.IsLink())
       \ ? '<ScriptCmd>SetLinkOpFunc()<CR>g@iw'
       \ : '<ScriptCmd>links.OpenLink()<CR>'
 
-
 if exists(':OutlineToggle') != 0
   nnoremap <buffer> <silent> <localleader>o <Cmd>OutlineToggle ^- [ <cr>
 endif
-
 
 if empty(maparg('<Plug>MarkdownToggleCheck'))
   noremap <script> <buffer> <Plug>MarkdownToggleCheck
