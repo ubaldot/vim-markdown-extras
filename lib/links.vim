@@ -262,7 +262,7 @@ export def ConvertLinks()
 enddef
 
 
-export def g:RemoveLink(range_info: dict<list<list<number>>> = {})
+export def RemoveLink(range_info: dict<list<list<number>>> = {})
   const link_info = empty(range_info) ? IsLink() : range_info
   # TODO: it may not be the best but it works so far
   echom "link_info: " .. string(link_info)
