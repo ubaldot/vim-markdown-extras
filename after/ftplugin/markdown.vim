@@ -121,11 +121,7 @@ if use_pandoc && executable('pandoc')
 endif
 # ------------------- End pandoc ------------------------------------
 
-
 # -------- Mappings ------------
-# This is very ugly: you add a - [ ] by pasting the content of register 'o'
-setreg("o", "- [ ] ")
-
 # Redefinition of <cr>. Unmap if user does not want it.
 inoremap <buffer> <silent> <CR> <ScriptCmd>funcs.CR_Hacked()<CR>
 if exists('g:markdown_extras_config')
