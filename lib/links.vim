@@ -203,13 +203,14 @@ export def OpenLink()
     b:markdown_extras_links = RefreshLinksDict()
     const link_id = utils.GetTextObject('i[').text
     const link = b:markdown_extras_links[link_id]
+    # TODO: filereadable() if not good if for example you have a .png it is
+    # still readable
     if filereadable(link)
       exe $'edit {link}'
-    elseif exists(':Open') != 0
-      echom link
-      exe $":Open {link}"
+    elseif IsURL(link)
+      exe $":URLOpen {link}"
     else
-      utils.Echowarn('You need a Vim version that has the :Open command')
+      exe $":Open {link}"
     endif
 enddef
 
@@ -293,8 +294,9 @@ enddef
 
 def ClosePopups()
   # This function tear down everything
-  popup_close(main_id, -1)
-  popup_close(prompt_id, -1)
+  # popup_close(main_id, -1)
+  # popup_close(prompt_id, -1)
+  # TODO: this will clear any opened popup
   popup_clear()
   # RestoreCursor()
   prop_type_delete('PopupToolsMatched')
