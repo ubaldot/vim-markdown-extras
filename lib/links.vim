@@ -141,10 +141,11 @@ export def IsURL(link: string): bool
     return false
 enddef
 
-def LinksPopupCallback(match_id: number,
-    type: string,
+def LinksPopupCallback(type: string,
     popup_id: number,
-    idx: number)
+    idx: number,
+    match_id: number
+  )
   if idx > 0
     const selection = getbufline(winbufnr(popup_id), idx)[0]
     var link_id = -1
@@ -302,13 +303,15 @@ export def PopupFilter(id: number,
     key: string,
     slave_id: number,
     results: list<string>,
-    match_id: number,
+    match_id: number = -1,
     ): bool
 
   var maxheight = popup_getoptions(slave_id).maxheight
 
   if key == "\<esc>"
-    matchdelete(match_id)
+    if match_id != -1
+      matchdelete(match_id)
+    endif
     ClosePopups()
     return true
   endif
@@ -429,7 +432,11 @@ export def PopupFilter(id: number,
   return true
 enddef
 
-export def ShowPromptPopup(slave_id: number, links: list<string>, title: string, match_id: number)
+export def ShowPromptPopup(slave_id: number,
+    links: list<string>,
+    title: string,
+    match_id: number = -1
+  )
   # This could be called by other scripts and its id may be undefined.
   InitScriptLocalVars()
   # This is the UI thing
@@ -491,7 +498,7 @@ export def CreateLink(type: string = '')
   redraw
 
   links_popup_opts.callback =
-    (popup_id, idx) => LinksPopupCallback(match_id, type, popup_id, idx)
+    (popup_id, idx) => LinksPopupCallback(type, popup_id, idx, match_id)
 
   var links = values(b:markdown_extras_links)->insert("Create new link")
   var popup_height = min([len(links), (&lines * 2) / 3])
