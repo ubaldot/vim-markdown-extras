@@ -207,8 +207,6 @@ export def OpenLink()
     # still readable
     if filereadable(link)
       exe $'edit {link}'
-    elseif IsURL(link)
-      exe $":URLOpen {link}"
     else
       exe $":Open {link}"
     endif
