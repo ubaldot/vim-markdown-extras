@@ -278,11 +278,12 @@ export def RemoveLink(range_info: dict<list<list<number>>> = {})
           ? '['
           : '('
       endif
+
       # Remove actual link
       search(symbol)
       exe $'norm! "_da{symbol}'
 
-      # Remove text link
+      # Remove text link - it is always between square brackets
       search(']', 'bc')
       norm! "_x
       search('[', 'bc')
