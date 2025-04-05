@@ -26,7 +26,7 @@ if exists('g:markdown_extras_loaded')
 endif
 g:markdown_extras_loaded = true
 
-augroup MARKDOWN_EXTRAS_VISITED_BUFFER
+augroup MARKDOWN_EXTRAS_VISITED_BUFFERS
     autocmd!
     autocmd BufEnter *.md funcs.AddVisitedBuffer()
 augroup END

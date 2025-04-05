@@ -11,9 +11,9 @@ This plugin adds some spice to the bundled [vim-markdown][3], such as:
 
 # Requirements
 
-Vim 9.0 is required.
-You must set a `<localleader>` key and your `vimrc` shall include the following
-lines:
+Vim 9.1-1270 is required.
+You must set a `<localleader>` key and your `.vimrc` file shall include the
+following lines:
 
 ```
     filetype indent plugin on

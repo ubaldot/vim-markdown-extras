@@ -6,7 +6,7 @@ import autoload './highlight.vim'
 import autoload './links.vim'
 
 var visited_buffers = []
-var visited_buffer_max_length = 100
+var visited_buffers_max_length = 100
 
 export def GoToPrevVisitedBuffer()
   if len(visited_buffers) > 1
@@ -18,7 +18,7 @@ enddef
 
 export def AddVisitedBuffer()
     if empty(visited_buffers) || bufnr() != visited_buffers[-1]
-      if len(visited_buffers) > visited_buffer_max_length
+      if len(visited_buffers) > visited_buffers_max_length
         remove(visited_buffers, 0)
       endif
       add(visited_buffers, bufnr())
