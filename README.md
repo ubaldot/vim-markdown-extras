@@ -105,7 +105,7 @@ utf-8 value.
 
 > [!Note]
 >
-> If you have `vim-outline` installed, then you can use `<localleader>o` to
+> If you have [vim-outline][4] installed, then you can use `<localleader>o` to
 > display the unchecked items of the to-do list in a scratch buffer.
 
 ### Formatting
@@ -183,3 +183,4 @@ BSD-3.
 [1]: https://pandoc.org
 [2]: https://prettier.io
 [3]: https://github.com/tpope/vim-markdown
+[4]: https://github.com/ubaldot/vim-outline
