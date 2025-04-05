@@ -1,4 +1,4 @@
-# vim-markdown-extras (MDE)
+# vim-MarkDown-Extras (MDE)
 
 This plugin adds some spice to the bundled [vim-markdown][3], such as:
 
