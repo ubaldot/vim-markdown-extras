@@ -101,7 +101,7 @@ to-do list with `<localleader>x` in normal mode. You can change how check-boxes
 are rendered by setting the keys `empty_checkbox` and `marked_checkbox` of the
 `g:markdown_extras_config` dictionary, for example you can set
 `g:markdown_extras_config[marked_checkbox] = 0x2714`. The value shall be a
-utf-8 value.
+valid Unicode point value.
 
 > [!Note]
 >
