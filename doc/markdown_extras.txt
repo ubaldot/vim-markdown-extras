@@ -57,6 +57,10 @@ Then, while letting the cursor on the bold text, hit `<localleader>d`
 to remove it.
 
 Next, try to do the same with arbitrary motion or with some visual selections.
+For example, you can use `<localleader>sa(` for strike-through all the text
+delimited by parenthesis (provided that the cursor is located in a region
+delimited by parenthesis).
+
 See |markdown-extras-mappings| for all the possible text styles.
 
 LINKS
@@ -72,8 +76,9 @@ Next, create some new links and use `<localleader>n` and `<localleader>N` to
 locate their position in the current buffer. When on a link, hit
 `<localleader>d` to remove it.
 
-Note: Although you can hit |<enter>| to link a word, more generlly you can
-use `<localleader>l` plus some motion to create links.
+Note: Although you can hit `<enter>` to link a word, more generlly you can
+use `<localleader>l` plus some motion to create links, like for example
+`<localleader>lfa` (note that `fa` is a motion).
 
 You can also dynamically refer to links while typing. Go in insert mode and
 type `[` to see a list of all available links.
@@ -95,9 +100,23 @@ bundled |ft-markdown-plugin| behavior when it comes to lists,
 my use-cases and preferences require a different behavior. At the end Vim is a
 matter of customizing everything to your workflow, no? :)
 
+You can create lists as in a normal markdown file. However, note that the
+behavior of the |<enter>| key is hacked to mimic the behavior of Microsoft
+products and respect possible nesting.
+Although there are many reasons to stick with the
+bundled |ft-markdown-plugin| behavior when it comes to lists,
+my use-cases and preferences require a different behavior.
+If you want the standard |ft-markdown-plugin| behavior, then set
+`g:markdown_extras_config['hack_CR'] = false` in your `.vimrc`.
+
 You can create to-do lists as you would do in normal markdown, by starting
 lines with `- [ ]` . When in normal mode, you can check/uncheck the item in the
-to-do list with `<localleader>x`.
+to-do list with `<localleader>x`. You can change how check-boxes
+are rendered by setting the keys `empty_checkbox` and `marked_checkbox` of the
+`g:markdown_extras_config` dictionary, for example you can set
+`g:markdown_extras_config[marked_checkbox] = 0x2714`.
+The value shall be a utf-8 value.
+
 
 Note: If you have `vim-outline` installed, then you can use `<localleader>o` to
 display the unchecked items of the to-do list in a scratch buffer.
@@ -266,8 +285,8 @@ limitations:
   fail. Parsing non-regular languages requires more advanced tools like
   Tree-sitter. However, it is generally not a good idea to "punish" all use
   cases with slow and memory-hungry solutions just for a few edge cases that
-  likely occur very sporadically. I prefer efficiency and speed for most use
-  cases, and for the others... well, patience!
+  likely occur very sporadically. The choice is to favor efficiency and speed
+  for most use cases, rather than having as much coverage as possible.
 
 - The plugin somewhat forces the use of reference-style links where the
   reference identifier is a number. You could try using strings as reference

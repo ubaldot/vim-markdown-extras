@@ -29,7 +29,8 @@ Along the same line, to enable the formatting feature, you need to install
 
 # Usage
 
-To best way to describe how to operate it, let's go through some examples.
+The best way to describe how to operate this plug it's through examples,
+so let's show some.
 
 ### Text-styles
 
@@ -41,6 +42,9 @@ to remove it.
 
 Next, try to do the same with arbitrary text-objects or in Visual mode by
 replacing `b` with `i` for italics, `s` for strike-through, `c` for code, etc.
+For example, you can use `<localleader>sa(` for strike-through all the text
+delimited by parenthesis (provided that the cursor is located in a region
+delimited by parenthesis).
 
 You can also highlight text with `<localleader>h`. However, the highlight is
 not persistent. As usual, you can remove the highlight with `<localleader>d`.
@@ -62,7 +66,8 @@ locate their position in the current buffer. When on a link text, hit
 `<localleader>d` to remove the link.
 
 Although you can hit `<enter>` to link a word, more generlly you can
-use `<localleader>l` plus some motion to create links.
+use `<localleader>l` plus some motion to create links, like for example
+`<localleader>lfa` (note that `fa` is a motion).
 
 You can also dynamically refer to links while typing. Go in insert mode and
 type `[` to see a list of all available links.
@@ -81,17 +86,22 @@ comment line. The reference identifiers are numbers.
 
 ### Lists
 
-You can create lists or enumerations as usual. However, the behavior of the
-`<enter>` key is hacked to mimic the behavior of Microsoft products and
-respect possible nesting. Although there are many reasons to stick with the
+You can create lists as in a normal markdown file. However, note that the
+behavior of the `<enter>` key is hacked to mimic the behavior of Microsoft
+products and respect possible nesting.
+Although there are many reasons to stick with the
 bundled [vim-markdown][3] behavior when it comes to lists,
 my use-cases and preferences require a different behavior.
-If you want the normal behavior, then set
+If you want the standard [vim-markdown][3] behavior, then set
 `g:markdown_extras_config['hack_CR'] = false` in your `.vimrc`.
 
 You can create to-do lists as you would do in normal markdown, by starting
 lines with `- [ ]` . When in normal mode, you can check/uncheck the item in the
-to-do list with `<localleader>x` in normal mode.
+to-do list with `<localleader>x` in normal mode. You can change how check-boxes
+are rendered by setting the keys `empty_checkbox` and `marked_checkbox` of the
+`g:markdown_extras_config` dictionary, for example you can set
+`g:markdown_extras_config[marked_checkbox] = 0x2714`. The value shall be a
+utf-8 value.
 
 > [!Note]
 >
@@ -151,8 +161,8 @@ limitations:
   fail. Parsing non-regular languages requires more advanced tools like
   Tree-sitter. However, it is generally not a good idea to "punish" all use
   cases with slow and memory-hungry solutions just for a few edge cases that
-  likely occur very sporadically. I prefer efficiency and speed for most use
-  cases, and for the others... well, patience!
+  likely occur very sporadically. The choice is to favor efficiency and speed
+  for most use cases, rather than having as much coverage as possible.
 
 - The plugin somewhat forces the use of reference-style links where the
   reference identifier is a number. You could try using strings as reference
