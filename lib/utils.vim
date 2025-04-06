@@ -319,45 +319,6 @@ export def SurroundSmart(style: string, type: string = '')
   endif
 enddef
 
-# TODO: Not used in markdown
-export def SurroundToggle(open_delimiter: string,
-    close_delimiter: string,
-    open_delimiters_dict: dict<string>,
-    close_delimiters_dict: dict<string>,
-    text_object: string = '')
-  # Usage:
-  #   Select text and hit <leader> + e.g. parenthesis
-  #
-  # 'open_delimiter' and 'close_delimiter' are the strings to add to the text.
-  # They also serves as keys for the dics 'open_delimiters_dict' and
-  # 'close_delimiters_dict'.
-  #
-  # We need dicts because we need the strings to add to the text for
-  # surrounding purposes, but also a mechanism to search the surrounding
-  # delimiters in the text.
-  # We need regex because the delimiters strings may not be disjoint (think
-  # for example, in the markdown case, you have '*' delimiter which is
-  # contained in the '**' delimiter) and therefore we cannot find the
-  # delimiting string as-is.
-  # Finally, open_delimiters_dict[ii] is zipped with
-  # close_delimiters_dict[ii], therefore be sure that there is correspondence
-  # between opening and closing delimiters.
-  #
-  # Remember that Visual Selections and Text Objects are cousins.
-  # Also, remember that a yank set the marks '[ and '].
-
-
-  if !empty(IsInRange())
-    RemoveSurrounding()
-  else
-    Surround(open_delimiter,
-    close_delimiter,
-    open_delimiters_dict,
-    close_delimiters_dict,
-    text_object
-    )
-enddef
-
 export def IsLess(l1: list<number>, l2: list<number>): bool
   # Lexicographic comparison on common prefix, i.e.for two vectors in N^n and
   # N^m you compare their projections onto the smaller subspace.

@@ -43,6 +43,8 @@ export def CR_Hacked()
   # Check if the current line starts with '- [ ]' or '- '
   # OBS! If there are issues, check 'formatlistpat' value for markdown
   # filetype
+  # OBS! The following scan the current line through the less general regex (a
+  # regex can be contained in another regex)
   var variant_1 = '-\s\[\(\s*\|x\)*\]\s\+' # - [ ] bla bla bla
   var variant_2 = '-\s\+\(\[\)\@!' # - bla bla bla
   var variant_3 = '\*\s\+' # * bla bla bla
@@ -76,17 +78,6 @@ export def CR_Hacked()
   var this_line = strcharpart(getline('.'), 0, col('.') - 1)
   var next_line = strcharpart(getline('.'), col('.') - 1)
 
-  # Check if the current line is an item.
-  # OBS! The following scan the current line through the less general regex (a
-  # regex can be contained in another regex)
-  # TODO: search back the previous \n
-  # var is_item = false
-  # for variant in [variant_1, variant_2, variant_3, variant_4, variant_5]
-  #   if current_line =~ $'^\s*{variant}\s*'
-  #     is_item = true
-  #     break
-  #   endif
-  # endfor
 
   # Handle different cases if the current line is an item of a list
   var line_nr = line('.')

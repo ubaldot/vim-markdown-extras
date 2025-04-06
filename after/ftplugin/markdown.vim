@@ -93,7 +93,6 @@ if use_pandoc && executable('pandoc')
 
   compiler pandoc
 
-  # TODO: make it to take additional arguments
   def Make(format: string = 'html')
 
     var output_file = $'{expand('%:p:r')}.{format}'
