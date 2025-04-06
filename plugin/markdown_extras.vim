@@ -8,9 +8,12 @@ import autoload './../lib/utils.vim'
 import autoload './../lib/funcs.vim'
 
 
-if !has("patch-9.1.1270")
+if has('win32') && !has("patch-9.1.1270")
   # Needs Vim version 9.0 and above
   echoerr "[markdown-extras] You need at least Vim 9.1.1270"
+  finish
+elseif !has('vim9script')
+  echoerr "[markdown-extras] You need at least Vim 9.0"
   finish
 endif
 
