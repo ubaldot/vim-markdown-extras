@@ -195,17 +195,49 @@ export def IsLink(): dict<list<list<number>>>
   endif
 enddef
 
-export def OpenLink()
-    norm! f[l
-    # Only work for [blabla][]
-    # var link_id = xxx->matchstr('\[*\]\s*\[\zs\d\+\ze')
+def IsBinary(link: string): bool
+  # Check if a file is binary
+  var is_binary = false
 
-    b:markdown_extras_links = RefreshLinksDict()
-    const link_id = utils.GetTextObject('i[').text
-    const link = b:markdown_extras_links[link_id]
-    # TODO: filereadable() if not good if for example you have a .png it is
-    # still readable
-    if filereadable(link)
+  # Override if binary
+  if executable('file') && system($'file --brief --mime {link}') !~ '^text/'
+    is_binary = true
+  # In case 'file' is not available, like in Windows, search for the NULL
+  # byte
+  elseif filereadable(link)
+      && !empty(readfile(link)->filter('v:val =~# "\\%u0000"'))
+    is_binary = true
+  endif
+
+  return is_binary
+enddef
+
+export def OpenLink()
+
+    # Get link name depending of reference-style or inline link
+    var symbol = ''
+    if searchpos('[', 'nW') == [0, 0]
+      symbol = '('
+    elseif searchpos('(', 'nW') == [0, 0]
+      symbol = '['
+    else
+      symbol = utils.IsLess(searchpos('[', 'nW'), searchpos('(', 'nW'))
+        ? '['
+        : '('
+    endif
+
+    exe $"norm! f{symbol}l"
+
+    var link = ''
+    if symbol == '['
+      b:markdown_extras_links = RefreshLinksDict()
+      const link_id = utils.GetTextObject('i[').text
+      link = b:markdown_extras_links[link_id]
+    else
+      link = utils.GetTextObject('i(').text
+    endif
+
+    if !IsBinary(link)
       exe $'edit {link}'
     else
       exe $":Open {link}"
@@ -561,7 +593,6 @@ export def PreviewPopup()
     var saved_curpos = getcurpos()
     norm! f[l
     var link_id = utils.GetTextObject('i[').text
-    echom link_id
     var link_name = b:markdown_extras_links[link_id]
     # TODO At the moment only .md files have syntax highlight.
     var refFiletype = $'{fnamemodify(link_name, ":e")}' == 'md'
