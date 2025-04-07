@@ -251,6 +251,9 @@ export def OpenLink()
 
     # Get link name depending of reference-style or inline link
     var symbol = ''
+    const saved_curpos = getcurpos()
+    # Start the search from the end of the text-link
+    norm! f]
     if searchpos('[', 'nW') == [0, 0]
       symbol = '('
     elseif searchpos('(', 'nW') == [0, 0]
@@ -286,6 +289,7 @@ export def OpenLink()
     else
       exe $":Open {link}"
     endif
+    setpos('.', saved_curpos)
 enddef
 
 export def ConvertLinks()
