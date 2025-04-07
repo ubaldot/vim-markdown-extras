@@ -16,6 +16,8 @@ var fuzzy_search: bool
 var popup_width: number
 var links_popup_opts: dict<any>
 
+var large_files_support: bool
+
 const references_comment =
   "<!-- DO NOT REMOVE vim-markdown-extras references DO NOT REMOVE-->"
 
@@ -33,6 +35,13 @@ def InitScriptLocalVars()
     fuzzy_search = g:markdown_extras_config['fuzzy_search']
   else
     fuzzy_search = true
+  endif
+
+  if exists('g:markdown_extras_config')
+      && has_key(g:markdown_extras_config, 'large_files_support')
+    large_files_support = g:markdown_extras_config['large_files_support']
+  else
+    large_files_support = false
   endif
 
   if empty(prop_type_get('PopupToolsMatched'))
@@ -263,9 +272,15 @@ export def OpenLink()
       link = utils.GetTextObject('i(').text
     endif
 
+    # Assume that a file is always small (=1 byte) is no large_file_support is
+    # enabled
+    const file_size = !IsURL(link) && large_files_support
+      ? GetFileSize(link)
+      : 1
+
     # TODO: files less than 1MB are opened in the same Vim instance
     if !IsURL(link)
-        && (0 < GetFileSize(link) && GetFileSize(link) < 1000000)
+        && (0 < file_size && file_size < 1000000)
         && !IsBinary(link)
       exe $'edit {link}'
     else
@@ -614,6 +629,7 @@ def GetFileContent(filename: string): list<string>
 enddef
 
 export def PreviewPopup()
+  # InitScriptLocalVars()
   b:markdown_extras_links = RefreshLinksDict()
 
   var previewText = []
@@ -652,8 +668,12 @@ export def PreviewPopup()
       ? 'markdown'
       : 'text'
     # echom GetFileSize(link_name)
+    const file_size = !IsURL(link_name) && large_files_support
+          ? GetFileSize(link_name)
+          : 1
+
     if IsURL(link_name)
-        || (filereadable(link_name) && GetFileSize(link_name) > 1000000)
+        || (filereadable(link_name) && file_size > 1000000)
       previewText = [link_name]
       refFiletype = 'text'
     else

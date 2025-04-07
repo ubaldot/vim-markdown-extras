@@ -203,6 +203,10 @@ filling it with he various keys.
                           Default: |true|.
         "hack_CR"         Set to |false| for the standard behavior of <CR>.
                           Default: |true|.
+  "large_files_support"   If you have large files linked to your document,
+			  then you may experience lags or malfunctioning.
+			  If that is the case, set this value to |true|.
+                          Default: |false|.
 
 
                                           *g:markdown_extras_indices*
