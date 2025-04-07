@@ -133,6 +133,10 @@ nnoremap <buffer> <expr> <CR> empty(links.IsLink())
       \ ? '<ScriptCmd>SetLinkOpFunc()<CR>g@iw'
       \ : '<ScriptCmd>links.OpenLink()<CR>'
 
+nnoremap <buffer> <expr> <s-CR> empty(links.IsLink())
+      \ ? '<s-CR>'
+      \ : '<ScriptCmd>links.OpenLink(true)<CR>'
+
 if exists(':OutlineToggle') != 0
   nnoremap <buffer> <silent> <localleader>o <Cmd>OutlineToggle ^- [ <cr>
 endif

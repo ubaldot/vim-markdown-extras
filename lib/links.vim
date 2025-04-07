@@ -248,7 +248,7 @@ def IsBinary(link: string): bool
   return is_binary
 enddef
 
-export def OpenLink()
+export def OpenLink(is_split: bool = false)
     InitScriptLocalVars()
     # Get link name depending of reference-style or inline link
     var symbol = ''
@@ -285,6 +285,9 @@ export def OpenLink()
     if !IsURL(link)
         && (0 <= file_size && file_size <= large_files_threshold )
         && !IsBinary(link)
+      if is_split
+        vsplit
+      endif
       exe $'edit {link}'
     else
       exe $":Open {link}"
