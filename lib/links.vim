@@ -54,6 +54,22 @@ def InitScriptLocalVars()
     }
 enddef
 
+def GetFileSize(filename: string): number
+  var filesize = ''
+  if filereadable(filename)
+    if has('win32')
+      filesize = system('powershell -NoProfile -ExecutionPolicy Bypass -Command '
+        .. $'"(Get-Item \"{filename}\").length"')
+    else
+      filesize = system($'stat --format=%s {filename}')
+    endif
+  else
+    utils.Echoerr($"File {filename} is not readable")
+    filesize = "-1"
+  endif
+  return filesize->substitute('\n', '', 'g')->str2nr()
+enddef
+
 export def RefreshLinksDict(): dict<string>
   # Generate the b:markdown_extras_links by parsing the # References section,
   # but it requires that there is a # Reference section at the end
@@ -199,14 +215,18 @@ def IsBinary(link: string): bool
   # Check if a file is binary
   var is_binary = false
 
-  # Override if binary
-  if executable('file') && system($'file --brief --mime {link}') !~ '^text/'
-    is_binary = true
-  # In case 'file' is not available, like in Windows, search for the NULL
-  # byte
-  elseif filereadable(link)
-      && !empty(readfile(link)->filter('v:val =~# "\\%u0000"'))
-    is_binary = true
+  # Override if binary and not too large
+  if filereadable(link)
+    # Large file: open in a new Vim instance if
+    if executable('file') && system($'file --brief --mime {link}') !~ '^text/'
+      is_binary = true
+    # In case 'file' is not available, like in Windows, search for the NULL
+    # byte. Guard if the file is too large
+    elseif !empty(readfile(link)->filter('v:val =~# "\\%u0000"'))
+        is_binary = true
+    endif
+  else
+    utils.Echoerr($"File {link} is not readable")
   endif
 
   return is_binary
@@ -237,7 +257,10 @@ export def OpenLink()
       link = utils.GetTextObject('i(').text
     endif
 
-    if !IsBinary(link)
+    # TODO: files less than 1MB are opened in the same Vim instance
+    if !IsURL(link)
+        && (0 < GetFileSize(link) && GetFileSize(link) < 1000000)
+        && !IsBinary(link)
       exe $'edit {link}'
     else
       exe $":Open {link}"
@@ -599,6 +622,7 @@ export def PreviewPopup()
       ? 'markdown'
       : 'text'
     if IsURL(link_name)
+        || (filereadable(link_name) && GetFileSize(link_name) > 1000000)
       previewText = [link_name]
       refFiletype = 'text'
     else
