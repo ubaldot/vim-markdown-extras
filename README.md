@@ -60,7 +60,7 @@ If you created a new file, fill it in with some text and save it.
 Hit `<backspace>` to go back to the previous file and place the cursor to the
 newly created link. Hit `K`. Then, hit `<enter>` again to open the link.
 The link can also be external URL:s, e.g. `https://example.com`.
-If the link is a file, then |<shift-enter>| open it in a vertical split
+If the link is a file, then `<shift-enter>` open it in a vertical split
 window.
 
 Next, create some new links and use `<localleader>n` and `<localleader>N` to
