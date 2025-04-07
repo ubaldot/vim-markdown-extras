@@ -346,6 +346,9 @@ export def RemoveLink(range_info: dict<list<list<number>>> = {})
   const link_info = empty(range_info) ? IsLink() : range_info
   # TODO: it may not be the best but it works so far
   if !empty(link_info)
+      const saved_curpos = getcurpos()
+      # Start the search from the end of the text-link
+      norm! f]
       # Find the closest between [ and (
       var symbol = ''
       if searchpos('[', 'nW') == [0, 0]
@@ -368,6 +371,7 @@ export def RemoveLink(range_info: dict<list<list<number>>> = {})
       search('[', 'bc')
       norm! "_x
   endif
+  setpos('.', saved_curpos)
 enddef
 
 def ClosePopups()
@@ -640,7 +644,8 @@ export def PreviewPopup()
   if !empty(IsLink())
     # Search from the current cursor position to the end of line
     var saved_curpos = getcurpos()
-
+    # Start the search from the end of the text-link
+    norm! f]
     # Find the closest between [ and (
     var symbol = ''
     if searchpos('[', 'nW') == [0, 0]
