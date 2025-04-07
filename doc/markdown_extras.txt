@@ -213,8 +213,8 @@ filling it with he various keys.
 			  using this feature is that the preview or opening of
 			  small files will also be delayed due to the
 			  "large file check" procedure.
-			  To disable this feature, set the value of -1.
-                          Default: -1.
+			  To disable this feature, set the value of 0.
+                          Default: 0.
 
 
                                           *g:markdown_extras_indices*

@@ -39,9 +39,10 @@ def InitScriptLocalVars()
 
   if exists('g:markdown_extras_config')
       && has_key(g:markdown_extras_config, 'large_files_threshold')
+      && g:markdown_extras_config['large_files_threshold'] > 0
     large_files_threshold = g:markdown_extras_config['large_files_threshold']
   else
-    large_files_threshold = -1
+    large_files_threshold = 0
   endif
 
   if empty(prop_type_get('PopupToolsMatched'))
@@ -76,7 +77,7 @@ def GetFileSize(filename: string): number
       filesize = system($'stat --format=%s {escape(filename, "  ")}')
     else
       utils.Echowarn($"Cannot determine the size of {filename}")
-      filesize = "-1"
+      filesize = "-2"
     endif
   else
     utils.Echoerr($"File {filename} is not readable")
@@ -277,15 +278,12 @@ export def OpenLink()
 
     # Assume that a file is always small (=1 byte) is no large_file_support is
     # enabled
-    const file_size = !IsURL(link) && large_files_threshold > -1
+    const file_size = !IsURL(link) && large_files_threshold > 0
       ? GetFileSize(link)
-      : 1
+      : 0
 
-    # TODO: files less than 1MB are opened in the same Vim instance
-    echom large_files_threshold
-    echom file_size
     if !IsURL(link)
-        && (0 < file_size && file_size < large_files_threshold)
+        && (0 <= file_size && file_size <= large_files_threshold )
         && !IsBinary(link)
       exe $'edit {link}'
     else
@@ -679,11 +677,9 @@ export def PreviewPopup()
       ? 'markdown'
       : 'text'
     # echom GetFileSize(link_name)
-    const file_size = !IsURL(link_name) && large_files_threshold > -1
+    const file_size = !IsURL(link_name) && large_files_threshold > 0
           ? GetFileSize(link_name)
-          : 1
-    echom large_files_threshold
-    echom file_size
+          : 0
     if IsURL(link_name)
         || (filereadable(link_name) && file_size > large_files_threshold)
       previewText = [link_name]
