@@ -16,7 +16,7 @@ var fuzzy_search: bool
 var popup_width: number
 var links_popup_opts: dict<any>
 
-var large_files_support: bool
+var large_files_threshold: number
 
 const references_comment =
   "<!-- DO NOT REMOVE vim-markdown-extras references DO NOT REMOVE-->"
@@ -38,10 +38,10 @@ def InitScriptLocalVars()
   endif
 
   if exists('g:markdown_extras_config')
-      && has_key(g:markdown_extras_config, 'large_files_support')
-    large_files_support = g:markdown_extras_config['large_files_support']
+      && has_key(g:markdown_extras_config, 'large_files_threshold')
+    large_files_threshold = g:markdown_extras_config['large_files_threshold']
   else
-    large_files_support = false
+    large_files_threshold = -1
   endif
 
   if empty(prop_type_get('PopupToolsMatched'))
@@ -248,7 +248,7 @@ def IsBinary(link: string): bool
 enddef
 
 export def OpenLink()
-
+    InitScriptLocalVars()
     # Get link name depending of reference-style or inline link
     var symbol = ''
     const saved_curpos = getcurpos()
@@ -277,13 +277,15 @@ export def OpenLink()
 
     # Assume that a file is always small (=1 byte) is no large_file_support is
     # enabled
-    const file_size = !IsURL(link) && large_files_support
+    const file_size = !IsURL(link) && large_files_threshold > -1
       ? GetFileSize(link)
       : 1
 
     # TODO: files less than 1MB are opened in the same Vim instance
+    echom large_files_threshold
+    echom file_size
     if !IsURL(link)
-        && (0 < file_size && file_size < 1000000)
+        && (0 < file_size && file_size < large_files_threshold)
         && !IsBinary(link)
       exe $'edit {link}'
     else
@@ -637,7 +639,7 @@ def GetFileContent(filename: string): list<string>
 enddef
 
 export def PreviewPopup()
-  # InitScriptLocalVars()
+  InitScriptLocalVars()
   b:markdown_extras_links = RefreshLinksDict()
 
   var previewText = []
@@ -677,12 +679,13 @@ export def PreviewPopup()
       ? 'markdown'
       : 'text'
     # echom GetFileSize(link_name)
-    const file_size = !IsURL(link_name) && large_files_support
+    const file_size = !IsURL(link_name) && large_files_threshold > -1
           ? GetFileSize(link_name)
           : 1
-
+    echom large_files_threshold
+    echom file_size
     if IsURL(link_name)
-        || (filereadable(link_name) && file_size > 1000000)
+        || (filereadable(link_name) && file_size > large_files_threshold)
       previewText = [link_name]
       refFiletype = 'text'
     else
