@@ -370,8 +370,8 @@ export def RemoveLink(range_info: dict<list<list<number>>> = {})
       norm! "_x
       search('[', 'bc')
       norm! "_x
+      setpos('.', saved_curpos)
   endif
-  setpos('.', saved_curpos)
 enddef
 
 def ClosePopups()
