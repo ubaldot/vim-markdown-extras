@@ -26,6 +26,22 @@ export def AddVisitedBuffer()
     # echom visited_buffers
 enddef
 
+export def RemoveVisitedBuffer(bufnr: number)
+    var tmp = copy(visited_buffers)
+    if !empty(tmp)
+      tmp->filter($"v:val != {bufnr}")
+    endif
+
+    # Remove consecutive duplicates
+    visited_buffers = []
+    for ii in range(len(tmp))
+        if ii == 0 || tmp[ii] != tmp[ii - 1]
+            add(visited_buffers, tmp[ii])
+        endif
+    endfor
+    # echom visited_buffers
+enddef
+
 export def ToggleMark()
   # Toggle checkbox marks in todo lists
 

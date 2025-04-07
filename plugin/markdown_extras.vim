@@ -32,4 +32,5 @@ g:markdown_extras_loaded = true
 augroup MARKDOWN_EXTRAS_VISITED_BUFFERS
     autocmd!
     autocmd BufEnter *.md funcs.AddVisitedBuffer()
+    autocmd BufDelete *.md funcs.RemoveVisitedBuffer(bufnr())
 augroup END
