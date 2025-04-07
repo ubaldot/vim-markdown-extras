@@ -56,12 +56,18 @@ enddef
 
 def GetFileSize(filename: string): number
   var filesize = ''
+  # TODO: Using system() slow down significantly the opening and the file preview
   if filereadable(filename)
     if has('win32')
       filesize = system('powershell -NoProfile -ExecutionPolicy Bypass -Command '
         .. $'"(Get-Item \"{filename}\").length"')
+    elseif has('unix') && system('uname') =~ 'Darwin'
+      filesize = system($'stat -f %z {escape(filename, " ")}')
+    elseif has('unix')
+      filesize = system($'stat --format=%s {escape(filename, "  ")}')
     else
-      filesize = system($'stat --format=%s {filename}')
+      utils.Echowarn($"Cannot determine the size of {filename}")
+      filesize = "-1"
     endif
   else
     utils.Echoerr($"File {filename} is not readable")
@@ -614,13 +620,38 @@ export def PreviewPopup()
   if !empty(IsLink())
     # Search from the current cursor position to the end of line
     var saved_curpos = getcurpos()
-    norm! f[l
-    var link_id = utils.GetTextObject('i[').text
-    var link_name = b:markdown_extras_links[link_id]
+
+    # Find the closest between [ and (
+    var symbol = ''
+    if searchpos('[', 'nW') == [0, 0]
+      symbol = '('
+    elseif searchpos('(', 'nW') == [0, 0]
+      symbol = '['
+    else
+      symbol = utils.IsLess(searchpos('[', 'nW'), searchpos('(', 'nW'))
+        ? '['
+        : '('
+    endif
+
+    exe $"norm! f{symbol}l"
+
+    var link_name = ''
+    var link_id = ''
+    if symbol == '['
+      b:markdown_extras_links = RefreshLinksDict()
+      link_id = utils.GetTextObject('i[').text
+      link_name = b:markdown_extras_links[link_id]
+    else
+      link_name = utils.GetTextObject('i(').text
+    endif
+
+    #
+    #
     # TODO At the moment only .md files have syntax highlight.
     var refFiletype = $'{fnamemodify(link_name, ":e")}' == 'md'
       ? 'markdown'
       : 'text'
+    # echom GetFileSize(link_name)
     if IsURL(link_name)
         || (filereadable(link_name) && GetFileSize(link_name) > 1000000)
       previewText = [link_name]

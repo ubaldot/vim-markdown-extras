@@ -3,11 +3,11 @@ vim9script
 import autoload "./constants.vim"
 
 export def Echoerr(msg: string)
-  echohl ErrorMsg | echo $'[markdown_extras] {msg}' | echohl None
+  echohl ErrorMsg | echom $'[markdown_extras] {msg}' | echohl None
 enddef
 
 export def Echowarn(msg: string)
-  echohl WarningMsg | echo $'[markdown_extras] {msg}' | echohl None
+  echohl WarningMsg | echom $'[markdown_extras] {msg}' | echohl None
 enddef
 
 export def FormatWithoutMoving(a: number = 0, b: number = 0)
