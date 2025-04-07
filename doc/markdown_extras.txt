@@ -206,14 +206,15 @@ filling it with he various keys.
 "large_files_threshold"   If you have large files linked to your document,
 			  then you may experience lags or malfunctioning.
 			  This value sets the minimum value in bytes after
-			  which a file is considered large. If a file exceeds
-			  such a threshold, then it is considered large and the
-			  behavior of the plugin changes to accommodate
-			  possible lags and malfunctioning. The drawback in
-			  using this feature is that the preview or opening of
-			  small files will also be delayed due to the
-			  "large file check" procedure.
-			  To disable this feature, set the value of 0.
+			  which a file is considered large.
+			  If a file is considered large, then the behavior of
+			  the plugin changes to accommodate possible lags
+			  and malfunctioning.
+			  The drawback in using such a feature is that the
+			  preview and the opening of small files will also
+			  be delayed due to the "large file check" procedure
+			  is performed on every file.
+			  To disable this feature, set this value to 0.
                           Default: 0.
 
 
