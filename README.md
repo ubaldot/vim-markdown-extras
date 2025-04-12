@@ -155,26 +155,26 @@ a look at `:h markdown-extras`.
 
 ### Limitations
 
-Nothing is perfect, and this plugin is no exception. Here are some random
+Nothing is perfect, and this plugin is no exception. Here are some known
 limitations:
 
-- Markdown is not a regular language, and many features rely on regular
-  expressions. This means there will always be corner cases where some features
-  fail. Parsing non-regular languages requires more advanced tools like
-  Tree-sitter. However, it is generally not a good idea to "punish" all use
-  cases with slow and memory-hungry solutions just for a few edge cases that
-  likely occur very sporadically. The choice is to favor efficiency and speed
-  for most use cases, rather than having as much coverage as possible.
+- **Markdown is not a regular language**, yet many features rely on regular
+  expressions. This means there will always be edge cases where some features
+  fail. Properly parsing non-regular languages requires more advanced tools
+  like Tree-sitter. However, I personally don't believe it's worth "punishing"
+  all use cases with slower, more memory-hungry solutions just to handle rare
+  edge cases. The choice here is to favor efficiency and speed for the
+  majority, rather than striving for exhaustive coverage.
 
-- The plugin somewhat forces the use of reference-style links where the
-  reference identifier is a number. You could try using strings as reference
-  identifiers, but I won't guarantee that everything will work fine.
+- **The plugin leans toward using reference-style links** with numeric
+  identifiers. You can try using strings as identifiers, but I can't guarantee
+  everything will work as expected.
 
-- The link management system heavily relies on the content below the
-  `<!-- DO NOT REMOVE vim-markdown-extras references DO NOT REMOVE -->`
-  comment. That comment must be unique. Attempting to pick links randomly
-  scattered throughout the buffer using regular expressions would most likely
-  lead to the issue described in the first bullet point.
+- **The link management system depends on a special comment:**
+  `<!-- DO NOT REMOVE vim-markdown-extras references DO NOT REMOVE -->` This
+  comment must be unique and present. Trying to locate links scattered
+  randomly throughout the buffer using regular expressions would likely run
+  into the same problems mentioned in the first point.
 
 ### License
 
