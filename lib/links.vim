@@ -248,6 +248,24 @@ def IsBinary(link: string): bool
   return is_binary
 enddef
 
+def GetRightWindowID(): number
+  var cur_winid = win_getid()
+  var cur_winpos = win_screenpos(win_id2win(cur_winid))
+  var cur_top = cur_winpos[0]
+  var cur_left = cur_winpos[1]
+
+  var winids = getwininfo()
+  for win in winids
+    if win.winid != cur_winid
+      var [top, left] = win_screenpos(win.winid)
+      if top == cur_top && left > cur_left
+        return win.winid
+      endif
+    endif
+  endfor
+  return -1 # No right window found
+enddef
+
 export def OpenLink(is_split: bool = false)
     InitScriptLocalVars()
     # Get link name depending of reference-style or inline link
@@ -286,9 +304,13 @@ export def OpenLink(is_split: bool = false)
         && (0 <= file_size && file_size <= large_files_threshold )
         && !IsBinary(link)
       if is_split
-        vsplit
+        if GetRightWindowID() == -1
+          win_execute(win_getid(), 'vsplit')
+        endif
+        win_execute(GetRightWindowID(), $'edit {link}')
+      else
+        exe $'edit {link}'
       endif
-      exe $'edit {link}'
     else
       exe $":Open {link}"
     endif
