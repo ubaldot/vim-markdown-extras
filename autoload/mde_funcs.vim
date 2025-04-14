@@ -188,7 +188,7 @@ export def RemoveAll()
 enddef
 
 # ---- auto-completion --------------
-export def MDEOmniFunc(findstart: number, base: string): any
+export def OmniFunc(findstart: number, base: string): any
     # Define the dictionary
     b:markdown_extras_links = links.RefreshLinksDict()
 
