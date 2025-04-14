@@ -238,64 +238,64 @@ endif
 if use_default_mappings
   # ------------ Text style mappings ------------------
   if !hasmapto('<Plug>MarkdownBold')
-   if  empty(mapcheck('<localleader>b', 'n', 1))
+   if empty(mapcheck('<localleader>b', 'n', 1))
     nnoremap <buffer> <localleader>b <Plug>MarkdownBold
    endif
-   if  empty(mapcheck('<localleader>b', 'x', 1))
+   if empty(mapcheck('<localleader>b', 'x', 1))
     xnoremap <buffer> <localleader>b <Plug>MarkdownBold
    endif
   endif
 
   if !hasmapto('<Plug>MarkdownItalic')
-   if  empty(mapcheck('<localleader>i', 'n', 1))
+   if empty(mapcheck('<localleader>i', 'n', 1))
     nnoremap <buffer> <localleader>i <Plug>MarkdownItalic
    endif
-   if  empty(mapcheck('<localleader>i', 'x', 1))
+   if empty(mapcheck('<localleader>i', 'x', 1))
     xnoremap <buffer> <localleader>i <Plug>MarkdownItalic
    endif
   endif
 
   if !hasmapto('<Plug>MarkdownStrike')
-   if  empty(mapcheck('<localleader>s', 'n', 1))
+   if empty(mapcheck('<localleader>s', 'n', 1))
     nnoremap <buffer> <localleader>s <Plug>MarkdownStrike
    endif
-   if  empty(mapcheck('<localleader>s', 'x', 1))
+   if empty(mapcheck('<localleader>s', 'x', 1))
     xnoremap <buffer> <localleader>s <Plug>MarkdownStrike
    endif
   endif
 
   if !hasmapto('<Plug>MarkdownCode')
-   if  empty(mapcheck('<localleader>c', 'n', 1))
+   if empty(mapcheck('<localleader>c', 'n', 1))
     nnoremap <buffer> <localleader>c <Plug>MarkdownCode
    endif
-   if  empty(mapcheck('<localleader>c', 'x', 1))
+   if empty(mapcheck('<localleader>c', 'x', 1))
     xnoremap <buffer> <localleader>c <Plug>MarkdownCode
    endif
   endif
 
   if !hasmapto('<Plug>MarkdownUnderline')
-   if  empty(mapcheck('<localleader>u', 'n', 1))
+   if empty(mapcheck('<localleader>u', 'n', 1))
     nnoremap <buffer> <localleader>u <Plug>MarkdownUnderline
    endif
-   if  empty(mapcheck('<localleader>u', 'x', 1))
+   if empty(mapcheck('<localleader>u', 'x', 1))
     xnoremap <buffer> <localleader>u <Plug>MarkdownUnderline
    endif
   endif
 
   if !hasmapto('<Plug>MarkdownCodeBlock')
-   if  empty(mapcheck('<localleader>f', 'n', 1))
+   if empty(mapcheck('<localleader>f', 'n', 1))
     nnoremap <buffer> <localleader>f <Plug>MarkdownCodeBlock
    endif
-   if  empty(mapcheck('<localleader>f', 'x', 1))
+   if empty(mapcheck('<localleader>f', 'x', 1))
     xnoremap <buffer> <localleader>f <Plug>MarkdownCodeBlock
    endif
   endif
 
   if !hasmapto('<Plug>MarkdownQuoteBlock')
-   if  empty(mapcheck('<localleader>q', 'n', 1))
+   if empty(mapcheck('<localleader>q', 'n', 1))
     nnoremap <buffer> <localleader>q <Plug>MarkdownQuoteBlock
    endif
-   if  empty(mapcheck('<localleader>q', 'x', 1))
+   if empty(mapcheck('<localleader>q', 'x', 1))
     xnoremap <buffer> <localleader>q <Plug>MarkdownQuoteBlock
    endif
   endif
