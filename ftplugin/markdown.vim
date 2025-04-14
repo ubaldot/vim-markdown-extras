@@ -1,11 +1,11 @@
 vim9script
 
-import autoload "../../lib/funcs.vim"
-import autoload "../../lib/links.vim"
-import autoload '../../lib/utils.vim'
-import autoload '../../lib/highlight.vim'
-import autoload '../../lib/constants.vim'
-import autoload '../../lib/indices.vim'
+import autoload "../lib/funcs.vim"
+import autoload "../lib/links.vim"
+import autoload '../lib/utils.vim'
+import autoload '../lib/highlight.vim'
+import autoload '../lib/constants.vim'
+import autoload '../lib/indices.vim'
 
 b:markdown_extras_links = links.RefreshLinksDict()
 
