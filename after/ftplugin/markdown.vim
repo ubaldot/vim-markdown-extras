@@ -47,7 +47,6 @@ if exists('g:markdown_extras_config') != 0
 endif
 
 if use_omnifunc
-    echom use_omnifunc
     setlocal completeopt=menu,menuone,noselect
     setlocal omnifunc=MyOmniFunc
     inoremap <buffer> [ [<C-x><C-o>
