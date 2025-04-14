@@ -1,11 +1,11 @@
 vim9script
 
-import autoload "../lib/funcs.vim"
-import autoload "../lib/links.vim"
-import autoload '../lib/utils.vim'
-import autoload '../lib/highlight.vim'
-import autoload '../lib/constants.vim'
-import autoload '../lib/indices.vim'
+import autoload "../autoload/mde_funcs.vim"
+import autoload "../autoload/links.vim"
+import autoload '../autoload/utils.vim'
+import autoload '../autoload/highlight.vim'
+import autoload '../autoload/constants.vim'
+import autoload '../autoload/indices.vim'
 
 b:markdown_extras_links = links.RefreshLinksDict()
 
@@ -14,29 +14,8 @@ command! -buffer -nargs=0 MDEConvertLinks links.ConvertLinks()
 command! -buffer -nargs=0 MDEIndices indices.ShowIndices()
 
 # Jump back to the previous file
-nnoremap <buffer> <backspace> <ScriptCmd>funcs.GoToPrevVisitedBuffer()<cr>
+nnoremap <buffer> <backspace> <ScriptCmd>mde_funcs.GoToPrevVisitedBuffer()<cr>
 
-# ---- auto-completion --------------
-def g:MDEOmniFunc(findstart: number, base: string): any
-    # Define the dictionary
-    b:markdown_extras_links = links.RefreshLinksDict()
-
-    if findstart == 1
-        # Find the start of the word
-        var line = getline('.')
-        var start = col('.')
-        while start > 1 && getline('.')[start - 1] =~ '\d'
-            start -= 1
-        endwhile
-        return start
-    else
-        var matches = []
-        for key in keys(b:markdown_extras_links)
-            add(matches, {word: key, menu: b:markdown_extras_links[key]})
-        endfor
-        return {words: matches}
-    endif
-enddef
 
 # -------------- prettier ------------------------
 var use_prettier = true
@@ -116,7 +95,7 @@ endif
 
 # -------- Mappings ------------
 # Redefinition of <cr>. Unmap if user does not want it.
-inoremap <buffer> <silent> <CR> <ScriptCmd>funcs.CR_Hacked()<CR>
+inoremap <buffer> <silent> <CR> <ScriptCmd>mde_funcs.CR_Hacked()<CR>
 if exists('g:markdown_extras_config')
     && has_key(g:markdown_extras_config, 'hack_CR')
     && !g:markdown_extras_config['hack_CR']
@@ -137,7 +116,7 @@ endif
 
 if empty(maparg('<Plug>MarkdownToggleCheck'))
   noremap <script> <buffer> <Plug>MarkdownToggleCheck
-        \ <ScriptCmd>funcs.ToggleMark()<cr>
+        \ <ScriptCmd>mde_funcs.ToggleMark()<cr>
 endif
 
 def SetLinkOpFunc()
@@ -215,7 +194,7 @@ endif
 
 if empty(maparg('<Plug>MarkdownRemove'))
   noremap <script> <buffer> <Plug>MarkdownRemove
-        \ <ScriptCmd>funcs.RemoveAll()<cr>
+        \ <ScriptCmd>mde_funcs.RemoveAll()<cr>
 endif
 
 def SetHighlightOpFunc()
@@ -259,71 +238,117 @@ endif
 if use_default_mappings
   # ------------ Text style mappings ------------------
   if !hasmapto('<Plug>MarkdownBold')
+   if  empty(mapcheck('<localleader>b', 'n', 1))
     nnoremap <buffer> <localleader>b <Plug>MarkdownBold
+   endif
+   if  empty(mapcheck('<localleader>b', 'x', 1))
     xnoremap <buffer> <localleader>b <Plug>MarkdownBold
+   endif
   endif
 
   if !hasmapto('<Plug>MarkdownItalic')
+   if  empty(mapcheck('<localleader>i', 'n', 1))
     nnoremap <buffer> <localleader>i <Plug>MarkdownItalic
+   endif
+   if  empty(mapcheck('<localleader>i', 'x', 1))
     xnoremap <buffer> <localleader>i <Plug>MarkdownItalic
+   endif
   endif
 
   if !hasmapto('<Plug>MarkdownStrike')
+   if  empty(mapcheck('<localleader>s', 'n', 1))
     nnoremap <buffer> <localleader>s <Plug>MarkdownStrike
+   endif
+   if  empty(mapcheck('<localleader>s', 'x', 1))
     xnoremap <buffer> <localleader>s <Plug>MarkdownStrike
+   endif
   endif
 
   if !hasmapto('<Plug>MarkdownCode')
+   if  empty(mapcheck('<localleader>c', 'n', 1))
     nnoremap <buffer> <localleader>c <Plug>MarkdownCode
+   endif
+   if  empty(mapcheck('<localleader>c', 'x', 1))
     xnoremap <buffer> <localleader>c <Plug>MarkdownCode
+   endif
   endif
 
   if !hasmapto('<Plug>MarkdownUnderline')
+   if  empty(mapcheck('<localleader>u', 'n', 1))
     nnoremap <buffer> <localleader>u <Plug>MarkdownUnderline
+   endif
+   if  empty(mapcheck('<localleader>u', 'x', 1))
     xnoremap <buffer> <localleader>u <Plug>MarkdownUnderline
+   endif
   endif
 
   if !hasmapto('<Plug>MarkdownCodeBlock')
+   if  empty(mapcheck('<localleader>f', 'n', 1))
     nnoremap <buffer> <localleader>f <Plug>MarkdownCodeBlock
+   endif
+   if  empty(mapcheck('<localleader>f', 'x', 1))
     xnoremap <buffer> <localleader>f <Plug>MarkdownCodeBlock
+   endif
   endif
 
   if !hasmapto('<Plug>MarkdownQuoteBlock')
+   if  empty(mapcheck('<localleader>q', 'n', 1))
     nnoremap <buffer> <localleader>q <Plug>MarkdownQuoteBlock
+   endif
+   if  empty(mapcheck('<localleader>q', 'x', 1))
     xnoremap <buffer> <localleader>q <Plug>MarkdownQuoteBlock
+   endif
   endif
 
   # Toggle checkboxes
   if !hasmapto('<Plug>MarkdownToggleCheck')
+   if empty(mapcheck('<localleader>x', 'n', 1))
     nnoremap <buffer> <silent> <localleader>x <Plug>MarkdownToggleCheck
+   endif
   endif
 
   # ---------- Remove all --------------------------
   if !hasmapto('<Plug>MarkdownRemove')
+   if empty(mapcheck('<localleader>d', 'n', 1))
     nnoremap <localleader>d <Plug>MarkdownRemove
+   endif
   endif
   # ---------- Links --------------------------
   if !hasmapto('<Plug>MarkdownAddLink')
+   if empty(mapcheck('<localleader>l', 'n', 1))
     nnoremap <buffer> <localleader>l <Plug>MarkdownAddLink
+   endif
+   if empty(mapcheck('<localleader>l', 'x', 1))
     xnoremap <buffer> <localleader>l <Plug>MarkdownAddLink
+   endif
   endif
 
   if !hasmapto('<Plug>MarkdownGotoLinkForward')
+   if empty(mapcheck('<localleader>n', 'n', 1))
     nnoremap <buffer> <silent> <localleader>n <Plug>MarkdownGotoLinkForward
+   endif
   endif
 
   if !hasmapto('<Plug>MarkdownGotoLinkBackwards')
+   if empty(mapcheck('<localleader>N', 'n', 1))
     nnoremap <buffer> <silent> <localleader>N <Plug>MarkdownGotoLinkBackwards
+   endif
   endif
 
   # ---------- Highlight --------------------------
   if !hasmapto('<Plug>MarkdownHighlight')
+   if empty(mapcheck('<localleader>h', 'n', 1))
     nnoremap <localleader>h <Plug>MarkdownHighlight
+   endif
+   if empty(mapcheck('<localleader>h', 'x', 1))
     xnoremap <localleader>h <Plug>MarkdownHighlight
+   endif
   endif
 
   # ------------------------------------------------------
   if !hasmapto('<Plug>MarkdownLinkPreview')
+   if empty(mapcheck('K', 'n', 1))
     nnoremap <buffer> <silent> K <Plug>MarkdownLinkPreview
+   endif
   endif
 endif

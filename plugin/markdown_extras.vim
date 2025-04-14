@@ -4,9 +4,8 @@ vim9script noclear
 # Maintainer:	Ubaldo Tiberi
 # License: BSD-3
 
-import autoload './../lib/utils.vim'
-import autoload './../lib/funcs.vim'
-
+import autoload './../autoload/utils.vim'
+import autoload './../autoload/mde_funcs.vim'
 
 if has('win32') && !has("patch-9.1.1270")
   # Needs Vim version 9.0 and above
@@ -31,6 +30,6 @@ g:markdown_extras_loaded = true
 
 augroup MARKDOWN_EXTRAS_VISITED_BUFFERS
     autocmd!
-    autocmd BufEnter *.md funcs.AddVisitedBuffer()
-    autocmd BufDelete *.md funcs.RemoveVisitedBuffer(bufnr())
+    autocmd BufEnter *.md mde_funcs.AddVisitedBuffer()
+    autocmd BufDelete *.md mde_funcs.RemoveVisitedBuffer(bufnr())
 augroup END

@@ -5,8 +5,8 @@ vim9script
 
 import "./common.vim"
 import "./../ftplugin/markdown.vim"
-import "./../lib/utils.vim"
-import "./../lib/constants.vim"
+import "./../autoload/utils.vim"
+import "./../autoload/constants.vim"
 
 var WaitForAssert = common.WaitForAssert
 var TEXT_STYLES_DICT = constants.TEXT_STYLES_DICT

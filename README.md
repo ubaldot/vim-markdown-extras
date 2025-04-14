@@ -72,13 +72,14 @@ use `<localleader>l` plus some motion to create links, like for example
 `<localleader>lfa` (note that `fa` is a motion).
 
 You can also dynamically refer to links while typing by setting the `omnifunc`
-option to `MDEOmniFunc` in your `~/.vim/after/ftplugin/markdown.vim` file.
-For example, to trigger links autocompletion when you hit `[`, add the
+option to `mde_funcs.MDEOmniFunc` in your `~/.vim/after/ftplugin/markdown.vim`
+file. For example, to trigger links auto-completion when you hit `[`, add the
 following lines to your `~/.vim/after/ftplugin/markdown.vim` file:
 
 ```vim
     setlocal completeopt=menu,menuone,noselect
-    setlocal omnifunc=MDEOmniFunc
+    import autoload "mde_funcs.vim"
+    setlocal omnifunc=mde_funcs.MDEOmniFunc
     inoremap <buffer> [ [<C-x><C-o>
 ```
 

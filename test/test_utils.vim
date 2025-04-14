@@ -4,8 +4,8 @@ vim9script
 # Copied and adjusted from Vim distribution
 
 import "./common.vim"
-import "../lib/constants.vim"
-import "../lib/utils.vim"
+import "../autoload/constants.vim"
+import "../autoload/utils.vim"
 const WaitForAssert = common.WaitForAssert
 
 const TEXT_STYLES_DICT = constants.TEXT_STYLES_DICT

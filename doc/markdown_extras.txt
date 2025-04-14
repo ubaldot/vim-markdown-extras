@@ -227,14 +227,15 @@ g:markdown_extras_indices List containing the path of indices files.
 
 						  *markdown_extras_omnifunc*
 You can autocomplete links in the current buffer by setting the 'omnifunc' to
-`MDEOmniFunc` in your `~/.vim/after/ftplugin/markdown.vim` file.
+`mde_funcs.MDEOmniFunc` in your `~/.vim/after/ftplugin/markdown.vim` file.
 If such a file does not exists, create it.
 
 For example, to trigger links autocompletion when you hit `[`, add the following
 lines to your `~/.vim/after/ftplugin/markdown.vim` file:
 >
     setlocal completeopt=menu,menuone,noselect
-    setlocal omnifunc=MDEOmniFunc
+    import autoload "mde_funcs.vim"
+    setlocal omnifunc=mde_funcs.MDEOmniFunc
     inoremap <buffer> [ [<C-x><C-o>
 <
 ==============================================================================

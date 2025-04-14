@@ -186,3 +186,25 @@ export def RemoveAll()
     utils.UnsetQuoteBlock()
   endif
 enddef
+
+# ---- auto-completion --------------
+export def MDEOmniFunc(findstart: number, base: string): any
+    # Define the dictionary
+    b:markdown_extras_links = links.RefreshLinksDict()
+
+    if findstart == 1
+        # Find the start of the word
+        var line = getline('.')
+        var start = col('.')
+        while start > 1 && getline('.')[start - 1] =~ '\d'
+            start -= 1
+        endwhile
+        return start
+    else
+        var matches = []
+        for key in keys(b:markdown_extras_links)
+            add(matches, {word: key, menu: b:markdown_extras_links[key]})
+        endfor
+        return {words: matches}
+    endif
+enddef
