@@ -67,12 +67,22 @@ Next, create some new links and use `<localleader>n` and `<localleader>N` to
 locate their position in the current buffer. When on a link text, hit
 `<localleader>d` to remove the link.
 
-Although you can hit `<enter>` to link a word, more generlly you can
+Although you can hit `<enter>` to link a word, more generally you can
 use `<localleader>l` plus some motion to create links, like for example
 `<localleader>lfa` (note that `fa` is a motion).
 
-You can also dynamically refer to links while typing. Go in insert mode and
-type `[` to see a list of all available links.
+You can also dynamically refer to links while typing by setting the `omnifunc`
+option to `MDEOmniFunc` in your `~/.vim/after/ftplugin/markdown.vim` file.
+For example, to trigger links autocompletion when you hit `[`, add the
+following lines to your `~/.vim/after/ftplugin/markdown.vim` file:
+
+```vim
+    setlocal completeopt=menu,menuone,noselect
+    setlocal omnifunc=MDEOmniFunc
+    inoremap <buffer> [ [<C-x><C-o>
+```
+
+see `:h completeopt` to customize the menu behavior.
 
 In case you are working on a markdown file with mixed inline and
 reference-style links, you can convert the former to the latter by using

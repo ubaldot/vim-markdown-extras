@@ -1,11 +1,11 @@
 vim9script
 
-import autoload "../../lib/funcs.vim"
-import autoload "../../lib/links.vim"
-import autoload '../../lib/utils.vim'
-import autoload '../../lib/highlight.vim'
-import autoload '../../lib/constants.vim'
-import autoload '../../lib/indices.vim'
+import autoload "../lib/funcs.vim"
+import autoload "../lib/links.vim"
+import autoload '../lib/utils.vim'
+import autoload '../lib/highlight.vim'
+import autoload '../lib/constants.vim'
+import autoload '../lib/indices.vim'
 
 b:markdown_extras_links = links.RefreshLinksDict()
 
@@ -17,7 +17,7 @@ command! -buffer -nargs=0 MDEIndices indices.ShowIndices()
 nnoremap <buffer> <backspace> <ScriptCmd>funcs.GoToPrevVisitedBuffer()<cr>
 
 # ---- auto-completion --------------
-def MyOmniFunc(findstart: number, base: string): any
+def g:MDEOmniFunc(findstart: number, base: string): any
     # Define the dictionary
     b:markdown_extras_links = links.RefreshLinksDict()
 
@@ -37,21 +37,6 @@ def MyOmniFunc(findstart: number, base: string): any
         return {words: matches}
     endif
 enddef
-
-# Set the custom omnifunction
-var use_omnifunc = true
-
-if exists('g:markdown_extras_config') != 0
-      && has_key(g:markdown_extras_config, 'omnifunc')
-      use_omnifunc = g:markdown_extras_config['omnifunc']
-endif
-
-if use_omnifunc
-    setlocal completeopt=menu,menuone,noselect
-    setlocal omnifunc=MyOmniFunc
-    inoremap <buffer> [ [<C-x><C-o>
-endif
-
 
 # -------------- prettier ------------------------
 var use_prettier = true

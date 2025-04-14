@@ -191,9 +191,6 @@ filling it with he various keys.
         "use_prettier"    Set to |true| if you want to use `prettier` formatter.
                           `prettier` needs to be installed separately.
                           Default |true|.
-        "omnifunc"        Set to |true| if you want to use the plugin bundled
-			  'omnifunc'.
-                          Default |true|.
         "use_nerd_fonts"  To set eye-candy check-boxes. Require some nerd-font
                           installed. Default |false|.
         "smart_textstyle" Whenever possible, text styles are kept
@@ -223,10 +220,23 @@ filling it with he various keys.
                           Default: 0.
 
 
-                                          *g:markdown_extras_indices*
+						*g:markdown_extras_indices*
 g:markdown_extras_indices List containing the path of indices files.
                           Default: empty
 
+
+						  *markdown_extras_omnifunc*
+You can autocomplete links in the current buffer by setting the 'omnifunc' to
+`MDEOmniFunc` in your `~/.vim/after/ftplugin/markdown.vim` file.
+If such a file does not exists, create it.
+
+For example, to trigger links autocompletion when you hit `[`, add the following
+lines to your `~/.vim/after/ftplugin/markdown.vim` file:
+>
+    setlocal completeopt=menu,menuone,noselect
+    setlocal omnifunc=MDEOmniFunc
+    inoremap <buffer> [ [<C-x><C-o>
+<
 ==============================================================================
 COMMANDS                                         *markdown-extras-commands*
 

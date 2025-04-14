@@ -4,7 +4,7 @@ vim9script
 # Copied and adjusted from Vim distribution
 
 import "./common.vim"
-import "./../after/ftplugin/markdown.vim"
+import "./../ftplugin/markdown.vim"
 import "./../lib/utils.vim"
 import "./../lib/constants.vim"
 
