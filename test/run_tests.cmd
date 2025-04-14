@@ -14,6 +14,7 @@ REM
     echo vim9script
     echo/
     echo set runtimepath+=..
+    echo set runtimepath+=../after
     echo filetype plugin indent on
     echo syntax on
 ) >> "%VIMRC%"

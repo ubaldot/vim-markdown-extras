@@ -2,7 +2,7 @@ vim9script
 
 import autoload './constants.vim'
 import autoload './utils.vim'
-import autoload '../ftplugin/markdown.vim'
+import autoload '../after/ftplugin/markdown.vim'
 
 var main_id: number
 var prompt_id: number

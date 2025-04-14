@@ -1,11 +1,11 @@
 vim9script
 
-import autoload "../lib/funcs.vim"
-import autoload "../lib/links.vim"
-import autoload '../lib/utils.vim'
-import autoload '../lib/highlight.vim'
-import autoload '../lib/constants.vim'
-import autoload '../lib/indices.vim'
+import autoload "../../lib/funcs.vim"
+import autoload "../../lib/links.vim"
+import autoload '../../lib/utils.vim'
+import autoload '../../lib/highlight.vim'
+import autoload '../../lib/constants.vim'
+import autoload '../../lib/indices.vim'
 
 b:markdown_extras_links = links.RefreshLinksDict()
 
@@ -39,10 +39,20 @@ def MyOmniFunc(findstart: number, base: string): any
 enddef
 
 # Set the custom omnifunction
-setlocal completeopt=menu,menuone,noselect
-setlocal omnifunc=MyOmniFunc
+var use_omnifunc = true
 
-inoremap <buffer> [ [<C-x><C-o>
+if exists('g:markdown_extras_config') != 0
+      && has_key(g:markdown_extras_config, 'omnifunc')
+      use_omnifunc = g:markdown_extras_config['omnifunc']
+endif
+
+if use_omnifunc
+    echom use_omnifunc
+    setlocal completeopt=menu,menuone,noselect
+    setlocal omnifunc=MyOmniFunc
+    inoremap <buffer> [ [<C-x><C-o>
+endif
+
 
 # -------------- prettier ------------------------
 var use_prettier = true
