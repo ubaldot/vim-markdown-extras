@@ -1,11 +1,11 @@
 vim9script
 
-import autoload "../autoload/mde_funcs.vim"
-import autoload "../autoload/links.vim"
-import autoload '../autoload/utils.vim'
-import autoload '../autoload/highlight.vim'
-import autoload '../autoload/constants.vim'
-import autoload '../autoload/indices.vim'
+import autoload "../autoload/mde_funcs.vim" as funcs
+import autoload "../autoload/mde_links.vim" as links
+import autoload '../autoload/mde_utils.vim' as utils
+import autoload '../autoload/mde_highlight.vim' as highlight
+import autoload '../autoload/mde_constants.vim' as constants
+import autoload '../autoload/mde_indices.vim' as indices
 
 b:markdown_extras_links = links.RefreshLinksDict()
 
@@ -14,7 +14,7 @@ command! -buffer -nargs=0 MDEConvertLinks links.ConvertLinks()
 command! -buffer -nargs=0 MDEIndices indices.ShowIndices()
 
 # Jump back to the previous file
-nnoremap <buffer> <backspace> <ScriptCmd>mde_funcs.GoToPrevVisitedBuffer()<cr>
+nnoremap <buffer> <backspace> <ScriptCmd>funcs.GoToPrevVisitedBuffer()<cr>
 
 
 # -------------- prettier ------------------------
@@ -95,7 +95,7 @@ endif
 
 # -------- Mappings ------------
 # Redefinition of <cr>. Unmap if user does not want it.
-inoremap <buffer> <silent> <CR> <ScriptCmd>mde_funcs.CR_Hacked()<CR>
+inoremap <buffer> <silent> <CR> <ScriptCmd>funcs.CR_Hacked()<CR>
 if exists('g:markdown_extras_config')
     && has_key(g:markdown_extras_config, 'hack_CR')
     && !g:markdown_extras_config['hack_CR']
@@ -116,7 +116,7 @@ endif
 
 if empty(maparg('<Plug>MarkdownToggleCheck'))
   noremap <script> <buffer> <Plug>MarkdownToggleCheck
-        \ <ScriptCmd>mde_funcs.ToggleMark()<cr>
+        \ <ScriptCmd>funcs.ToggleMark()<cr>
 endif
 
 def SetLinkOpFunc()
@@ -194,7 +194,7 @@ endif
 
 if empty(maparg('<Plug>MarkdownRemove'))
   noremap <script> <buffer> <Plug>MarkdownRemove
-        \ <ScriptCmd>mde_funcs.RemoveAll()<cr>
+        \ <ScriptCmd>funcs.RemoveAll()<cr>
 endif
 
 def SetHighlightOpFunc()

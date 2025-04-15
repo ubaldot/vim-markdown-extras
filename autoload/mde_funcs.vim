@@ -1,9 +1,9 @@
 vim9script
 
-import autoload './constants.vim'
-import autoload './utils.vim'
-import autoload './highlight.vim'
-import autoload './links.vim'
+import autoload './mde_constants.vim' as constants
+import autoload './mde_utils.vim' as utils
+import autoload './mde_highlight.vim' as highlight
+import autoload './mde_links.vim' as links
 
 var visited_buffers = []
 var visited_buffers_max_length = 100

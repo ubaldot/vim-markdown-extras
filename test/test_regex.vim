@@ -1,6 +1,6 @@
 vim9script
 
-import "../autoload/constants.vim"
+import "../autoload/mde_constants.vim" as constants
 
 const CODE_OPEN_REGEX = constants.CODE_OPEN_DICT['`']
 const CODE_CLOSE_REGEX = constants.CODE_CLOSE_DICT['`']

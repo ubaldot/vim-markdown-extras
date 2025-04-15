@@ -4,9 +4,9 @@ vim9script
 # Copied and adjusted from Vim distribution
 
 import "./common.vim"
-import "../autoload/constants.vim"
-import "../autoload/utils.vim"
-import "../autoload/links.vim"
+import "../autoload/mde_constants.vim" as constants
+import "../autoload/mde_utils.vim" as utils
+import "../autoload/mde_links.vim" as links
 const WaitForAssert = common.WaitForAssert
 
 # Test file 1
