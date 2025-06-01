@@ -184,7 +184,7 @@ endif
 
 if empty(maparg('<Plug>MarkdownCode'))
   noremap <script> <buffer> <Plug>MarkdownCode
-        \ <ScriptCmd>SetSurroundOpFunc('MarkdownCode')<cr>g@
+        \ <ScriptCmd>SetSurroundOpFunc('markdownCode')<cr>g@
 endif
 
 if empty(maparg('<Plug>MarkdownUnderline'))
