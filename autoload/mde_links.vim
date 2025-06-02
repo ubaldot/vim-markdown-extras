@@ -312,7 +312,7 @@ export def OpenLink(is_split: bool = false)
         exe $'edit {link}'
       endif
     else
-      exe $":Open {link}"
+      exe $":Open {fnameescape(link)}"
     endif
     setpos('.', saved_curpos)
 enddef
