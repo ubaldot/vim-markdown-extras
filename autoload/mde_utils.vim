@@ -124,7 +124,6 @@ export def SurroundSimple(style: string, type: string = '')
   endif
 enddef
 
-
 export def SurroundSmart(style: string, type: string = '')
   # It tries to preserve the style.
   # In general, you may want to pass constant.TEXT_STYLES_DICT as a parameter.
@@ -264,7 +263,6 @@ export def SurroundSmart(style: string, type: string = '')
   # Next, we have to adjust the text between A and B, by removing all the
   # possible delimiters left between them.
 
-
   # If on the same line
   if lA == lB
     # Overwrite everything that is in the middle
@@ -386,7 +384,7 @@ export def IsInRange(): dict<list<list<number>>>
   #
   # NOTE: Due to that bundled markdown syntax file returns 'markdownItalic' and
   # 'markdownBold' regardless is the delimiters are '_' or '*', we need the
-  # StarOrUnrescore() function
+  # StarOrUnderscore() function
 
   def StarOrUnderscore(text_style: string): string
     var text_style_refined = ''
@@ -414,6 +412,48 @@ export def IsInRange(): dict<list<list<number>>>
   # Main function start here
   # text_style comes from vim-markdown
   const text_style = synIDattr(synID(line("."), col("."), 1), "name")
+
+  # Delimiter smart detection logic (non-recursive, move cursor to content area if found)
+  if text_style =~ 'Delimiter'
+    echomsg '[IsInRange] On Delimiter, try left/right (non-recursive, move cursor)'
+    var orig_line = line('.')
+    var orig_col = col('.')
+    var style_base = text_style->substitute('Delimiter$', '', '')
+    var open_len = has_key(constants.TEXT_STYLES_DICT, style_base) ? strchars(constants.TEXT_STYLES_DICT[style_base].open_delim) : 2
+    var close_len = has_key(constants.TEXT_STYLES_DICT, style_base) ? strchars(constants.TEXT_STYLES_DICT[style_base].close_delim) : 2
+    var found = 0
+    # Try left within delimiter length
+    for i in range(1, open_len)
+      if orig_col - i < 1 | continue | endif
+      call cursor(orig_line, orig_col - i)
+      var left_style = synIDattr(synID(line('.'), col('.'), 1), 'name')
+      echomsg '[IsInRange] left_style: ' .. left_style
+      if left_style !~ 'Delimiter' && left_style != ''
+        found = 1
+        break
+      endif
+    endfor
+    # Try right within delimiter length (only if not found on left)
+    if !found
+      for i in range(1, close_len)
+        call cursor(orig_line, orig_col + i)
+        var right_style = synIDattr(synID(line('.'), col('.'), 1), 'name')
+        echomsg '[IsInRange] right_style: ' .. right_style
+        if right_style !~ 'Delimiter' && right_style != ''
+          found = 1
+          break
+        endif
+      endfor
+    endif
+    # If found, cursor is now at content area; do not restore
+    if found
+      text_style = synIDattr(synID(line('.'), col('.'), 1), 'name')
+    else
+      # If not found, keep original position and style
+      call cursor(orig_line, orig_col)
+    endif
+  endif
+
   const text_style_adjusted =
     text_style == 'markdownItalic' || text_style == 'markdownBold'
      ? StarOrUnderscore(synIDattr(synID(line("."), col("."), 1), "name"))
