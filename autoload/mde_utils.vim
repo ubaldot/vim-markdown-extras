@@ -411,7 +411,7 @@ export def IsInRange(): dict<list<list<number>>>
 
   # Main function start here
   # text_style comes from vim-markdown
-  const text_style = synIDattr(synID(line("."), col("."), 1), "name")
+  var text_style = synIDattr(synID(line("."), col("."), 1), "name")
 
   # Delimiter smart detection logic (non-recursive, move cursor to content area if found)
   if text_style =~ 'Delimiter'
