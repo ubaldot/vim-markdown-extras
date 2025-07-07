@@ -7,8 +7,14 @@ var indices_id = -1
 
 def IndicesCallback(id: number, idx: number)
   if idx > 0
-    var selection = getbufline(winbufnr(id), idx)[0]
-    exe $'edit {selection}'
+
+    if typename(g:markdown_extras_indices) == "list<string>"
+      var selection = getbufline(winbufnr(id), idx)[0]
+      exe $'edit {selection}'
+    elseif typename(g:markdown_extras_indices) == "dict<string>"
+      var selection = getbufline(winbufnr(id), idx)[0]
+      exe $'edit {g:markdown_extras_indices[selection]}'
+    endif
     indices_id = -1
   endif
 enddef
@@ -32,8 +38,13 @@ export def ShowIndices()
         wrap: 0,
         drag: 0,
       }
-    indices_id = popup_create(g:markdown_extras_indices, opts)
-    links.ShowPromptPopup(indices_id, g:markdown_extras_indices, " indices: ")
+    if typename(g:markdown_extras_indices) == "list<string>"
+      indices_id = popup_create(g:markdown_extras_indices, opts)
+      links.ShowPromptPopup(indices_id, g:markdown_extras_indices, " indices: ")
+    elseif typename(g:markdown_extras_indices) == "dict<string>"
+      indices_id = popup_create(keys(g:markdown_extras_indices), opts)
+      links.ShowPromptPopup(indices_id, keys(g:markdown_extras_indices), " indices: ")
+    endif
   else
     utils.Echoerr("'g:markdown_extras_indices' not set" )
   endif
