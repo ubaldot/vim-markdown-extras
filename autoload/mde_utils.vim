@@ -10,16 +10,7 @@ export def Echowarn(msg: string)
   echohl WarningMsg | echom $'[markdown_extras] {msg}' | echohl None
 enddef
 
-export def FormatWithoutMoving(a: number = 0, b: number = 0)
-  # To be used for formatting through autocmds
-  var view = winsaveview()
-  if a == 0 && b == 0
-    silent exe $":norm! gggqG"
-  else
-    var interval = b - a + 1
-    silent exe $":norm! {a}gg{interval}gqq"
-  endif
-
+def UndoFormatting()
   if v:shell_error != 0
     undo
     Echoerr($"'{&l:formatprg->matchstr('^\s*\S*')}' returned errors.")
@@ -32,6 +23,20 @@ export def FormatWithoutMoving(a: number = 0, b: number = 0)
       Echowarn("'formatprg' is empty. Using default formatter.")
     endif
   endif
+enddef
+
+export def FormatWithoutMoving(a: number = 0, b: number = 0)
+  # To be used for formatting through autocmds
+  var view = winsaveview()
+
+  defer UndoFormatting()
+  if a == 0 && b == 0
+    silent exe $":norm! gggqG"
+  else
+    var interval = b - a + 1
+    silent exe $":norm! {a}gg{interval}gqq"
+  endif
+
   winrestview(view)
 enddef
 
