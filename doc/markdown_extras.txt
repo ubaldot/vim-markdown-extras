@@ -221,8 +221,12 @@ filling it with he various keys.
 
 
 						*g:markdown_extras_indices*
-g:markdown_extras_indices List containing the path of indices files.
-                          Default: empty
+g:markdown_extras_indices list<string> or dict<string>.
+			  If list<string>, contain the path of indices files.
+			  If dict<string>, the values are the path of
+			  the indices files whereas the keys are aliases. In
+			  the popup menu only the alias are displayed.
+			  Default: empty
 
 
 						  *markdown_extras_omnifunc*
