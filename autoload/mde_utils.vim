@@ -31,7 +31,7 @@ export def FormatWithoutMoving(a: number = 0, b: number = 0)
 
   defer UndoFormatting()
   if a == 0 && b == 0
-    silent exe $":norm! gggqG"
+    normal! gggqG
   else
     var interval = b - a + 1
     silent exe $":norm! {a}gg{interval}gqq"
