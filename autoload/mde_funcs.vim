@@ -91,8 +91,8 @@ export def CR_Hacked()
   enddef
 
   # Break line at cursor position
-  var this_line = strcharpart(getline('.'), 0, charcharcol('.') - 1)
-  var next_line = strcharpart(getline('.'), charcharcol('.') - 1)
+  var this_line = strcharpart(getline('.'), 0, charcol('.') - 1)
+  var next_line = strcharpart(getline('.'), charcol('.') - 1)
 
 
   # Handle different cases if the current line is an item of a list
@@ -118,7 +118,7 @@ export def CR_Hacked()
   endif
 
   # The following is in case the cursor is on the lhs of the item_symbol
-  if charcharcol('.') < strchars(item_symbol)
+  if charcol('.') < strchars(item_symbol)
     if current_line =~ $'^\s*{variant_4}'
       this_line = $"{current_line->matchstr($'^\s*{variant_4}')}"
       next_line = strcharpart(current_line, strchars(item_symbol))
@@ -146,7 +146,7 @@ export def RemoveAll()
   # TODO could be refactored to increase speed, but it may not be necessary
   const range_info = utils.IsInRange()
   const prop_info = highlight.IsOnProp()
-  const syn_info = synIDattr(synID(line("."), charcharcol("."), 1), "name")
+  const syn_info = synIDattr(synID(line("."), charcol("."), 1), "name")
   const is_quote_block = getline('.') =~ '^>\s'
 
   # If on plain text, do nothing, just execute a normal! <BS>
@@ -195,7 +195,7 @@ export def OmniFunc(findstart: number, base: string): any
     if findstart == 1
         # Find the start of the word
         var line = getline('.')
-        var start = charcharcol('.')
+        var start = charcol('.')
         while start > 1 && getline('.')[start - 1] =~ '\d'
             start -= 1
         endwhile

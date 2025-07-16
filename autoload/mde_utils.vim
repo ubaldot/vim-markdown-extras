@@ -328,7 +328,7 @@ export def IsLess(l1: list<number>, l2: list<number>): bool
   # Lexicographic comparison on common prefix, i.e.for two vectors in N^n and
   # N^m you compare their projections onto the smaller subspace.
 
-  var min_length = min([len(l1), strchars(l2)])
+  var min_length = min([len(l1), len(l2)])
   var result = false
 
   for ii in range(min_length)
@@ -347,7 +347,7 @@ export def IsGreater(l1: list<number>, l2: list<number>): bool
   # Lexicographic comparison on common prefix, i.e.for two vectors in N^n and
   # N^m you compare their projections onto the smaller subspace.
 
-  var min_length = min([len(l1), strchars(l2)])
+  var min_length = min([len(l1), len(l2)])
   var result = false
 
   for ii in range(min_length)
