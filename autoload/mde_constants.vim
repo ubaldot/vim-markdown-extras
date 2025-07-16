@@ -61,7 +61,7 @@ export const TEXT_STYLES_DICT = {
   markdownCode: {open_delim: '`', close_delim: '`',
   open_regex: CODE_OPEN_REGEX, close_regex: CODE_CLOSE_REGEX },
 
-  # TODO on the delimiter synIDattr(synID(line("."), col("."), 1), "name")
+  # TODO on the delimiter synIDattr(synID(line("."), charcharcol("."), 1), "name")
   # return markdownCodeDelimiter instead of
   # markdownCodeBlockDelimiter. Perhaps it is a bug in vim-markdown. Hence, we
   # cannot include it here.
@@ -125,7 +125,7 @@ export const UNDERLINE_OPEN_DICT = {[TEXT_STYLES_DICT.markdownUnderline.open_del
 export const UNDERLINE_CLOSE_DICT = {[TEXT_STYLES_DICT.markdownUnderline.close_delim]:
   TEXT_STYLES_DICT.markdownUnderline.close_regex}
 
-# TODO on the delimiter synIDattr(synID(line("."), col("."), 1), "name")
+# TODO on the delimiter synIDattr(synID(line("."), charcharcol("."), 1), "name")
 # return markdownCodeDelimiter instead of
 # markdownCodeBlockDelimiter. Perhaps it is a bug in vim-markdown. Hence, we
   # cannot include it here.

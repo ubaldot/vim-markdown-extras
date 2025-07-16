@@ -459,7 +459,7 @@ export def PopupFilter(id: number,
       if key =~ '^\p$'
         prompt_text ..= key
       elseif keytrans(key) ==# "<BS>"
-        if len(prompt_text) > 0
+        if strchars(prompt_text) > 0
           prompt_text = prompt_text[: -2]
         endif
       elseif key == "\<c-u>"
@@ -595,7 +595,7 @@ export def CreateLink(type: string = '')
 
   # line and column of point B
   var lB = line("']")
-  var cB = type == 'line' ? len(getline(lB)) : col("']")
+  var cB = type == 'line' ? strchars(getline(lB)) : col("']")
 
   if getregion(getpos("'["), getpos("']"))[0] =~ '^\s*$'
     return

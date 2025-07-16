@@ -56,7 +56,7 @@ export def RemoveSurrounding(range_info: dict<list<list<number>>> = {})
       const cA = interval[0][1]
       const lineA = getline(lA)
       var newline = strcharpart(lineA, 0,
-              \ cA - 1 - len(constants.TEXT_STYLES_DICT[style].open_delim))
+              \ cA - 1 - strchars(constants.TEXT_STYLES_DICT[style].open_delim))
               \ .. strcharpart(lineA, cA - 1)
       setline(lA, newline)
 
@@ -68,7 +68,7 @@ export def RemoveSurrounding(range_info: dict<list<list<number>>> = {})
       # If lA == lB, then The value of cB may no longer be valid since
       # we shortened the line
       if lA == lB
-        cB = cB - len(constants.TEXT_STYLES_DICT[style].open_delim)
+        cB = cB - strchars(constants.TEXT_STYLES_DICT[style].open_delim)
       endif
 
       # Check if you hit a delimiter or a blank line OR if you hit a delimiter
@@ -77,11 +77,11 @@ export def RemoveSurrounding(range_info: dict<list<list<number>>> = {})
       # not, then don't do anything. This behavior is compliant with
       # vim-surround
       const lineB = getline(lB)
-      if  cB < len(lineB)
+      if  cB < strchars(lineB)
         # You have delimters
         newline = strcharpart(lineB, 0, cB)
               \ .. strcharpart(lineB,
-                \ cB + len(constants.TEXT_STYLES_DICT[style].close_delim))
+                \ cB + strchars(constants.TEXT_STYLES_DICT[style].close_delim))
       else
         # You hit the end of paragraph
         newline = lineB
@@ -101,11 +101,11 @@ export def SurroundSimple(style: string, type: string = '')
 
   # line and column of point A
   var lA = line("'[")
-  var cA = col("'[")
+  var cA = charcol("'[")
 
   # line and column of point B
   var lB = line("']")
-  var cB = col("']")
+  var cB = charcol("']")
 
   var toA = strcharpart(getline(lA), 0, cA - 1) .. open_delim
   var fromB = close_delim .. strcharpart(getline(lB), cB)
@@ -178,11 +178,11 @@ export def SurroundSmart(style: string, type: string = '')
 
   # line and column of point A
   var lA = line("'[")
-  var cA = type == 'line' ? 1 : col("'[")
+  var cA = type == 'line' ? 1 : charcol("'[")
 
   # line and column of point B
   var lB = line("']")
-  var cB = type == 'line' ? len(getline(lB)) : col("']")
+  var cB = type == 'line' ? strchars(getline(lB)) : charcol("']")
 
   # -------- SMART DELIMITERS BEGIN ---------------------------
   # We check conditions like the following and we adjust the style
@@ -418,11 +418,11 @@ export def IsInRange(): dict<list<list<number>>>
 
   # Main function start here
   # text_style comes from vim-markdown
-  const text_style = synIDattr(synID(line("."), col("."), 1), "name")
+  const text_style = synIDattr(synID(line("."), charcol("."), 1), "name")
   const text_style_adjusted =
     text_style == 'markdownItalic' || text_style == 'markdownBold'
-     ? StarOrUnderscore(synIDattr(synID(line("."), col("."), 1), "name"))
-     : synIDattr(synID(line("."), col("."), 1), "name")
+     ? StarOrUnderscore(synIDattr(synID(line("."), charcol("."), 1), "name"))
+     : synIDattr(synID(line("."), charcol("."), 1), "name")
   var return_val = {}
 
   if !empty(text_style_adjusted)
@@ -435,20 +435,20 @@ export def IsInRange(): dict<list<list<number>>>
       eval($'constants.TEXT_STYLES_DICT.{text_style_adjusted}.open_delim')
 
     var open_delim_pos = searchpos($'\V{open_delim}', 'bW')
-    var current_style = synIDattr(synID(line("."), col("."), 1), "name")
+    var current_style = synIDattr(synID(line("."), charcol("."), 1), "name")
     # We search for a markdown delimiter or an htmlTag.
     while current_style != $'{text_style}Delimiter'
         && current_style != 'htmlTag'
       && open_delim_pos != [0, 0]
       open_delim_pos = searchpos($'\V{open_delim}', 'bW')
-      current_style = synIDattr(synID(line("."), col("."), 1), "name")
+      current_style = synIDattr(synID(line("."), charcol("."), 1), "name")
     endwhile
 
     # To avoid infinite loops if some weird delimited text is highlighted
     if open_delim_pos == [0, 0]
       return {}
     endif
-    open_delim_pos[1] += len(open_delim)
+    open_delim_pos[1] += strchars(open_delim)
 
     # Search end delimiter.
     # The end delimiter may be a blank line, hence
@@ -459,7 +459,7 @@ export def IsInRange(): dict<list<list<number>>>
     var close_delim_pos = searchpos($'\V{close_delim}', 'nW')
     var blank_line_pos = searchpos($'^$', 'nW')
     var first_met = [0, 0]
-    current_style = synIDattr(synID(line("."), col("."), 1), "name")
+    current_style = synIDattr(synID(line("."), charcol("."), 1), "name")
 
     while current_style != $'{text_style}Delimiter'
         && current_style != 'htmlEndTag'
@@ -476,14 +476,14 @@ export def IsInRange(): dict<list<list<number>>>
         : blank_line_pos
       endif
       setcursorcharpos(first_met)
-      current_style = synIDattr(synID(line("."), col("."), 1), "name")
+      current_style = synIDattr(synID(line("."), charcol("."), 1), "name")
     endwhile
 
     # If we hit a blank line, then we take the previous line and last column,
     # to keep consistency in returning open-intervals
     if getline(line('.')) =~ '^$'
       first_met[0] = first_met[0] - 1
-      first_met[1] = len(getline(first_met[0]))
+      first_met[1] = strchars(getline(first_met[0]))
     else
       first_met[1] -= 1
     endif
@@ -500,7 +500,7 @@ export def SetBlock(type: string = '')
   # the moment is more like 'SurroundSimple'.
   #
   # If we are overlapping another thing, don't do anything
-  const syn_info = synIDattr(synID(line("."), col("."), 1), "name")
+  const syn_info = synIDattr(synID(line("."), charcol("."), 1), "name")
   if !empty(IsInRange())
       || syn_info == 'markdownCodeDelimiter'
       || syn_info == 'markdownCodeBlock'
@@ -525,7 +525,7 @@ export def SetBlock(type: string = '')
   var cA = 1
 
   var lB = line("']")
-  var cB = len(getline(lB))
+  var cB = strchars(getline(lB))
 
   var firstline = getline(lA)
   var lastline = getline(lB)
@@ -559,7 +559,7 @@ enddef
 
 export def UnsetBlock(syn_info: string = '')
   const syn_str = empty(syn_info)
-    ? synIDattr(synID(line("."), col("."), 1), "name")
+    ? synIDattr(synID(line("."), charcol("."), 1), "name")
     : syn_info
   if syn_str == 'markdownCodeBlock'
     const pos_start = searchpos(values(constants.CODEBLOCK_OPEN_DICT)[0], 'nbW')
@@ -580,7 +580,7 @@ enddef
 
 export def SetQuoteBlock(type: string = '')
 
-  # We set cA=1 and cB = len(geline(B)) so we pretend that we are working
+  # We set cA=1 and cB = strchars(geline(B)) so we pretend that we are working
   # always line-wise
   var lA = line("'[")
   var lB = line("']")

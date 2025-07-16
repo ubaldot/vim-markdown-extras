@@ -21,11 +21,11 @@ export def AddProp(type: string = '')
 
   # line and column of point A
   var lA = line("'[")
-  var cA = type == 'line' ? 1 : col("'[")
+  var cA = type == 'line' ? 1 : charcol("'[")
 
   # line and column of point B
   var lB = line("']")
-  var cB = type == 'line' ? len(getline(lB)) : col("']")
+  var cB = type == 'line' ? strchars(getline(lB)) : charcol("']")
 
   prop_add(lA, cA, {id: prop_id, type: 'markdown_extras_highlight',
     end_lnum: lB, end_col: cB + 1})
@@ -33,9 +33,9 @@ export def AddProp(type: string = '')
 enddef
 
 export def IsOnProp(): dict<any>
-  var prop = prop_find({type: prop_name, 'col': col('.')}, 'b')
+  var prop = prop_find({type: prop_name, 'col': charcol('.')}, 'b')
   if has_key(prop, 'id')
-    if line('.') != prop.lnum || col('.') > prop.col + prop.length
+    if line('.') != prop.lnum || charcol('.') > prop.col + prop.length
       prop = {}
     endif
   endif
