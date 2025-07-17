@@ -26,7 +26,7 @@ augroup MARKDOWN_EXTRAS_VISITED_BUFFERS
     autocmd!
     autocmd BufEnter *.md,*.markdown,*.mdown,*.mkd funcs.AddVisitedBuffer()
     autocmd BufDelete *.md,*.markdown,*.mdown,*.mkd
-           funcs.RemoveVisitedBuffer(bufnr())
+          \ funcs.RemoveVisitedBuffer(bufnr())
 augroup END
 
 # Check if prettier can/shall be used or not
