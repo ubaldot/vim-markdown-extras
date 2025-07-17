@@ -24,8 +24,9 @@ g:markdown_extras_loaded = true
 
 augroup MARKDOWN_EXTRAS_VISITED_BUFFERS
     autocmd!
-    autocmd BufEnter *.md funcs.AddVisitedBuffer()
-    autocmd BufDelete *.md funcs.RemoveVisitedBuffer(bufnr())
+    autocmd BufEnter *.md,*.markdown,*.mdown,*.mkd funcs.AddVisitedBuffer()
+    autocmd BufDelete *.md,*.markdown,*.mdown,*.mkd
+           funcs.RemoveVisitedBuffer(bufnr())
 augroup END
 
 # Check if prettier can/shall be used or not
@@ -49,7 +50,9 @@ if use_prettier
   else
     augroup MARKDOWN_EXTRAS_PRETTIER_CHECK
       autocmd!
-      autocmd BufReadPost *.md ++once PrettierInstalledCheck()
+      # autocmd BufReadPost *.md,*.markdown,*.mdown,*.mkd ++once
+      autocmd BufReadPost *.md ++once
+             PrettierInstalledCheck()
     augroup END
   endif
 endif
@@ -75,7 +78,8 @@ if use_pandoc
   else
     augroup MARKDOWN_EXTRAS_PANDOC_CHECK
       autocmd!
-      autocmd BufReadPre *.md ++once PandocInstalledCheck()
+      autocmd BufReadPre *.md,*.markdown,*.mdown,*.mkd ++once
+             PandocInstalledCheck()
     augroup END
   endif
 endif
