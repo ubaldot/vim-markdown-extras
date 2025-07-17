@@ -11,9 +11,8 @@ This plugin adds some spice to the bundled [vim-markdown][3], such as:
 
 # Requirements
 
-Vim 9.1-1270 is required.
-You must set a `<localleader>` key and your `.vimrc` file shall include the
-following lines:
+Vim 9.1-1270 is required. You must set a `<localleader>` key and your `.vimrc`
+file shall include the following lines:
 
 ```
     filetype indent plugin on
@@ -29,16 +28,14 @@ Along the same line, to enable the formatting feature, you need to install
 
 # Usage
 
-The best way to describe how to operate this plug it's through examples,
-so let's show some.
+The best way to describe how to operate this plugin it's through examples, so
+let's show some.
 
 ### Text-styles
 
-Open a markdown file and place the cursor on a word.
-Hit `<localleader>biw` to change the text-style inside-the-word
-to bold (`iw` is a text-objext).
-Then, while letting the cursor on the bold text, hit `<localleader>d`
-to remove it.
+Open a markdown file and place the cursor on a word. Hit `<localleader>biw` to
+change the text-style inside-the-word to bold (`iw` is a text-objext). Then,
+while letting the cursor on the bold text, hit `<localleader>d` to remove it.
 
 Next, try to do the same with arbitrary text-objects or in Visual mode by
 replacing `b` with `i` for italics, `s` for strike-through, `c` for code, etc.
@@ -53,22 +50,20 @@ See `:h markdown-extras-mappings` for all the possible text styles.
 
 ### Links
 
-Now, place the cursor on a word and hit `<enter>`.
-Select `Create new link` from the popup menu and point to an existing
-file or just type a new file name.
-If you created a new file, fill it in with some text and save it.
-Hit `<backspace>` to go back to the previous file and place the cursor to the
-newly created link. Hit `K`. Then, hit `<enter>` again to open the link.
-The link can also be external URL:s, e.g. `https://example.com`.
-If the link is a file, then `<shift-enter>` open it in a vertical split
-window.
+Now, place the cursor on a word and hit `<enter>`. Select `Create new link`
+from the popup menu and point to an existing file or just type a new file
+name. If you created a new file, fill it in with some text and save it. Hit
+`<backspace>` to go back to the previous file and place the cursor to the
+newly created link. Hit `K`. Then, hit `<enter>` again to open the link. The
+link can also be external URL:s, e.g. `https://example.com`. If the link is a
+file, then `<shift-enter>` open it in a vertical split window.
 
 Next, create some new links and use `<localleader>n` and `<localleader>N` to
 locate their position in the current buffer. When on a link text, hit
 `<localleader>d` to remove the link.
 
-Although you can hit `<enter>` to link a word, more generally you can
-use `<localleader>l` plus some motion to create links, like for example
+Although you can hit `<enter>` to link a word, more generally you can use
+`<localleader>l` plus some motion to create links, like for example
 `<localleader>lfa` (note that `fa` is a motion).
 
 You can also dynamically refer to links while typing by setting the `omnifunc`
@@ -94,27 +89,26 @@ comment line. The reference identifiers are numbers.
 > [!Note]
 >
 > The links management only applies to links reported after the
-> `<!-- DO NOT REMOVE vim-markdown-extras references DO NOT REMOVE-->`
-> comment line. Such a line shall be unique in the buffer.
+> `<!-- DO NOT REMOVE vim-markdown-extras references DO NOT REMOVE-->` comment
+> line. Such a line shall be unique in the buffer.
 
 ### Lists
 
 You can create lists as in a normal markdown file. However, note that the
 behavior of the `<enter>` key is hacked to mimic the behavior of Microsoft
-products and respect possible nesting.
-Although there are many reasons to stick with the
-bundled [vim-markdown][3] behavior when it comes to lists,
-my use-cases and preferences require a different behavior.
-If you want the standard [vim-markdown][3] behavior, then set
+products and respect possible nesting. Although there are many reasons to
+stick with the bundled [vim-markdown][3] behavior when it comes to lists, my
+use-cases and preferences require a different behavior. If you want the
+standard [vim-markdown][3] behavior, then set
 `g:markdown_extras_config['hack_CR'] = false` in your `.vimrc`.
 
 You can create to-do lists as you would do in normal markdown, by starting
-lines with `- [ ]` . When in normal mode, you can check/uncheck the item in the
-to-do list with `<localleader>x` in normal mode. You can change how check-boxes
-are rendered by setting the keys `empty_checkbox` and `marked_checkbox` of the
-`g:markdown_extras_config` dictionary, for example you can set
-`g:markdown_extras_config[marked_checkbox] = 0x2714`. The value shall be a
-valid Unicode point value.
+lines with `- [ ]` . When in normal mode, you can check/uncheck the item in
+the to-do list with `<localleader>x` in normal mode. You can change how
+check-boxes are rendered by setting the keys `empty_checkbox` and
+`marked_checkbox` of the `g:markdown_extras_config` dictionary, for example
+you can set `g:markdown_extras_config[marked_checkbox] = 0x2714`. The value
+shall be a valid Unicode point value.
 
 > [!Note]
 >
@@ -123,12 +117,12 @@ valid Unicode point value.
 
 ### Formatting
 
-You can format text as usual by using `gq`.
-Here `gq` uses `prettier`, provided that you have it installed.
-That is, if you use `gq` plus motion, or if you visually select some text and
-then hit `gq`, then `prettier` will only prettify such a portion of text. You
-can also prettify the whole buffer on save by setting
-`g:markdown_extras_config['format_on_save'] = true` in your `.vimrc`.
+You can format text as usual by using `gq`. Here `gq` uses `prettier`,
+provided that you have it installed. That is, if you use `gq` plus motion, or
+if you visually select some text and then hit `gq`, then `prettier` will only
+prettify such a portion of text. You can also prettify the whole buffer on
+save by setting `g:markdown_extras_config['format_on_save'] = true` in your
+`.vimrc`.
 
 ### Rendering
 
@@ -137,11 +131,11 @@ you have `pandoc` installed.
 
 However, sometimes you want to render & open the rendered file at once, and
 for this reason you have `:MDEMake`. Try to run call such a command and hit
-    `<tab>` to see possible targets.
+`<tab>` to see possible targets.
 
-You can pass arguments to `pandoc` via the key
-`pandoc_args` of the `g:markdown_extras_config` dictionary.
-You could for example set the following:
+You can pass arguments to `pandoc` via the key `pandoc_args` of the
+`g:markdown_extras_config` dictionary. You could for example set the
+following:
 
 ```
   g:markdown_extras_config = {}
@@ -152,17 +146,19 @@ You could for example set the following:
 
 > [!Note]
 >
-> The rendered file will automatically open if your Vim has the `:Open` command.
+> The rendered file will automatically open if your Vim has the `:Open`
+> command.
 
 ### Indices
 
 As the plugin can be used for note-taking, it may be desirable to access
 different indices in an ergonomic way. This can be achieved with the
 `g:markdown_extras_indices` list in combination with the `:MDEIndices`
-command. Note that `g:markdown_extras_indices` is nothing, but a list of files.
+command. Note that `g:markdown_extras_indices` is nothing, but a list of
+files.
 
-For more information about key-bindings, configuration, etc. take
-a look at `:h markdown-extras`.
+For more information about key-bindings, configuration, etc. take a look at
+`:h markdown-extras`.
 
 ### Limitations
 
