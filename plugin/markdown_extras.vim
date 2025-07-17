@@ -22,9 +22,16 @@ endif
 
 augroup MARKDOWN_EXTRAS_VISITED_BUFFERS
     autocmd!
-    autocmd BufEnter *.md,*.markdown,*.mdown,*.mkd funcs.AddVisitedBuffer()
-    autocmd BufDelete *.md,*.markdown,*.mdown,*.mkd
-          \ funcs.RemoveVisitedBuffer(bufnr())
+    autocmd BufEnter *  {
+      if &filetype ==# 'markdown'
+        funcs.AddVisitedBuffer()
+      endif
+    }
+    autocmd BufDelete * {
+      if getbufvar(expand('%'), '&filetype') ==# 'markdown'
+        funcs.RemoveVisitedBuffer(bufnr())
+      endif
+    }
 augroup END
 
 # Check prettier executable
