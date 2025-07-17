@@ -16,12 +16,6 @@ elseif !has('patch-9.1.1071')
   finish
 endif
 
-if !executable('prettier') && !exists('g:markdown_extras_loaded')
-    utils.Echowarn("'prettier' not installed!'")
-endif
-if !executable('pandoc') && !exists('g:markdown_extras_loaded')
-    utils.Echowarn("'pandoc' not installed!'")
-endif
 
 if exists('g:markdown_extras_loaded')
   finish
@@ -33,3 +27,55 @@ augroup MARKDOWN_EXTRAS_VISITED_BUFFERS
     autocmd BufEnter *.md funcs.AddVisitedBuffer()
     autocmd BufDelete *.md funcs.RemoveVisitedBuffer(bufnr())
 augroup END
+
+# Check if prettier can/shall be used or not
+export var use_prettier = true
+
+if exists('g:markdown_extras_config') != 0
+    && has_key(g:markdown_extras_config, 'use_prettier')
+  use_prettier = g:markdown_extras_config['use_prettier']
+endif
+
+if use_prettier
+  def PrettierInstalledCheck()
+    if !executable('prettier')
+      utils.Echowarn("'prettier' not installed!'")
+      use_prettier = false
+    endif
+  enddef
+
+  if &filetype == "markdown"
+    PrettierInstalledCheck()
+  else
+    augroup MARKDOWN_EXTRAS_PRETTIER_CHECK
+      autocmd!
+      autocmd BufReadPost *.md ++once PrettierInstalledCheck()
+    augroup END
+  endif
+endif
+
+# Check if pandoc can/shall be used or not
+export var use_pandoc = true
+
+if exists('g:markdown_extras_config') != 0
+    && has_key(g:markdown_extras_config, 'use_pandoc')
+  use_pandoc = g:markdown_extras_config['use_pandoc']
+endif
+
+if use_pandoc
+  def PandocInstalledCheck()
+    if !executable('pandoc')
+      utils.Echowarn("'pandoc' not installed!'")
+      use_pandoc = false
+    endif
+  enddef
+
+  if &filetype == "markdown"
+    PandocInstalledCheck()
+  else
+    augroup MARKDOWN_EXTRAS_PANDOC_CHECK
+      autocmd!
+      autocmd BufReadPre *.md ++once PandocInstalledCheck()
+    augroup END
+  endif
+endif

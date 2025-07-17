@@ -3,9 +3,10 @@ vim9script
 import autoload "../autoload/mde_funcs.vim" as funcs
 import autoload "../autoload/mde_links.vim" as links
 import autoload '../autoload/mde_utils.vim' as utils
-import autoload '../autoload/mde_highlight.vim' as highlight
+import autoload '../autoload/mde_highlight.vim' as highlights
 import autoload '../autoload/mde_constants.vim' as constants
 import autoload '../autoload/mde_indices.vim' as indices
+import autoload '../plugin/markdown_extras.vim' as markdown_extras
 
 b:markdown_extras_links = links.RefreshLinksDict()
 
@@ -18,14 +19,7 @@ nnoremap <buffer> <backspace> <ScriptCmd>funcs.GoToPrevVisitedBuffer()<cr>
 
 
 # -------------- prettier ------------------------
-var use_prettier = true
-if exists('g:markdown_extras_config') != 0
-    && has_key(g:markdown_extras_config, 'use_prettier')
-    && g:markdown_extras_config['use_prettier']
-  use_prettier = g:markdown_extras_config['use_prettier']
-endif
-
-if use_prettier && executable('prettier')
+if markdown_extras.use_prettier
   if exists('g:markdown_extras_config') != 0
       && has_key(g:markdown_extras_config, 'formatprg')
     &l:formatprg = g:markdown_extras_config['formatprg']
@@ -47,14 +41,12 @@ endif
 # --------------End prettier ------------------------
 
 # -------------------- pandoc -----------------------
-var use_pandoc = true
 if exists('g:markdown_extras_config') != 0
     && has_key(g:markdown_extras_config, 'use_pandoc')
-    && g:markdown_extras_config['use_pandoc']
   use_pandoc = g:markdown_extras_config['use_pandoc']
 endif
 
-if use_pandoc && executable('pandoc')
+if markdown_extras.use_pandoc
   # All the coreography happening inside here relies on the compiler
   # pandoc.
 
@@ -198,7 +190,7 @@ if empty(maparg('<Plug>MarkdownRemove'))
 endif
 
 def SetHighlightOpFunc()
-  &l:opfunc = function(highlight.AddProp)
+  &l:opfunc = function(highlights.AddProp)
 enddef
 
 if empty(maparg('<Plug>MarkdownHighlight'))
