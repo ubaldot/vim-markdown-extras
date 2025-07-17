@@ -16,11 +16,9 @@ elseif !has('patch-9.1.1071')
   finish
 endif
 
-
 if exists('g:markdown_extras_loaded')
   finish
 endif
-g:markdown_extras_loaded = true
 
 augroup MARKDOWN_EXTRAS_VISITED_BUFFERS
     autocmd!
@@ -29,7 +27,7 @@ augroup MARKDOWN_EXTRAS_VISITED_BUFFERS
           \ funcs.RemoveVisitedBuffer(bufnr())
 augroup END
 
-# Check if prettier can/shall be used or not
+# Check prettier executable
 export var use_prettier = true
 
 if exists('g:markdown_extras_config') != 0
@@ -37,27 +35,24 @@ if exists('g:markdown_extras_config') != 0
   use_prettier = g:markdown_extras_config['use_prettier']
 endif
 
-if use_prettier
-  def PrettierInstalledCheck()
-    if !executable('prettier')
-      utils.Echowarn("'prettier' not installed!'")
-      use_prettier = false
-    endif
-  enddef
-
-  augroup MARKDOWN_EXTRAS_PRETTIER_CHECK
-    autocmd!
-    # TODO: Changing BufReadPre with FileType markdown won't work because
-    # FileType markdown autocmd is executed after ftplugin/markdown.vim is sourced,
-    # and therefore ftplugin/markdown.vim would see use_prettier = true all
-    # the time. Hence, the hack is to use BufReadPre and to specify all the
-    # possible file extensions.
-    autocmd BufReadPre *.md,*.markdown,*.mdown,*.mkd ++once
-          \ PrettierInstalledCheck()
-  augroup END
+# If user wants to use prettier but it is not available...
+if use_prettier && !executable('prettier')
+  use_prettier = false
+  # If vim is called with args, like vim README.md
+  if &filetype == 'markdown'
+    utils.Echowarn("'prettier' not installed!'")
+  else
+    # As soon as we open a markdown file, the error is displayed
+    augroup MARKDOWN_EXTRAS_PRETTIER_ERROR
+      autocmd!
+      autocmd FileType markdown ++once {
+          utils.Echowarn("'prettier' not installed!'")
+      }
+    augroup END
+  endif
 endif
 
-# Check if pandoc can/shall be used or not
+# Check pandoc executable
 export var use_pandoc = true
 
 if exists('g:markdown_extras_config') != 0
@@ -65,17 +60,19 @@ if exists('g:markdown_extras_config') != 0
   use_pandoc = g:markdown_extras_config['use_pandoc']
 endif
 
-if use_pandoc
-  def PandocInstalledCheck()
-    if !executable('pandoc')
-      utils.Echowarn("'pandoc' not installed!'")
-      use_pandoc = false
-    endif
-  enddef
-
-  augroup MARKDOWN_EXTRAS_PANDOC_CHECK
-    autocmd!
-    autocmd BufReadPre *.md,*.markdown,*.mdown,*.mkd ++once
-          \ PandocInstalledCheck()
-  augroup END
+# If user wants to use pandoc but it is not available...
+if use_pandoc && !executable('pandoc')
+  use_pandoc = false
+  if &filetype == 'markdown'
+    utils.Echowarn("'pandoc' not installed!'")
+  else
+    augroup MARKDOWN_EXTRAS_PANDOC_ERROR
+      autocmd!
+      autocmd FileType markdown ++once {
+          utils.Echowarn("'pandoc' not installed!'")
+      }
+    augroup END
+  endif
 endif
+
+g:markdown_extras_loaded = true

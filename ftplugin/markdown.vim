@@ -19,6 +19,7 @@ nnoremap <buffer> <backspace> <ScriptCmd>funcs.GoToPrevVisitedBuffer()<cr>
 
 
 # -------------- prettier ------------------------
+#
 if markdown_extras.use_prettier
   if exists('g:markdown_extras_config') != 0
       && has_key(g:markdown_extras_config, 'formatprg')
@@ -41,11 +42,6 @@ endif
 # --------------End prettier ------------------------
 
 # -------------------- pandoc -----------------------
-if exists('g:markdown_extras_config') != 0
-    && has_key(g:markdown_extras_config, 'use_pandoc')
-  use_pandoc = g:markdown_extras_config['use_pandoc']
-endif
-
 if markdown_extras.use_pandoc
   # All the coreography happening inside here relies on the compiler
   # pandoc.
@@ -66,6 +62,8 @@ if markdown_extras.use_pandoc
     # TIP2: redraw! is used to avoid the "PRESS ENTER" thing
     echo cmd->matchstr('.*\ze2>&1') | redraw!
 
+    # TODO: pandoc compiler returns v:shell_error = 0 even if there are
+    # errors. Add a condition on v:shell_error once pandoc compiler is fixed.
     if exists(':Open') != 0
       exe $'Open {output_file}'
     endif
