@@ -45,20 +45,16 @@ if use_prettier
     endif
   enddef
 
-  if &filetype == "markdown"
-    PrettierInstalledCheck()
-  else
-    augroup MARKDOWN_EXTRAS_PRETTIER_CHECK
-      autocmd!
-      # TODO: Changing BufReadPre with FileType markdown won't work because
-      # FileType markdown autocmd is executed after ftplugin/markdown.vim is sourced,
-      # and therefore ftplugin/markdown.vim would see use_prettier = true all
-      # the time. Hence, the hack is to use BufReadPre and to specify all the
-      # possible file extensions.
-      autocmd BufReadPre *.md,*.markdown,*.mdown,*.mkd ++once
-            \ PrettierInstalledCheck()
-    augroup END
-  endif
+  augroup MARKDOWN_EXTRAS_PRETTIER_CHECK
+    autocmd!
+    # TODO: Changing BufReadPre with FileType markdown won't work because
+    # FileType markdown autocmd is executed after ftplugin/markdown.vim is sourced,
+    # and therefore ftplugin/markdown.vim would see use_prettier = true all
+    # the time. Hence, the hack is to use BufReadPre and to specify all the
+    # possible file extensions.
+    autocmd BufReadPre *.md,*.markdown,*.mdown,*.mkd ++once
+          \ PrettierInstalledCheck()
+  augroup END
 endif
 
 # Check if pandoc can/shall be used or not
@@ -77,13 +73,9 @@ if use_pandoc
     endif
   enddef
 
-  if &filetype == "markdown"
-    PandocInstalledCheck()
-  else
-    augroup MARKDOWN_EXTRAS_PANDOC_CHECK
-      autocmd!
-      autocmd BufReadPre *.md,*.markdown,*.mdown,*.mkd ++once
-            \ PandocInstalledCheck()
-    augroup END
-  endif
+  augroup MARKDOWN_EXTRAS_PANDOC_CHECK
+    autocmd!
+    autocmd BufReadPre *.md,*.markdown,*.mdown,*.mkd ++once
+          \ PandocInstalledCheck()
+  augroup END
 endif
