@@ -69,9 +69,9 @@ if exists('g:markdown_extras_config') != 0
   use_pandoc = g:markdown_extras_config['use_pandoc']
 endif
 
-if use_pandoc
+# if use_pandoc
   def PandocInstalledCheck()
-    if !executable('pandoc')
+    if !executable('pandoc') && use_pandoc
       utils.Echowarn("'pandoc' not installed!'")
       use_pandoc = false
     endif
@@ -82,8 +82,9 @@ if use_pandoc
   else
     augroup MARKDOWN_EXTRAS_PANDOC_CHECK
       autocmd!
-      autocmd BufReadPre *.md,*.markdown,*.mdown,*.mkd ++once
-            \ PandocInstalledCheck()
+      # autocmd BufReadPre *.md,*.markdown,*.mdown,*.mkd ++once
+      #       \ PandocInstalledCheck()
+      autocmd FileType markdown ++once PandocInstalledCheck()
     augroup END
   endif
-endif
+# endif
