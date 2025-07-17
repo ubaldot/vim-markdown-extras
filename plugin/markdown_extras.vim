@@ -16,11 +16,9 @@ elseif !has('patch-9.1.1071')
   finish
 endif
 
-
 if exists('g:markdown_extras_loaded')
   finish
 endif
-g:markdown_extras_loaded = true
 
 augroup MARKDOWN_EXTRAS_VISITED_BUFFERS
     autocmd!
@@ -31,70 +29,50 @@ augroup END
 
 # Check prettier executable
 export var use_prettier = true
-var prettier_installed = true
 
 if exists('g:markdown_extras_config') != 0
     && has_key(g:markdown_extras_config, 'use_prettier')
   use_prettier = g:markdown_extras_config['use_prettier']
 endif
 
-def PrettierInstalledCheck()
-  if !executable('prettier')
-    prettier_installed = false
-    use_prettier = false
-  endif
-
-  # If you run Vim with an argument, e.g. vim testfile.md
-  if &filetype == "markdown" && !prettier_installed
+# If user wants to use prettier but it is not available...
+if use_prettier && !executable('prettier')
+  use_prettier = false
+  # If vim is called with args, like vim README.md
+  if &filetype == 'markdown'
     utils.Echowarn("'prettier' not installed!'")
+  else
+    # As soon as we open a markdown file, the error is displayed
+    augroup MARKDOWN_EXTRAS_PRETTIER_ERROR
+      autocmd!
+      autocmd FileType markdown ++once {
+          utils.Echowarn("'prettier' not installed!'")
+      }
+    augroup END
   endif
-enddef
-
-augroup MARKDOWN_EXTRAS_PRETTIER_CHECK
-  autocmd!
-  autocmd BufReadPre * ++once PrettierInstalledCheck()
-augroup END
-
-augroup MARKDOWN_EXTRAS_PRETTIER_ERROR
-  autocmd!
-  autocmd FileType markdown ++once {
-    if !prettier_installed
-      utils.Echowarn("'prettier' not installed!'")
-    endif
-  }
-augroup END
+endif
 
 # Check pandoc executable
 export var use_pandoc = true
-var pandoc_installed = true
 
 if exists('g:markdown_extras_config') != 0
     && has_key(g:markdown_extras_config, 'use_pandoc')
   use_pandoc = g:markdown_extras_config['use_pandoc']
 endif
 
-def PandocInstalledCheck()
-  if !executable('pandoc')
-    pandoc_installed = false
-    use_pandoc = false
-  endif
-
-  # If you run Vim with an argument, e.g. vim testfile.md
-  if &filetype == "markdown" && !pandoc_installed
+# If user wants to use pandoc but it is not available...
+if use_pandoc && !executable('pandoc')
+  use_pandoc = false
+  if &filetype == 'markdown'
     utils.Echowarn("'pandoc' not installed!'")
+  else
+    augroup MARKDOWN_EXTRAS_PANDOC_ERROR
+      autocmd!
+      autocmd FileType markdown ++once {
+          utils.Echowarn("'pandoc' not installed!'")
+      }
+    augroup END
   endif
-enddef
+endif
 
-augroup MARKDOWN_EXTRAS_PANDOC_CHECK
-  autocmd!
-  autocmd BufReadPre * ++once PandocInstalledCheck()
-augroup END
-
-augroup MARKDOWN_EXTRAS_PANDOC_ERROR
-  autocmd!
-  autocmd FileType markdown ++once {
-    if !pandoc_installed
-      utils.Echowarn("'pandoc' not installed!'")
-    endif
-  }
-augroup END
+g:markdown_extras_loaded = true
