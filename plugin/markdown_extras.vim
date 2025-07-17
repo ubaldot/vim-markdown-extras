@@ -29,62 +29,72 @@ augroup MARKDOWN_EXTRAS_VISITED_BUFFERS
           \ funcs.RemoveVisitedBuffer(bufnr())
 augroup END
 
-# Check if prettier can/shall be used or not
+# Check prettier executable
 export var use_prettier = true
+var prettier_installed = true
 
 if exists('g:markdown_extras_config') != 0
     && has_key(g:markdown_extras_config, 'use_prettier')
   use_prettier = g:markdown_extras_config['use_prettier']
 endif
 
-if use_prettier
-  def PrettierInstalledCheck()
-    if !executable('prettier')
-      utils.Echowarn("'prettier' not installed!'")
-      use_prettier = false
-    endif
-  enddef
-
-  if &filetype == "markdown"
-    PrettierInstalledCheck()
-  else
-    augroup MARKDOWN_EXTRAS_PRETTIER_CHECK
-      autocmd!
-      # TODO: Changing BufReadPre with FileType markdown won't work because
-      # FileType markdown autocmd is executed after ftplugin/markdown.vim is sourced,
-      # and therefore ftplugin/markdown.vim would see use_prettier = true all
-      # the time. Hence, the hack is to use BufReadPre and to specify all the
-      # possible file extensions.
-      autocmd BufReadPre *.md,*.markdown,*.mdown,*.mkd ++once
-            \ PrettierInstalledCheck()
-    augroup END
+def PrettierInstalledCheck()
+  if !executable('prettier')
+    prettier_installed = false
+    use_prettier = false
   endif
-endif
 
-# Check if pandoc can/shall be used or not
+  # If you run Vim with an argument, e.g. vim testfile.md
+  if &filetype == "markdown" && !prettier_installed
+    utils.Echowarn("'prettier' not installed!'")
+  endif
+enddef
+
+augroup MARKDOWN_EXTRAS_PRETTIER_CHECK
+  autocmd!
+  autocmd BufReadPre * ++once PrettierInstalledCheck()
+augroup END
+
+augroup MARKDOWN_EXTRAS_PRETTIER_ERROR
+  autocmd!
+  autocmd FileType markdown ++once {
+    if !prettier_installed
+      utils.Echowarn("'prettier' not installed!'")
+    endif
+  }
+augroup END
+
+# Check pandoc executable
 export var use_pandoc = true
+var pandoc_installed = true
 
 if exists('g:markdown_extras_config') != 0
     && has_key(g:markdown_extras_config, 'use_pandoc')
   use_pandoc = g:markdown_extras_config['use_pandoc']
 endif
 
-# if use_pandoc
-  def PandocInstalledCheck()
-    if !executable('pandoc') && use_pandoc
-      utils.Echowarn("'pandoc' not installed!'")
-      use_pandoc = false
-    endif
-  enddef
-
-  if &filetype == "markdown"
-    PandocInstalledCheck()
-  else
-    augroup MARKDOWN_EXTRAS_PANDOC_CHECK
-      autocmd!
-      # autocmd BufReadPre *.md,*.markdown,*.mdown,*.mkd ++once
-      #       \ PandocInstalledCheck()
-      autocmd FileType markdown ++once PandocInstalledCheck()
-    augroup END
+def PandocInstalledCheck()
+  if !executable('pandoc')
+    pandoc_installed = false
+    use_pandoc = false
   endif
-# endif
+
+  # If you run Vim with an argument, e.g. vim testfile.md
+  if &filetype == "markdown" && !pandoc_installed
+    utils.Echowarn("'pandoc' not installed!'")
+  endif
+enddef
+
+augroup MARKDOWN_EXTRAS_PANDOC_CHECK
+  autocmd!
+  autocmd BufReadPre * ++once PandocInstalledCheck()
+augroup END
+
+augroup MARKDOWN_EXTRAS_PANDOC_ERROR
+  autocmd!
+  autocmd FileType markdown ++once {
+    if !pandoc_installed
+      utils.Echowarn("'pandoc' not installed!'")
+    endif
+  }
+augroup END
