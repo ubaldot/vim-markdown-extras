@@ -50,9 +50,8 @@ if use_prettier
   else
     augroup MARKDOWN_EXTRAS_PRETTIER_CHECK
       autocmd!
-      # autocmd BufReadPost *.md,*.markdown,*.mdown,*.mkd ++once
-      autocmd BufReadPost *.md ++once
-             PrettierInstalledCheck()
+      autocmd BufReadPost *.md,*.markdown,*.mdown,*.mkd ++once
+            \ PrettierInstalledCheck()
     augroup END
   endif
 endif
@@ -79,7 +78,7 @@ if use_pandoc
     augroup MARKDOWN_EXTRAS_PANDOC_CHECK
       autocmd!
       autocmd BufReadPre *.md,*.markdown,*.mdown,*.mkd ++once
-             PandocInstalledCheck()
+            \ PandocInstalledCheck()
     augroup END
   endif
 endif
