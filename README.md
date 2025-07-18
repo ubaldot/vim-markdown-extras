@@ -75,7 +75,7 @@ following lines to your `~/.vim/after/ftplugin/markdown.vim` file:
     setlocal completeopt=menu,menuone,noselect
     import autoload "mde_funcs.vim"
     setlocal omnifunc=mde_funcs.OmniFunc
-    inoremap <buffer> [ [<C-x><C-o>
+    inoremap <buffer> ][ ][<C-x><C-o>
 ```
 
 see `:h completeopt` to customize the menu behavior.

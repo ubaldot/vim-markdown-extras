@@ -203,7 +203,7 @@ export def OmniFunc(findstart: number, base: string): any
     else
         var matches = []
         for key in keys(b:markdown_extras_links)
-            add(matches, {word: key, menu: b:markdown_extras_links[key]})
+            add(matches, {word: $'{key}]', menu: b:markdown_extras_links[key]})
         endfor
         return {words: matches}
     endif
