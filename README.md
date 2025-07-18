@@ -1,5 +1,7 @@
 # vim-MarkDown-Extras (MDE)
 
+[![asciicast](https://asciinema.org/a/UbDuIOCSPp1H1F4a7VIcZm5Qj.svg)](https://asciinema.org/a/UbDuIOCSPp1H1F4a7VIcZm5Qj)
+
 This plugin adds some spice to the bundled [vim-markdown][3], such as:
 
 - Easy toggle italic, bold, strike-through, code text-styles,
