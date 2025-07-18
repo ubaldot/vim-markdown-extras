@@ -164,7 +164,9 @@ INDICES
 As the plugin can be used for note-taking, it may be desirable to access
 different indices in an ergonomic way. This can be achieved with the
 |g:markdown_extras_indices| list in combination with the |:MDEIndices|
-command. Note that `g:markdown_extras_indices` is nothing, but a list of files.
+command. Note that `g:markdown_extras_indices` is nothing, but a list (or a dict)
+of files. If it is a dict, then the keys is what is displayed in the popup
+menu and the values are the corresponding links.
 
 ==============================================================================
 CONFIGURATION       *markdown-extras-configuration* *g:markdown_extras_config*
@@ -223,9 +225,9 @@ filling it with he various keys.
 						*g:markdown_extras_indices*
 g:markdown_extras_indices list<string> or dict<string>.
 			  If list<string>, contain the path of indices files.
-			  If dict<string>, the values are the path of
-			  the indices files whereas the keys are aliases. In
-			  the popup menu only the alias are displayed.
+			  If dict<string>, the values are the actual links
+			  whereas the keys are aliases. In the popup menu only
+			  the alias are displayed.
 			  Default: empty
 
 
