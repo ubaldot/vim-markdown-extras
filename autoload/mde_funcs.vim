@@ -13,7 +13,7 @@ export def GoToPrevVisitedBuffer()
     remove(visited_buffers, -1)
     exe $"buffer {visited_buffers[-1]}"
   endif
-  echom visited_buffers
+  # echom visited_buffers
 enddef
 
 export def AddVisitedBuffer()
@@ -23,7 +23,7 @@ export def AddVisitedBuffer()
       endif
       add(visited_buffers, bufnr())
     endif
-    echom visited_buffers
+    # echom visited_buffers
 enddef
 
 export def RemoveVisitedBuffer(bufnr: number)
