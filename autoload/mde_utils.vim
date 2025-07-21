@@ -368,7 +368,7 @@ export def IsEqual(l1: list<number>, l2: list<number>): bool
 enddef
 
 export def IsBetweenMarks(A: string, B: string): bool
-    var cursor_pos = getpos(".")
+    var cursor_pos = getcharpos(".")
     var A_pos = getcharpos(A)
     var B_pos = getcharpos(B)
 
@@ -611,7 +611,7 @@ export def UnsetQuoteBlock()
   endwhile
 
   # Moving down
-  setpos('.', saved_curpos)
+  setcharpos('.', saved_curpos)
   line_nr = line('.') + 1
   line_content = getline(line_nr)
   while line_content !~ close_regex && line_nr <= line('$')
@@ -619,7 +619,7 @@ export def UnsetQuoteBlock()
     line_nr += 1
     line_content = getline(line_nr)
   endwhile
-  setpos('.', saved_curpos)
+  setcharpos('.', saved_curpos)
 enddef
 
 export def GetTextObject(textobject: string): dict<any>

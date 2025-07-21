@@ -314,7 +314,7 @@ export def OpenLink(is_split: bool = false)
     else
       exe $":Open {fnameescape(link)}"
     endif
-    setpos('.', saved_curpos)
+    setcharpos('.', saved_curpos)
 enddef
 
 export def ConvertLinks()
@@ -395,7 +395,7 @@ export def RemoveLink(range_info: dict<list<list<number>>> = {})
       norm! "_x
       search('[', 'bc')
       norm! "_x
-      setpos('.', saved_curpos)
+      setcharpos('.', saved_curpos)
   endif
 enddef
 
@@ -550,9 +550,9 @@ export def ShowPromptPopup(slave_id: number,
   # This could be called by other scripts and its id may be undefined.
   InitScriptLocalVars()
   # This is the UI thing
-  var slave_id_core_line = popup_getpos(slave_id).core_line
-  var slave_id_core_col = popup_getpos(slave_id).core_col
-  var slave_id_core_width = popup_getpos(slave_id).core_width
+  var slave_id_core_line = popup_getcharpos(slave_id).core_line
+  var slave_id_core_col = popup_getcharpos(slave_id).core_col
+  var slave_id_core_width = popup_getcharpos(slave_id).core_width
 
   # var base_title = $'{search_type}:'
   var opts = {
@@ -597,7 +597,7 @@ export def CreateLink(type: string = '')
   var lB = line("']")
   var cB = type == 'line' ? strchars(getline(lB)) : col("']")
 
-  if getregion(getpos("'["), getpos("']"))[0] =~ '^\s*$'
+  if getregion(getcharpos("'["), getcharpos("']"))[0] =~ '^\s*$'
     return
   endif
 
@@ -747,6 +747,6 @@ export def PreviewPopup()
     # endif
 
     win_execute(winid, $"setlocal ft={refFiletype}")
-    setpos('.', saved_curpos)
+    setcharpos('.', saved_curpos)
   endif
 enddef
