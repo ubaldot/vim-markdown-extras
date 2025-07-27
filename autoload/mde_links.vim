@@ -262,6 +262,27 @@ export def IsLink(): dict<list<list<number>>>
   const range_info = utils.IsInRange()
   if !empty(range_info) && keys(range_info)[0] == 'markdownLinkText'
     return range_info
+  elseif synIDattr(synID(line("."), charcol("."), 1), "name") == 'markdownUrl'
+    # Find beginning of the URL
+    var a = [line('.'), 1]
+    var b = searchpos(' ', 'nbW')
+    var start_pos = [0, 0]
+    if utils.IsLess(a, b) && b != [0, 0]
+      start_pos = [b[0], b[1] + 1]
+    else
+      start_pos = a
+    endif
+
+    # Find end of the URL
+    a = searchpos(' ', 'nW')
+    b = [line('.'), charcol('$') - 1]
+    var end_pos = [0, 0]
+    if utils.IsLess(a, b) && a != [0, 0]
+      end_pos = [a[0], a[1] - 1]
+    else
+      end_pos = b
+    endif
+    return {'markdownUrl': [start_pos, end_pos]}
   else
     return {}
   endif
@@ -314,22 +335,7 @@ export def OpenLink(is_split: bool = false)
     const saved_curpos = getcurpos()
     var link = ''
 
-    if synIDattr(synID(line("."), charcol("."), 1), "name") == 'markdownUrl'
-      # The end of the URL is an empty space or the end of the line. We have
-      # to capture the correct one.
-
-      # if "norm! T " don't move, then the URL string is until the end of the line
-      const a = getcursorcharpos()
-      execute "normal! t "
-      const b = getcursorcharpos()
-      if a == b
-        # cursor didn't move
-        link = utils.GetTextObject('$').text
-      else
-        execute "normal! T "
-        link = utils.GetTextObject('t ').text
-      endif
-    else
+    if synIDattr(synID(line("."), charcol("."), 1), "name") != 'markdownUrl'
       # Start the search from the end of the text-link
       var symbol = ''
       norm! f]
@@ -352,10 +358,14 @@ export def OpenLink(is_split: bool = false)
       else
         link = utils.GetTextObject('i(').text
       endif
+    else
+        const link_interval = values(IsLink())[0]
+        const start = link_interval[0][1] - 1
+        const length = link_interval[1][1] - link_interval[0][1] + 1
+        link = strcharpart(getline('.'), start, length)
     endif
 
-
-
+    # COMMON
     # Assume that a file is always small (=1 byte) is no large_file_support is
     # enabled
     const file_size = link =~ '^file://' && large_files_threshold > 0
@@ -432,7 +442,8 @@ enddef
 export def RemoveLink(range_info: dict<list<list<number>>> = {})
   const link_info = empty(range_info) ? IsLink() : range_info
   # TODO: it may not be the best but it works so far
-  if !empty(link_info)
+  echom "link_info: " .. string(keys(link_info))
+  if !empty(link_info) && keys(link_info)[0] != 'markdownUrl'
       const saved_curpos = getcurpos()
       # Start the search from the end of the text-link
       norm! f]
@@ -734,7 +745,9 @@ export def PreviewPopup()
   var previewText = []
   var link_name = ''
   const saved_curpos = getcurpos()
-  if !empty(IsLink())
+  const link_info = IsLink()
+  # CASE 1: on an alias
+  if !empty(link_info) && keys(link_info)[0] != 'markdownUrl'
     # Search from the current cursor position to the end of line
     # Start the search from the end of the text-link
     norm! f]
@@ -760,12 +773,12 @@ export def PreviewPopup()
     else
       link_name = utils.GetTextObject('i(').text
     endif
-  endif
-
-  # Show preview also if the cursor is on the reference Section
-  if synIDattr(synID(line("."), charcol("."), 1), "name") == 'markdownUrl'
-    execute "normal! T "
-    link_name = utils.GetTextObject('$').text
+  # CASE 2: on an actual link, like those in the reference Section
+  elseif keys(link_info)[0] == 'markdownUrl'
+    const link_interval = values(link_info)[0]
+    const start = link_interval[0][1] - 1
+    const length = link_interval[1][1] - link_interval[0][1] + 1
+    link_name = strcharpart(getline('.'), start, length)
   endif
 
   if !empty(link_name)
@@ -773,7 +786,6 @@ export def PreviewPopup()
     var refFiletype = $'{fnamemodify(link_name, ":e")}' == 'md'
       ? 'markdown'
       : 'text'
-    # echom GetFileSize(link_name)
     const file_size = !IsURL(link_name) && large_files_threshold > 0
           ? GetFileSize(link_name)
           : 0
