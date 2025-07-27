@@ -131,7 +131,6 @@ def LastReferenceLine(): number
   return lastline
 enddef
 
-
 export def RefreshLinksDict(): dict<string>
   # Generate the b:markdown_extras_links by parsing the 'references_comment'
   # Section.
