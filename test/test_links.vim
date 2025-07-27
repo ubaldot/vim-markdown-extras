@@ -155,35 +155,44 @@ enddef
 
 def g:Test_URL_path_conversions()
 
-  const tests_win32 = [
-    # Simple path
-    ['file:///C:/Users/me/file.txt', 'C:\\Users\\me\\file.txt'],
-    # Spaces in path
-    ['file:///C:/Users/me/My%20Documents/file%20name.txt',
-     'C:\\Users\\me\\My Documents\\file name.txt'],
-    # Special characters (e.g., #, &, =)
-    ['file:///C:/path/with%20special%20chars/%23hash%26and%3Dequals.txt',
-     'C:\\path\\with special chars\\#hash&and=equals.txt'],
-    # Path with unicode characters
-    ['file:///C:/Users/%E6%B5%8B%E8%AF%95/%E6%96%87%E4%BB%B6.txt', 'C:\\Users\\测试\\文件.txt'],
-    # File at root
-    ['file:///C:/file.txt', 'C:\\file.txt'],
-    # Network share (UNC path)
-    ['file://server/share/folder/file.txt', '\\\\server\\share\\folder\\file.txt'],
-    # Directory instead of file
-    ['file:///C:/Program%20Files/', 'C:\\Program Files\\'],
-    # Trailing slash on file (unusual, but possible)
-    ['file:///C:/temp/file.txt/', 'C:\\temp\\file.txt\\'],
-    # Drive letter only (edge case)
-    ['file:///C:/', 'C:\\'],
-    # Deeply nested path
-    ['file:///C:/a/b/c/d/e/f/g/h/i/j/file.txt',
-     'C:\\a\\b\\c\\d\\e\\f\\g\\h\\i\\j\\file.txt'],
-    # With some space (duplicate, still needs escaping)
-    ['file:///C:/Users/me/My%20Documents/file%20name.txt',
-     'C:\\Users\\me\\My Documents\\file name.txt'],
-  ]
+const tests_win32 = [
+  # Simple path
+  ['file:///C:/Users/me/file.txt', 'C:\\Users\\me\\file.txt'],
 
+  # Spaces in path
+  ['file:///C:/Users/me/My%20Documents/file%20name.txt',
+   'C:\\Users\\me\\My Documents\\file name.txt'],
+
+  # Special characters (e.g., #, &, =)
+  ['file:///C:/path/with%20special%20chars/%23hash%26and%3Dequals.txt',
+   'C:\\path\\with special chars\\#hash&and=equals.txt'],
+
+  # Path with unicode characters
+  ['file:///C:/Users/测试/文件.txt', 'C:\\Users\\测试\\文件.txt'],
+
+  # File at root
+  ['file:///C:/file.txt', 'C:\\file.txt'],
+
+  # Network share (UNC path)
+  ['file://server/share/folder/file.txt', '\\\\server\\share\\folder\\file.txt'],
+
+  # Directory instead of file
+  ['file:///C:/Program%20Files/', 'C:\\Program Files\\'],
+
+  # Trailing slash on file (unusual, but possible)
+  ['file:///C:/temp/file.txt/', 'C:\\temp\\file.txt\\'],
+
+  # Drive letter only (edge case)
+  ['file:///C:/', 'C:\\'],
+
+  # Deeply nested path
+  ['file:///C:/a/b/c/d/e/f/g/h/i/j/file.txt',
+   'C:\\a\\b\\c\\d\\e\\f\\g\\h\\i\\j\\file.txt'],
+
+  # With some space (duplicate test, but correctly escaped)
+  ['file:///C:/Users/me/My%20Documents/file%20name.txt',
+   'C:\\Users\\me\\My Documents\\file name.txt'],
+]
 
   const tests_unix = [
     # Simple path
