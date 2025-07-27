@@ -145,7 +145,8 @@ export def RefreshLinksDict(): dict<string>
   var links_dict = {}
   const references_line = search($'^{references_comment}', 'nw')
   # UBA to check
-  const lastline = LastReferenceLine() == 0 ? line('$') : LastReferenceLine()
+  const last_reference_line = LastReferenceLine()
+  const lastline = last_reference_line == 0 ? line('$') : last_reference_line
 
   if references_line != 0
     for l in range(references_line + 1, lastline + 1)
@@ -208,7 +209,8 @@ def GetLinkID(): number
     if link_id == 1
       append(line('$'), '')
     endif
-    const lastline = LastReferenceLine() == 0 ? line('$') : LastReferenceLine()
+    const last_reference_line = LastReferenceLine()
+    const lastline = last_reference_line == 0 ? line('$') : last_reference_line
     if lastline != 0
       append(lastline, $'[{link_id}]: {link}' )
     endif
@@ -433,7 +435,8 @@ export def ConvertLinks()
 
       # Fix dict
       b:markdown_extras_links[link_id] = link
-      const lastline = LastReferenceLine()
+      const last_reference_line = LastReferenceLine()
+      const lastline = last_reference_line == 0 ? line('$') : last_reference_line
       if lastline != 0
         append(lastline, $'[{link_id}]: {link}' )
       endif
