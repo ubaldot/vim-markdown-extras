@@ -53,6 +53,7 @@ def PercentDecode(s: string): string
   endwhile
   return result
 enddef
+
 export def URLToPath(url: string): string
   var rest = ''
   if has('win32') || has('win64')
