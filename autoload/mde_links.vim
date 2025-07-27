@@ -20,40 +20,94 @@ var large_files_threshold: number
 const references_comment =
   "<!-- DO NOT REMOVE vim-markdown-extras references DO NOT REMOVE-->"
 
-export def URLToPath(url: string): string
-  # Strip the file:// prefix
-  var path = substitute(url, '^file://', '', '')
-
-  # Decode percent-encoded characters
-  path = substitute(path, '%\(\x\x\)', '\=nr2char(str2nr(submatch(1), 16))', 'g')
-
-  # Handle Windows: convert forward slashes to backslashes only if it's a drive letter path
-  if has('win32') || has('win64')
-    if path =~? '^/[a-zA-Z]: '
-      # Strip leading slash
-      path = substitute(path, '^/', '', '')
+# To account for multi-byte chars, I had to spend one afternoon with chat GPT
+# to understand how the URLToPath and PathToURL function should look like.
+def PercentDecode(s: string): string
+  var result = ''
+  var i = 0
+  while i < len(s)
+    if s[i] ==# '%'
+      var bytes = []
+      while i + 2 < len(s) && s[i] ==# '%'
+        var hex = strpart(s, i + 1, 2)
+        var n = str2nr(hex, 16)
+        if n < 0 || n > 255
+          break
+        endif
+        bytes->add(n)
+        i += 3
+      endwhile
+      if !empty(bytes)
+        # Convert bytes to UTF-8 string
+        var char = join(mapnew(bytes, (_, val) => printf('%c', val)), '')
+        result ..= char
+      endif
+    else
+      result ..= s[i]
+      i += 1
     endif
-    path = substitute(path, '/', '\\', 'g')
+  endwhile
+  return result
+enddef
+
+export def URLToPath(url: string): string
+  var rest = ''
+  if has('win32') || has('win64')
+    # Windows: remove 'file:///' prefix (3 slashes)
+    rest = substitute(url, '^file:///', '', '')
+  else
+    # Unix: remove 'file://' prefix (2 slashes), keep leading slash
+    rest = substitute(url, '^file://', '', '')
   endif
 
-  return path
+  # Percent decode rest
+  rest = PercentDecode(rest)
+
+  if has('win32') || has('win64')
+    # Convert slashes to backslashes on Windows
+    rest = substitute(rest, '/', '\\', 'g')
+  endif
+
+  return rest
+enddef
+
+# Percent-encode non-unreserved characters
+def PercentEncode(str: string): string
+  var out = ''
+  for c in split(str, '\zs')
+    var code = char2nr(c)
+    if (code >=# 0x30 && code <=# 0x39) ||  # 0-9
+       (code >=# 0x41 && code <=# 0x5A) ||  # A-Z
+       (code >=# 0x61 && code <=# 0x7A) ||  # a-z
+       c ==# '-' || c ==# '_' || c ==# '.' || c ==# '~' || c ==# '/' || c ==# ':' || c ==# '@'
+      out ..= c
+    else
+      for b in str2list(iconv(c, &encoding, 'utf-8'))
+        out ..= printf('%%%02X', b)
+      endfor
+    endif
+  endfor
+  return out
 enddef
 
 export def PathToURL(path: string): string
-  # Normalize backslashes to forward slashes
-  var tmp = substitute(path, '\\', '/', 'g')
-
-  # If Windows-style path with drive letter, ensure proper format
-  var url = ''
-  if tmp =~? '^[a-zA-Z]: /'
-    url = 'file:///' .. tmp
-  else
-    url = 'file://' .. tmp
+  var utf8 = iconv(path, &encoding, 'utf-8')
+  var bytes = str2blob([utf8])
+  if len(bytes) > 0 && bytes[len(bytes) - 1] == 0x0A
+    call remove(bytes, len(bytes) - 1)
   endif
 
-  # Percent-encode unsafe characters
-  url = substitute(url, '[^A-Za-z0-9._~!$&''()*+,;=:@/]', '\="%" .. printf("%02X", char2nr(submatch(0)))', 'g')
-  return url
+  var allowed = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_.~/:'
+  var encoded = ''
+  for val in bytes
+    if stridx(allowed, nr2char(val)) >= 0
+      encoded ..= nr2char(val)
+    else
+      encoded ..= printf('%%%02X', val)
+    endif
+  endfor
+
+  return 'file://' .. encoded
 enddef
 
 def InitScriptLocalVars()

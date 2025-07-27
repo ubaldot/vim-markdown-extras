@@ -155,16 +155,59 @@ enddef
 
 def g:Test_URL_path_conversions()
   const tests_win32 = [
-        ['file:///C:/Users/me/My%20Documents/file%20name.txt',
-                      'C:\Users\me\My Documents\file name.txt'],
-        ]
+    # Simple path
+    ['file:///C:/Users/me/file.txt', 'C:\\Users\\me\\file.txt'],
+    # Spaces in path
+    ['file:///C:/Users/me/My%20Documents/file%20name.txt',
+    'C:\\Users\\me\\My Documents\\file name.txt'],
+    # Special characters (e.g., #, &, =)
+    ['file:///C:/path/with%20special%20chars/%23hash%26and%3Dequals.txt',
+        'C:\\path\\with special chars\\#hash&and=equals.txt'],
+    # Path with unicode characters
+    ['file:///C:/Users/测试/文件.txt', 'C:\\Users\\测试\\文件.txt'],
+    # File at root
+    ['file:///C:/file.txt', 'C:\\file.txt'],
+    # Network share (UNC path)
+    ['file://server/share/folder/file.txt', '\\\\server\\share\\folder\\file.txt'],
+    # Directory instead of file
+    ['file:///C:/Program%20Files/', 'C:\\Program Files\\'],
+    # Trailing slash on file (unusual, but possible)
+    ['file:///C:/temp/file.txt/', 'C:\\temp\\file.txt\\'],
+    # Drive letter only (edge case)
+    ['file:///C:/', 'C:\\'],
+    # Deeply nested path
+    ['file:///C:/a/b/c/d/e/f/g/h/i/j/file.txt',
+      'C:\\a\\b\\c\\d\\e\\f\\g\\h\\i\\j\\file.txt'],
+    # With some space
+    ['file:///C:/Users/me/My%20Documents/file%20name.txt',
+      'C:\Users\me\My Documents\file name.txt'],
+  ]
 
-  const tests = [
-        ['file:///home/ubaldo/my%20folder/file.txt', '/home/ubaldo/my folder/file.txt'],
-        ['file:///tmp/foo.txt', '/tmp/foo.txt'],
-        ]
 
-  const target_tests = has('win32') || has('win64') ? tests_win32 : tests
+  const tests_unix = [
+    # Simple path
+    ['file:///home/user/file.txt', '/home/user/file.txt'],
+    # Path with spaces
+    ['file:///home/user/My%20Documents/file%20name.txt', '/home/user/My Documents/file name.txt'],
+    # Special characters (e.g., #, &, =)
+    ['file:///home/user/special%20chars/%23hash%26and%3Dequals.txt', '/home/user/special chars/#hash&and=equals.txt'],
+    # Unicode characters
+    ['file:///home/%E7%94%A8%E6%88%B7/%E6%96%87%E4%BB%B6.txt', '/home/用户/文件.txt'],
+    # File at root
+    ['file:///file.txt', '/file.txt'],
+    # Path with trailing slash (directory)
+    ['file:///usr/local/bin/', '/usr/local/bin/'],
+    # Dot and double dot references
+    ['file:///home/user/../admin/log.txt', '/home/user/../admin/log.txt'],
+    # Path with tilde is not expanded in URLs
+    ['file:///~user/config.txt', '/~user/config.txt'],
+    # Absolute path with multiple slashes
+    ['file:///home//user///docs/file.txt', '/home//user///docs/file.txt'],
+    # Deeply nested path
+    ['file:///a/b/c/d/e/f/g/h/i/j/file.txt', '/a/b/c/d/e/f/g/h/i/j/file.txt']
+  ]
+
+  const target_tests = has('win32') || has('win64') ? tests_win32 : tests_unix
 
   # Test URL_to_path
   var path_converted = ''
