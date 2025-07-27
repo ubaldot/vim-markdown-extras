@@ -170,7 +170,7 @@ def g:Test_URL_path_conversions()
     # Network share (UNC path)
     ['file://server/share/folder/file.txt', '\\server\share\folder\file.txt'],
     # Directory instead of file
-    ['file:///C:/Program%20Files/', 'C:\Program Files\'],
+    ['file:///C:/Program%20Files/', 'C:\\Program Files\\'],
     # Trailing slash on file (unusual, but possible)
     ['file:///C:/temp/file.txt/', 'C:\temp\file.txt\'],
     # Drive letter only (edge case)
@@ -180,7 +180,7 @@ def g:Test_URL_path_conversions()
       'C:\a\b\c\d\e\f\g\h\i\j\file.txt'],
     # With some space
     ['file:///C:/Users/me/My%20Documents/file%20name.txt',
-      'C:\Users\me\My Documents\file name.txt'],
+      'C:\\Users\\me\\My Documents\\file name.txt'],
   ]
 
 
