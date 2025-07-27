@@ -156,17 +156,17 @@ enddef
 def g:Test_URL_path_conversions()
 
 const tests_win32 = [
-  ['file:///C:/Users/me/file.txt', 'C:\\Users\\me\\file.txt'],
-  ['file:///C:/Users/me/My%20Documents/file%20name.txt', 'C:\\Users\\me\\My Documents\\file name.txt'],
-  ['file:///C:/path/with%20special%20chars/%23hash%26and%3Dequals.txt', 'C:\\path\\with special chars\\#hash&and=equals.txt'],
-  ['file:///C:/Users/测试/文件.txt', 'C:\\Users\\测试\\文件.txt'],
-  ['file:///C:/file.txt', 'C:\\file.txt'],
-  ['file://server/share/folder/file.txt', '\\\\server\\share\\folder\\file.txt'],
-  ['file:///C:/Program%20Files/', 'C:\\Program Files\\'],
-  ['file:///C:/temp/file.txt/', 'C:\\temp\\file.txt\\'],
-  ['file:///C:/', 'C:\\'],
-  ['file:///C:/a/b/c/d/e/f/g/h/i/j/file.txt', 'C:\\a\\b\\c\\d\\e\\f\\g\\h\\i\\j\\file.txt'],
-  ['file:///C:/Users/me/My%20Documents/file%20name.txt', 'C:\\Users\\me\\My Documents\\file name.txt'],
+  ['file:///C:/Users/me/file.txt', 'C:\Users\me\file.txt'],
+  ['file:///C:/Users/me/My%20Documents/file%20name.txt', 'C:\Users\me\My Documents\file name.txt'],
+  ['file:///C:/path/with%20special%20chars/%23hash%26and%3Dequals.txt', 'C:\path\with special chars\#hash&and=equals.txt'],
+  ['file:///C:/Users/测试/文件.txt', 'C:\Users\测试\文件.txt'],
+  ['file:///C:/file.txt', 'C:\file.txt'],
+  ['file://server/share/folder/file.txt', '\\server\share\folder\file.txt'],
+  ['file:///C:/Program%20Files/', 'C:\Program Files\'],
+  ['file:///C:/temp/file.txt/', 'C:\temp\file.txt\'],
+  ['file:///C:/', 'C:\'],
+  ['file:///C:/a/b/c/d/e/f/g/h/i/j/file.txt', 'C:\a\b\c\d\e\f\g\h\i\j\file.txt'],
+  ['file:///C:/Users/me/My%20Documents/file%20name.txt', 'C:\Users\me\My Documents\file name.txt'],
 ]
   const tests_unix = [
     # Simple path
@@ -197,7 +197,7 @@ const tests_win32 = [
   var path_converted = ''
   for [url, expected_path] in target_tests
      path_converted = links.URLToPath(url)
-    assert_equal(expected_path, path_converted)
+    echom assert_equal(expected_path, path_converted)
   endfor
 
   # Test path_to_URL

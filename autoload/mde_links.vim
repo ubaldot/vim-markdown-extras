@@ -56,11 +56,16 @@ enddef
 
 export def URLToPath(url: string): string
   var rest = ''
+
+  # Windows:
   if has('win32') || has('win64')
-    # Windows: remove 'file:///' prefix (3 slashes)
-    rest = substitute(url, '^file:///', '', '')
+    rest = substitute(url, '^file:', '', '')
+    # If it starts with a drive letter, like '///C:/', we remove the leading
+    # '///'. Otherwise it is a UNC (like \\server\foo\bar) but that is already set
+    if rest =~ '^///[A-Za-z]:/'
+      rest = substitute(rest, '^///', '', '')
+    endif
   else
-    # Unix: remove 'file://' prefix (2 slashes), keep leading slash
     rest = substitute(url, '^file://', '', '')
   endif
 
@@ -91,7 +96,11 @@ export def PathToURL(path: string): string
     endif
   endfor
 
-  return 'file://' .. encoded
+  if has('win32') || has('win64')
+    return 'file:///' .. encoded
+  else
+    return 'file://' .. encoded
+  endif
 enddef
 
 def InitScriptLocalVars()
