@@ -2,7 +2,6 @@ vim9script
 
 import autoload './mde_constants.vim' as constants
 import autoload './mde_utils.vim' as utils
-# import autoload './ftplugin/markdown.vim'
 
 var main_id: number
 var prompt_id: number
@@ -20,6 +19,42 @@ var large_files_threshold: number
 
 const references_comment =
   "<!-- DO NOT REMOVE vim-markdown-extras references DO NOT REMOVE-->"
+
+def URLToPath(url: string): string
+  # Strip the file:// prefix
+  var path = substitute(url, '^file://', '', '')
+
+  # Decode percent-encoded characters
+  path = substitute(path, '%\(\x\x\)', '\=nr2char(str2nr(submatch(1), 16))', 'g')
+
+  # Handle Windows: convert forward slashes to backslashes only if it's a drive letter path
+  if has('win32') || has('win64')
+    if path =~? '^/[a-zA-Z]: '
+      # Strip leading slash
+      path = substitute(path, '^/', '', '')
+    endif
+    path = substitute(path, '/', '\\', 'g')
+  endif
+
+  return path
+enddef
+
+def PathToURL(path: string): string
+  # Normalize backslashes to forward slashes
+  var tmp = substitute(path, '\\', '/', 'g')
+
+  # If Windows-style path with drive letter, ensure proper format
+  var url = ''
+  if tmp =~? '^[a-zA-Z]: /'
+    url = 'file:///' .. tmp
+  else
+    url = 'file://' .. tmp
+  endif
+
+  # Percent-encode unsafe characters
+  url = substitute(url, '[^A-Za-z0-9._~!$&''()*+,;=:@/]', '\="%" .. printf("%02X", char2nr(submatch(0)))', 'g')
+  return url
+enddef
 
 def InitScriptLocalVars()
   # Set script-local variables
@@ -87,9 +122,15 @@ def GetFileSize(filename: string): number
 enddef
 
 export def RefreshLinksDict(): dict<string>
-  # Generate the b:markdown_extras_links by parsing the # References section,
-  # but it requires that there is a # Reference section at the end
+  # Generate the b:markdown_extras_links by parsing the 'references_comment'
+  # Section.
   #
+  # b:markdown_extras_links is a dict where the keys are numbers and the
+  # values are valid URLs, e.g. https://, file://, ...
+  #
+  # Note that URLs starting with file:// are converted back and forth from URL
+  # to local paths within the script.
+
   # Cleanup the current b:markdown_extras_links
   var links_dict = {}
   const references_line = search($'^{references_comment}', 'nw')
@@ -137,9 +178,8 @@ def GetLinkID(): number
   endif
   &wildmenu = current_wildmenu
 
-  # TODO: use full-path?
   if !IsURL(link)
-    link = fnamemodify(link, ':p')
+    link = PathToURL(fnamemodify(link, ':p'))
   endif
   var reference_line = search($'^{references_comment}', 'nw')
   if reference_line == 0
@@ -206,8 +246,8 @@ def LinksPopupCallback(type: string,
     execute $'norm! a[{link_id}]'
     if selection == "Create new link"
       norm! F]h
-      if !IsURL(b:markdown_extras_links[link_id])
-          && !filereadable(b:markdown_extras_links[link_id])
+      if b:markdown_extras_links[link_id] =~ '^file://'
+          && !filereadable(URLToPath(b:markdown_extras_links[link_id]))
         exe $'edit {b:markdown_extras_links[link_id]}'
         # write
       endif
@@ -234,7 +274,8 @@ def IsBinary(link: string): bool
   # Override if binary and not too large
   if filereadable(link)
     # Large file: open in a new Vim instance if
-    if executable('file') && system($'file --brief --mime {link}') !~ '^text/'
+    const file_type = system($'file --brief -mime "{link}"')
+    if executable('file') && file_type !~ '^ASCII text' && file_type !~ '^empty'
       is_binary = true
     # In case 'file' is not available, like in Windows, search for the NULL
     # byte. Guard if the file is too large
@@ -296,23 +337,23 @@ export def OpenLink(is_split: bool = false)
 
     # Assume that a file is always small (=1 byte) is no large_file_support is
     # enabled
-    const file_size = !IsURL(link) && large_files_threshold > 0
-      ? GetFileSize(link)
+    const file_size = link =~ '^file://' && large_files_threshold > 0
+      ? GetFileSize(URLToPath(link))
       : 0
 
-    if !IsURL(link)
+    if link =~ '^file://'
         && (0 <= file_size && file_size <= large_files_threshold )
-        && !IsBinary(link)
+        && !IsBinary(URLToPath(link))
       if is_split
         if GetRightWindowID() == -1
           win_execute(win_getid(), 'vsplit')
         endif
-        win_execute(GetRightWindowID(), $'edit {link}')
+        win_execute(GetRightWindowID(), $'edit {URLToPath(link)}')
       else
-        exe $'edit {link}'
+        exe $'edit {URLToPath(link)}'
       endif
     else
-      exe $":Open {fnameescape(link)}"
+      exe $":Open {fnameescape(URLToPath(link))}"
     endif
     setcharpos('.', saved_curpos)
 enddef
@@ -550,9 +591,9 @@ export def ShowPromptPopup(slave_id: number,
   # This could be called by other scripts and its id may be undefined.
   InitScriptLocalVars()
   # This is the UI thing
-  var slave_id_core_line = popup_getcharpos(slave_id).core_line
-  var slave_id_core_col = popup_getcharpos(slave_id).core_col
-  var slave_id_core_width = popup_getcharpos(slave_id).core_width
+  var slave_id_core_line = popup_getpos(slave_id).core_line
+  var slave_id_core_col = popup_getpos(slave_id).core_col
+  var slave_id_core_width = popup_getpos(slave_id).core_width
 
   # var base_title = $'{search_type}:'
   var opts = {
@@ -705,12 +746,12 @@ export def PreviewPopup()
     const file_size = !IsURL(link_name) && large_files_threshold > 0
           ? GetFileSize(link_name)
           : 0
-    if IsURL(link_name)
+    if link_name !~ '^file://'
         || (filereadable(link_name) && file_size > large_files_threshold)
       previewText = [link_name]
       refFiletype = 'text'
     else
-      previewText = GetFileContent(link_name)
+      previewText = GetFileContent(URLToPath(link_name))
     endif
 
     popup_clear()
