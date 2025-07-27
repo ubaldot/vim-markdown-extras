@@ -20,7 +20,7 @@ var large_files_threshold: number
 const references_comment =
   "<!-- DO NOT REMOVE vim-markdown-extras references DO NOT REMOVE-->"
 
-def URLToPath(url: string): string
+export def URLToPath(url: string): string
   # Strip the file:// prefix
   var path = substitute(url, '^file://', '', '')
 
@@ -39,7 +39,7 @@ def URLToPath(url: string): string
   return path
 enddef
 
-def PathToURL(path: string): string
+export def PathToURL(path: string): string
   # Normalize backslashes to forward slashes
   var tmp = substitute(path, '\\', '/', 'g')
 
@@ -309,31 +309,52 @@ enddef
 
 export def OpenLink(is_split: bool = false)
     InitScriptLocalVars()
-    # Get link name depending of reference-style or inline link
-    var symbol = ''
+    # Get link name depending of reference-style or inline link or just a
+    # link, like for example when it is in the reference Section
     const saved_curpos = getcurpos()
-    # Start the search from the end of the text-link
-    norm! f]
-    if searchpos('[', 'nW') == [0, 0]
-      symbol = '('
-    elseif searchpos('(', 'nW') == [0, 0]
-      symbol = '['
-    else
-      symbol = utils.IsLess(searchpos('[', 'nW'), searchpos('(', 'nW'))
-        ? '['
-        : '('
-    endif
-
-    exe $"norm! f{symbol}l"
-
     var link = ''
-    if symbol == '['
-      b:markdown_extras_links = RefreshLinksDict()
-      const link_id = utils.GetTextObject('i[').text
-      link = b:markdown_extras_links[link_id]
+
+    if synIDattr(synID(line("."), charcol("."), 1), "name") == 'markdownUrl'
+      # The end of the URL is an empty space or the end of the line. We have
+      # to capture the correct one.
+
+      # if "norm! T " don't move, then the URL string is until the end of the line
+      const a = getcursorcharpos()
+      execute "normal! t "
+      const b = getcursorcharpos()
+      if a == b
+        # cursor didn't move
+        link = utils.GetTextObject('$').text
+      else
+        execute "normal! T "
+        link = utils.GetTextObject('t ').text
+      endif
     else
-      link = utils.GetTextObject('i(').text
+      # Start the search from the end of the text-link
+      var symbol = ''
+      norm! f]
+      if searchpos('[', 'nW') == [0, 0]
+        symbol = '('
+      elseif searchpos('(', 'nW') == [0, 0]
+        symbol = '['
+      else
+        symbol = utils.IsLess(searchpos('[', 'nW'), searchpos('(', 'nW'))
+          ? '['
+          : '('
+      endif
+
+      exe $"norm! f{symbol}l"
+
+      if symbol == '['
+        b:markdown_extras_links = RefreshLinksDict()
+        const link_id = utils.GetTextObject('i[').text
+        link = b:markdown_extras_links[link_id]
+      else
+        link = utils.GetTextObject('i(').text
+      endif
     endif
+
+
 
     # Assume that a file is always small (=1 byte) is no large_file_support is
     # enabled
@@ -618,6 +639,10 @@ export def ShowPromptPopup(slave_id: number,
 enddef
 
 export def CreateLink(type: string = '')
+  if !empty(synIDattr(synID(line("."), charcol("."), 1), "name"))
+    return
+  endif
+
   InitScriptLocalVars()
   const references_line = search($'^{references_comment}', 'nw')
   if references_line == 0
@@ -707,9 +732,10 @@ export def PreviewPopup()
   b:markdown_extras_links = RefreshLinksDict()
 
   var previewText = []
+  var link_name = ''
+  const saved_curpos = getcurpos()
   if !empty(IsLink())
     # Search from the current cursor position to the end of line
-    var saved_curpos = getcurpos()
     # Start the search from the end of the text-link
     norm! f]
     # Find the closest between [ and (
@@ -726,7 +752,6 @@ export def PreviewPopup()
 
     exe $"norm! f{symbol}l"
 
-    var link_name = ''
     var link_id = ''
     if symbol == '['
       b:markdown_extras_links = RefreshLinksDict()
@@ -735,9 +760,15 @@ export def PreviewPopup()
     else
       link_name = utils.GetTextObject('i(').text
     endif
+  endif
 
-    #
-    #
+  # Show preview also if the cursor is on the reference Section
+  if synIDattr(synID(line("."), charcol("."), 1), "name") == 'markdownUrl'
+    execute "normal! T "
+    link_name = utils.GetTextObject('$').text
+  endif
+
+  if !empty(link_name)
     # TODO At the moment only .md files have syntax highlight.
     var refFiletype = $'{fnamemodify(link_name, ":e")}' == 'md'
       ? 'markdown'
