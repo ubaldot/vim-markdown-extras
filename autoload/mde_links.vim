@@ -121,6 +121,16 @@ def GetFileSize(filename: string): number
   return filesize->substitute('\n', '', 'g')->str2nr()
 enddef
 
+def LastReferenceLine(): number
+  const saved_curpos = getcursorcharpos()
+  cursor('$', 1)
+  # Search backwards line starting with e.g. '[32]: '
+  const lastline = search('^\s*\[\d\+\]:\s\+', 'bW')
+  setpos('.', saved_curpos)
+  return lastline
+enddef
+
+
 export def RefreshLinksDict(): dict<string>
   # Generate the b:markdown_extras_links by parsing the 'references_comment'
   # Section.
@@ -134,8 +144,11 @@ export def RefreshLinksDict(): dict<string>
   # Cleanup the current b:markdown_extras_links
   var links_dict = {}
   const references_line = search($'^{references_comment}', 'nw')
+  # UBA to check
+  const lastline = LastReferenceLine() == 0 ? line('$') : LastReferenceLine()
+
   if references_line != 0
-    for l in range(references_line + 1, line('$'))
+    for l in range(references_line + 1, lastline + 1)
       var ref = getline(l)
       if !empty(ref)
         var key = ref->matchstr('\[\zs\d\+\ze\]')
@@ -195,7 +208,10 @@ def GetLinkID(): number
     if link_id == 1
       append(line('$'), '')
     endif
-    append(line('$'), $'[{link_id}]: {link}' )
+    const lastline = LastReferenceLine() == 0 ? line('$') : LastReferenceLine()
+    if lastline != 0
+      append(lastline, $'[{link_id}]: {link}' )
+    endif
   else
     # Reuse existing link
     var tmp = getline(link_line)->substitute('\v^\[(\d*)\].*', '\1', '')
@@ -417,8 +433,10 @@ export def ConvertLinks()
 
       # Fix dict
       b:markdown_extras_links[link_id] = link
-      var lastline = line('$')
-      append(lastline, $'[{link_id}]: {link}')
+      const lastline = LastReferenceLine()
+      if lastline != 0
+        append(lastline, $'[{link_id}]: {link}' )
+      endif
       # TODO Find last proper line
       # var line = search('\s*#\+\s*References', 'n') + 2
       # var lastline = -1
@@ -442,7 +460,6 @@ enddef
 export def RemoveLink(range_info: dict<list<list<number>>> = {})
   const link_info = empty(range_info) ? IsLink() : range_info
   # TODO: it may not be the best but it works so far
-  echom "link_info: " .. string(keys(link_info))
   if !empty(link_info) && keys(link_info)[0] != 'markdownUrl'
       const saved_curpos = getcurpos()
       # Start the search from the end of the text-link
