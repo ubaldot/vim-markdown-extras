@@ -201,9 +201,9 @@ const tests_win32 = [
   endfor
 
   # Test path_to_URL
-  # var url_converted = ''
-  # for [expected_url, path] in target_tests
-  #    url_converted = links.PathToURL(path)
-  #   assert_equal(expected_url, url_converted)
-  # endfor
+  var url_converted = ''
+  for [expected_url, path] in target_tests
+     url_converted = links.PathToURL(path)
+    assert_equal(expected_url, url_converted)
+  endfor
 enddef

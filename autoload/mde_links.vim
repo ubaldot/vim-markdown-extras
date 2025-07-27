@@ -80,7 +80,14 @@ export def URLToPath(url: string): string
 enddef
 
 export def PathToURL(path: string): string
-  var utf8 = iconv(path, &encoding, 'utf-8')
+  var rest = ''
+  if has('win32') || has('win64')
+    rest = path->substitute('\\', '/', 'g')
+  else
+    rest = path
+  endif
+
+  var utf8 = iconv(rest, &encoding, 'utf-8')
   var bytes = str2blob([utf8])
   if len(bytes) > 0 && bytes[len(bytes) - 1] == 0x0A
     call remove(bytes, len(bytes) - 1)
@@ -97,7 +104,11 @@ export def PathToURL(path: string): string
   endfor
 
   if has('win32') || has('win64')
-    return 'file:///' .. encoded
+    if rest =~ '^[A-Za-z]:/'
+      return 'file:///' .. encoded
+    else
+      return 'file:' .. encoded
+    endif
   else
     return 'file://' .. encoded
   endif
