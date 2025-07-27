@@ -159,7 +159,7 @@ const tests_win32 = [
   ['file:///C:/Users/me/file.txt', 'C:\Users\me\file.txt'],
   ['file:///C:/Users/me/My%20Documents/file%20name.txt', 'C:\Users\me\My Documents\file name.txt'],
   ['file:///C:/path/with%20special%20chars/%23hash%26and%3Dequals.txt', 'C:\path\with special chars\#hash&and=equals.txt'],
-  ['file:///C:/Users/测试/文件.txt', 'C:\Users\测试\文件.txt'],
+  ['file:///C:/Users/%E6%B5%8B%E8%AF%95/%E6%96%87%E4%BB%B6.txt', 'C:\Users\测试\文件.txt'],
   ['file:///C:/file.txt', 'C:\file.txt'],
   ['file://server/share/folder/file.txt', '\\server\share\folder\file.txt'],
   ['file:///C:/Program%20Files/', 'C:\Program Files\'],
