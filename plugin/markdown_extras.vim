@@ -16,9 +16,47 @@ elseif !has('patch-9.1.1071')
   finish
 endif
 
-if exists('g:markdown_extras_loaded')
+if exists('g:markdown_extras_loaded') && g:markdown_extras_loaded
   finish
 endif
+
+var release_notes =<< FOO
+## vim-markdown-extras: release notes
+
+Links must have a valid URL format to keep consistency with
+the markdown requirements.
+
+Hence, the following link:
+
+[1]: C:\User\John\My Documents\foo bar.txt
+
+shall be converted into:
+
+[1]: file:///C:/User/John/My%20Documents/foo%20bar.txt
+
+Please, update the links in your markdown files.
+
+💡 **TIP**:
+You can ask any LLM to convert the links for you.
+Typically, they are quite accurate.
+
+Press <Esc> to close this popup.
+FOO
+
+def ShowReleaseNotes()
+
+  const popup_options = {
+      border: [1, 1, 1, 1],
+      borderchars:  ['─', '│', '─', '│', '╭', '╮', '╯', '╰'],
+      filter: 'popup_filter_menu',
+    }
+
+  const popup_id = popup_create(release_notes, popup_options)
+  win_execute(popup_id, 'set filetype=markdown')
+  win_execute(popup_id, 'set conceallevel=2')
+enddef
+
+command! -nargs=0 MDEReleaseNotes ShowReleaseNotes()
 
 augroup MARKDOWN_EXTRAS_VISITED_BUFFERS
     autocmd!

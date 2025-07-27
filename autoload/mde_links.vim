@@ -2,7 +2,6 @@ vim9script
 
 import autoload './mde_constants.vim' as constants
 import autoload './mde_utils.vim' as utils
-# import autoload './ftplugin/markdown.vim'
 
 var main_id: number
 var prompt_id: number
@@ -20,6 +19,100 @@ var large_files_threshold: number
 
 const references_comment =
   "<!-- DO NOT REMOVE vim-markdown-extras references DO NOT REMOVE-->"
+
+# To account for multi-byte chars, I had to spend one afternoon with chat GPT
+# to understand how the URLToPath and PathToURL function should look like.
+
+def PercentDecode(s: string): string
+  var result = ''
+  var i = 0
+  while i < len(s)
+    if s[i] ==# '%'
+      var bytes = []
+      while i + 2 < len(s) && s[i] ==# '%'
+        var hex = strpart(s, i + 1, 2)
+        var n = str2nr(hex, 16)
+        if n < 0 || n > 255
+          break
+        endif
+        bytes->add(n)
+        i += 3
+      endwhile
+
+      if !empty(bytes)
+        # Convert list of bytes to blob, then decode blob to UTF-8 string
+        var decoded_list = list2blob(bytes)->blob2str({'encoding': 'utf-8'})
+        # blob2str returns a list of strings (split by newline bytes), join them safely
+        var decoded_str = join(decoded_list, "\n")
+        result ..= decoded_str
+      endif
+    else
+      result ..= s[i]
+      i += 1
+    endif
+  endwhile
+  return result
+enddef
+
+export def URLToPath(url: string): string
+  var rest = ''
+
+  # Windows:
+  if has('win32') || has('win64')
+    rest = substitute(url, '^file:', '', '')
+    # If it starts with a drive letter, like '///C:/', we remove the leading
+    # '///'. Otherwise it is a UNC (like \\server\foo\bar) but that is already set
+    if rest =~ '^///[A-Za-z]:/'
+      rest = substitute(rest, '^///', '', '')
+    endif
+  else
+    rest = substitute(url, '^file://', '', '')
+  endif
+
+  rest = PercentDecode(rest)
+
+  if has('win32') || has('win64')
+    # Convert forward slashes to backslashes on Windows
+    rest = substitute(rest, '/', '\\', 'g')
+  endif
+
+  return rest
+enddef
+
+export def PathToURL(path: string): string
+  var rest = ''
+  if has('win32') || has('win64')
+    rest = path->substitute('\\', '/', 'g')
+  else
+    rest = path
+  endif
+
+  var utf8 = iconv(rest, &encoding, 'utf-8')
+  var bytes = str2blob([utf8])
+  if len(bytes) > 0 && bytes[len(bytes) - 1] == 0x0A
+    call remove(bytes, len(bytes) - 1)
+  endif
+
+  var allowed = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_.~/:'
+  var encoded = ''
+  for val in bytes
+    if stridx(allowed, nr2char(val)) >= 0
+      encoded ..= nr2char(val)
+    else
+      encoded ..= printf('%%%02X', val)
+    endif
+  endfor
+
+  if has('win32') || has('win64')
+    if rest =~ '^[A-Za-z]:/'
+      return 'file:///' .. encoded
+    else
+      return 'file:' .. encoded
+    endif
+  else
+    return 'file://' .. encoded
+  endif
+enddef
 
 def InitScriptLocalVars()
   # Set script-local variables
@@ -86,15 +179,35 @@ def GetFileSize(filename: string): number
   return filesize->substitute('\n', '', 'g')->str2nr()
 enddef
 
+def LastReferenceLine(): number
+  # Return the last occurrence of reference of the form '[32]: ...'
+  const saved_curpos = getcursorcharpos()
+  cursor('$', 1)
+  # Search backwards line starting with e.g. '[32]: '
+  const lastline = search('^\s*\[\d\+\]:\s\+', 'bW')
+  setpos('.', saved_curpos)
+  return lastline
+enddef
+
 export def RefreshLinksDict(): dict<string>
-  # Generate the b:markdown_extras_links by parsing the # References section,
-  # but it requires that there is a # Reference section at the end
+  # Generate the b:markdown_extras_links by parsing the 'references_comment'
+  # Section.
   #
+  # b:markdown_extras_links is a dict where the keys are numbers and the
+  # values are valid URLs, e.g. https://, file://, ...
+  #
+  # Note that URLs starting with file:// are converted back and forth from URL
+  # to local paths within the script.
+
   # Cleanup the current b:markdown_extras_links
   var links_dict = {}
   const references_line = search($'^{references_comment}', 'nw')
+  # UBA to check
+  const last_reference_line = LastReferenceLine()
+  const lastline = last_reference_line == 0 ? line('$') : last_reference_line
+
   if references_line != 0
-    for l in range(references_line + 1, line('$'))
+    for l in range(references_line + 1, lastline + 1)
       var ref = getline(l)
       if !empty(ref)
         var key = ref->matchstr('\[\zs\d\+\ze\]')
@@ -137,9 +250,8 @@ def GetLinkID(): number
   endif
   &wildmenu = current_wildmenu
 
-  # TODO: use full-path?
   if !IsURL(link)
-    link = fnamemodify(link, ':p')
+    link = PathToURL(fnamemodify(link, ':p'))
   endif
   var reference_line = search($'^{references_comment}', 'nw')
   if reference_line == 0
@@ -155,7 +267,11 @@ def GetLinkID(): number
     if link_id == 1
       append(line('$'), '')
     endif
-    append(line('$'), $'[{link_id}]: {link}' )
+    const last_reference_line = LastReferenceLine()
+    const lastline = last_reference_line == 0 ? line('$') : last_reference_line
+    if lastline != 0
+      append(lastline, $'[{link_id}]: {link}' )
+    endif
   else
     # Reuse existing link
     var tmp = getline(link_line)->substitute('\v^\[(\d*)\].*', '\1', '')
@@ -206,8 +322,8 @@ def LinksPopupCallback(type: string,
     execute $'norm! a[{link_id}]'
     if selection == "Create new link"
       norm! F]h
-      if !IsURL(b:markdown_extras_links[link_id])
-          && !filereadable(b:markdown_extras_links[link_id])
+      if b:markdown_extras_links[link_id] =~ '^file://'
+          && !filereadable(URLToPath(b:markdown_extras_links[link_id]))
         exe $'edit {b:markdown_extras_links[link_id]}'
         # write
       endif
@@ -222,6 +338,27 @@ export def IsLink(): dict<list<list<number>>>
   const range_info = utils.IsInRange()
   if !empty(range_info) && keys(range_info)[0] == 'markdownLinkText'
     return range_info
+  elseif synIDattr(synID(line("."), charcol("."), 1), "name") == 'markdownUrl'
+    # Find beginning of the URL
+    var a = [line('.'), 1]
+    var b = searchpos(' ', 'nbW')
+    var start_pos = [0, 0]
+    if utils.IsLess(a, b) && b != [0, 0]
+      start_pos = [b[0], b[1] + 1]
+    else
+      start_pos = a
+    endif
+
+    # Find end of the URL
+    a = searchpos(' ', 'nW')
+    b = [line('.'), charcol('$') - 1]
+    var end_pos = [0, 0]
+    if utils.IsLess(a, b) && a != [0, 0]
+      end_pos = [a[0], a[1] - 1]
+    else
+      end_pos = b
+    endif
+    return {'markdownUrl': [start_pos, end_pos]}
   else
     return {}
   endif
@@ -234,7 +371,8 @@ def IsBinary(link: string): bool
   # Override if binary and not too large
   if filereadable(link)
     # Large file: open in a new Vim instance if
-    if executable('file') && system($'file --brief --mime {link}') !~ '^text/'
+    const file_type = system($'file --brief -mime "{link}"')
+    if executable('file') && file_type !~ '^ASCII text' && file_type !~ '^empty'
       is_binary = true
     # In case 'file' is not available, like in Windows, search for the NULL
     # byte. Guard if the file is too large
@@ -268,51 +406,61 @@ enddef
 
 export def OpenLink(is_split: bool = false)
     InitScriptLocalVars()
-    # Get link name depending of reference-style or inline link
-    var symbol = ''
+    # Get link name depending of reference-style or inline link or just a
+    # link, like for example when it is in the reference Section
     const saved_curpos = getcurpos()
-    # Start the search from the end of the text-link
-    norm! f]
-    if searchpos('[', 'nW') == [0, 0]
-      symbol = '('
-    elseif searchpos('(', 'nW') == [0, 0]
-      symbol = '['
-    else
-      symbol = utils.IsLess(searchpos('[', 'nW'), searchpos('(', 'nW'))
-        ? '['
-        : '('
-    endif
-
-    exe $"norm! f{symbol}l"
-
     var link = ''
-    if symbol == '['
-      b:markdown_extras_links = RefreshLinksDict()
-      const link_id = utils.GetTextObject('i[').text
-      link = b:markdown_extras_links[link_id]
+
+    if synIDattr(synID(line("."), charcol("."), 1), "name") != 'markdownUrl'
+      # Start the search from the end of the text-link
+      var symbol = ''
+      norm! f]
+      if searchpos('[', 'nW') == [0, 0]
+        symbol = '('
+      elseif searchpos('(', 'nW') == [0, 0]
+        symbol = '['
+      else
+        symbol = utils.IsLess(searchpos('[', 'nW'), searchpos('(', 'nW'))
+          ? '['
+          : '('
+      endif
+
+      exe $"norm! f{symbol}l"
+
+      if symbol == '['
+        b:markdown_extras_links = RefreshLinksDict()
+        const link_id = utils.GetTextObject('i[').text
+        link = b:markdown_extras_links[link_id]
+      else
+        link = utils.GetTextObject('i(').text
+      endif
     else
-      link = utils.GetTextObject('i(').text
+        const link_interval = values(IsLink())[0]
+        const start = link_interval[0][1] - 1
+        const length = link_interval[1][1] - link_interval[0][1] + 1
+        link = strcharpart(getline('.'), start, length)
     endif
 
+    # COMMON
     # Assume that a file is always small (=1 byte) is no large_file_support is
     # enabled
-    const file_size = !IsURL(link) && large_files_threshold > 0
-      ? GetFileSize(link)
+    const file_size = link =~ '^file://' && large_files_threshold > 0
+      ? GetFileSize(URLToPath(link))
       : 0
 
-    if !IsURL(link)
+    if link =~ '^file://'
         && (0 <= file_size && file_size <= large_files_threshold )
-        && !IsBinary(link)
+        && !IsBinary(URLToPath(link))
       if is_split
         if GetRightWindowID() == -1
           win_execute(win_getid(), 'vsplit')
         endif
-        win_execute(GetRightWindowID(), $'edit {link}')
+        win_execute(GetRightWindowID(), $'edit {URLToPath(link)}')
       else
-        exe $'edit {link}'
+        exe $'edit {URLToPath(link)}'
       endif
     else
-      exe $":Open {fnameescape(link)}"
+      exe $":Open {fnameescape(URLToPath(link))}"
     endif
     setcharpos('.', saved_curpos)
 enddef
@@ -345,8 +493,11 @@ export def ConvertLinks()
 
       # Fix dict
       b:markdown_extras_links[link_id] = link
-      var lastline = line('$')
-      append(lastline, $'[{link_id}]: {link}')
+      const last_reference_line = LastReferenceLine()
+      const lastline = last_reference_line == 0 ? line('$') : last_reference_line
+      if lastline != 0
+        append(lastline, $'[{link_id}]: {link}' )
+      endif
       # TODO Find last proper line
       # var line = search('\s*#\+\s*References', 'n') + 2
       # var lastline = -1
@@ -370,7 +521,7 @@ enddef
 export def RemoveLink(range_info: dict<list<list<number>>> = {})
   const link_info = empty(range_info) ? IsLink() : range_info
   # TODO: it may not be the best but it works so far
-  if !empty(link_info)
+  if !empty(link_info) && keys(link_info)[0] != 'markdownUrl'
       const saved_curpos = getcurpos()
       # Start the search from the end of the text-link
       norm! f]
@@ -550,9 +701,9 @@ export def ShowPromptPopup(slave_id: number,
   # This could be called by other scripts and its id may be undefined.
   InitScriptLocalVars()
   # This is the UI thing
-  var slave_id_core_line = popup_getcharpos(slave_id).core_line
-  var slave_id_core_col = popup_getcharpos(slave_id).core_col
-  var slave_id_core_width = popup_getcharpos(slave_id).core_width
+  var slave_id_core_line = popup_getpos(slave_id).core_line
+  var slave_id_core_col = popup_getpos(slave_id).core_col
+  var slave_id_core_width = popup_getpos(slave_id).core_width
 
   # var base_title = $'{search_type}:'
   var opts = {
@@ -577,6 +728,10 @@ export def ShowPromptPopup(slave_id: number,
 enddef
 
 export def CreateLink(type: string = '')
+  if !empty(synIDattr(synID(line("."), charcol("."), 1), "name"))
+    return
+  endif
+
   InitScriptLocalVars()
   const references_line = search($'^{references_comment}', 'nw')
   if references_line == 0
@@ -666,9 +821,12 @@ export def PreviewPopup()
   b:markdown_extras_links = RefreshLinksDict()
 
   var previewText = []
-  if !empty(IsLink())
+  var link_name = ''
+  const saved_curpos = getcurpos()
+  const link_info = IsLink()
+  # CASE 1: on an alias
+  if !empty(link_info) && keys(link_info)[0] != 'markdownUrl'
     # Search from the current cursor position to the end of line
-    var saved_curpos = getcurpos()
     # Start the search from the end of the text-link
     norm! f]
     # Find the closest between [ and (
@@ -685,7 +843,6 @@ export def PreviewPopup()
 
     exe $"norm! f{symbol}l"
 
-    var link_name = ''
     var link_id = ''
     if symbol == '['
       b:markdown_extras_links = RefreshLinksDict()
@@ -694,23 +851,28 @@ export def PreviewPopup()
     else
       link_name = utils.GetTextObject('i(').text
     endif
+  # CASE 2: on an actual link, like those in the reference Section
+  elseif !empty(link_info) && keys(link_info)[0] == 'markdownUrl'
+    const link_interval = values(link_info)[0]
+    const start = link_interval[0][1] - 1
+    const length = link_interval[1][1] - link_interval[0][1] + 1
+    link_name = strcharpart(getline('.'), start, length)
+  endif
 
-    #
-    #
+  if !empty(link_name)
     # TODO At the moment only .md files have syntax highlight.
     var refFiletype = $'{fnamemodify(link_name, ":e")}' == 'md'
       ? 'markdown'
       : 'text'
-    # echom GetFileSize(link_name)
     const file_size = !IsURL(link_name) && large_files_threshold > 0
           ? GetFileSize(link_name)
           : 0
-    if IsURL(link_name)
+    if link_name !~ '^file://'
         || (filereadable(link_name) && file_size > large_files_threshold)
       previewText = [link_name]
       refFiletype = 'text'
     else
-      previewText = GetFileContent(link_name)
+      previewText = GetFileContent(URLToPath(link_name))
     endif
 
     popup_clear()

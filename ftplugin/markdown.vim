@@ -10,6 +10,16 @@ import autoload '../plugin/markdown_extras.vim' as markdown_extras
 
 b:markdown_extras_links = links.RefreshLinksDict()
 
+# UBA: check that the values of the dict are valid URL
+for link in values(b:markdown_extras_links)
+  if !links.IsURL(link)
+    utils.Echowarn($'"{link}" is not a valid URL.'
+                .. ' Run :MDEReleaseNotes to read more')
+    sleep 200m
+    break
+  endif
+endfor
+
 # Convert links inline links [mylink](blabla) to referenced links [mylink][3]
 command! -buffer -nargs=0 MDEConvertLinks links.ConvertLinks()
 command! -buffer -nargs=0 MDEIndices indices.ShowIndices()

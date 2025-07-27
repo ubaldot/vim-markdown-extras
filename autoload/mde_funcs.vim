@@ -149,10 +149,9 @@ export def RemoveAll()
   const syn_info = synIDattr(synID(line("."), charcol("."), 1), "name")
   const is_quote_block = getline('.') =~ '^>\s'
 
-  # If on plain text, do nothing, just execute a normal! <BS>
+  # If on plain text, do nothing
   if empty(range_info) && empty(prop_info)
         && syn_info != 'markdownCodeBlock' && !is_quote_block
-    exe "norm! \<BS>"
     return
   endif
 

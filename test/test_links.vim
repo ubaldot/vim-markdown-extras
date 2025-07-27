@@ -92,7 +92,7 @@ def g:Test_ConvertLinks()
   const expected_line_9 =  'More text to demonstrate mixed links. '
   .. 'Here is another inline link: [example][7].'
   const expected_line_17 = '- Visit [this site][8] for details.'
-  const expected_lines_25_28 = [
+  const expected_lines_24_27 = [
             '[5]: foo_foo',
             '[6]: ciao_ciao',
             '[7]: https://example.com',
@@ -102,10 +102,10 @@ def g:Test_ConvertLinks()
  echom  assert_equal(expected_line_6, getline(6))
  echom  assert_equal(expected_line_9, getline(9))
  echom  assert_equal(expected_line_17, getline(17))
- echom  assert_equal(expected_lines_25_28, getline(25, 28))
+ echom  assert_equal(expected_lines_24_27, getline(24, 27))
 
-  # :%bw!
-  # Cleanup_testfile(src_name_1)
+  :%bw!
+  Cleanup_testfile(src_name_1)
 enddef
 
 def g:Test_RefreshLinksDict()
@@ -151,4 +151,59 @@ def g:Test_RemoveLink()
 
   :%bw!
   Cleanup_testfile(src_name_1)
+enddef
+
+def g:Test_URL_path_conversions()
+
+const tests_win32 = [
+  ['file:///C:/Users/me/file.txt', 'C:\Users\me\file.txt'],
+  ['file:///C:/Users/me/My%20Documents/file%20name.txt', 'C:\Users\me\My Documents\file name.txt'],
+  ['file:///C:/path/with%20special%20chars/%23hash%26and%3Dequals.txt', 'C:\path\with special chars\#hash&and=equals.txt'],
+  ['file:///C:/Users/%E6%B5%8B%E8%AF%95/%E6%96%87%E4%BB%B6.txt', 'C:\Users\测试\文件.txt'],
+  ['file:///C:/file.txt', 'C:\file.txt'],
+  ['file://server/share/folder/file.txt', '\\server\share\folder\file.txt'],
+  ['file:///C:/Program%20Files/', 'C:\Program Files\'],
+  ['file:///C:/temp/file.txt/', 'C:\temp\file.txt\'],
+  ['file:///C:/', 'C:\'],
+  ['file:///C:/a/b/c/d/e/f/g/h/i/j/file.txt', 'C:\a\b\c\d\e\f\g\h\i\j\file.txt'],
+  ['file:///C:/Users/me/My%20Documents/file%20name.txt', 'C:\Users\me\My Documents\file name.txt'],
+]
+  const tests_unix = [
+    # Simple path
+    ['file:///home/user/file.txt', '/home/user/file.txt'],
+    # Path with spaces
+    ['file:///home/user/My%20Documents/file%20name.txt', '/home/user/My Documents/file name.txt'],
+    # Special characters (e.g., #, &, =)
+    ['file:///home/user/special%20chars/%23hash%26and%3Dequals.txt', '/home/user/special chars/#hash&and=equals.txt'],
+    # Unicode characters
+    ['file:///home/%E7%94%A8%E6%88%B7/%E6%96%87%E4%BB%B6.txt', '/home/用户/文件.txt'],
+    # File at root
+    ['file:///file.txt', '/file.txt'],
+    # Path with trailing slash (directory)
+    ['file:///usr/local/bin/', '/usr/local/bin/'],
+    # Dot and double dot references
+    ['file:///home/user/../admin/log.txt', '/home/user/../admin/log.txt'],
+    # Path with tilde is not expanded in URLs
+    ['file:///~user/config.txt', '/~user/config.txt'],
+    # Absolute path with multiple slashes
+    ['file:///home//user///docs/file.txt', '/home//user///docs/file.txt'],
+    # Deeply nested path
+    ['file:///a/b/c/d/e/f/g/h/i/j/file.txt', '/a/b/c/d/e/f/g/h/i/j/file.txt']
+  ]
+
+  const target_tests = has('win32') || has('win64') ? tests_win32 : tests_unix
+
+  # Test URL_to_path
+  var path_converted = ''
+  for [url, expected_path] in target_tests
+     path_converted = links.URLToPath(url)
+    echom assert_equal(expected_path, path_converted)
+  endfor
+
+  # Test path_to_URL
+  var url_converted = ''
+  for [expected_url, path] in target_tests
+     url_converted = links.PathToURL(path)
+    assert_equal(expected_url, url_converted)
+  endfor
 enddef
