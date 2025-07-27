@@ -774,7 +774,7 @@ export def PreviewPopup()
       link_name = utils.GetTextObject('i(').text
     endif
   # CASE 2: on an actual link, like those in the reference Section
-  elseif keys(link_info)[0] == 'markdownUrl'
+  elseif !empty(link_info) && keys(link_info)[0] == 'markdownUrl'
     const link_interval = values(link_info)[0]
     const start = link_interval[0][1] - 1
     const length = link_interval[1][1] - link_interval[0][1] + 1
