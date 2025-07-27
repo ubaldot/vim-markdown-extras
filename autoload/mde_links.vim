@@ -122,6 +122,7 @@ def GetFileSize(filename: string): number
 enddef
 
 def LastReferenceLine(): number
+  # Return the last occurrence of reference of the form '[32]: ...'
   const saved_curpos = getcursorcharpos()
   cursor('$', 1)
   # Search backwards line starting with e.g. '[32]: '
