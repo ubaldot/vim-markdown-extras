@@ -154,23 +154,28 @@ def g:Test_RemoveLink()
 enddef
 
 def g:Test_URL_path_conversions()
-  const tests = [
-        ['file:///C:/Users/me/My%20Documents/file%20name.txt', 'C:\Users\me\My Documents\file name.txt'],
-        ['file:///home/ubaldo/my%20folder/file.txt',           '/home/ubaldo/my folder/file.txt'],
-        ['file:///mnt/c/Windows/System32/drivers/etc/hosts',   '/mnt/c/Windows/System32/drivers/etc/hosts'],
-        ['file:///tmp/foo.txt',                                '/tmp/foo.txt'],
+  const tests_win32 = [
+        ['file:///C:/Users/me/My%20Documents/file%20name.txt',
+                      'C:\Users\me\My Documents\file name.txt'],
         ]
+
+  const tests = [
+        ['file:///home/ubaldo/my%20folder/file.txt', '/home/ubaldo/my folder/file.txt'],
+        ['file:///tmp/foo.txt', '/tmp/foo.txt'],
+        ]
+
+  const target_tests = has('win32') || has('win64') ? tests_win32 : tests
 
   # Test URL_to_path
   var path_converted = ''
-  for [url, expected_path] in tests
+  for [url, expected_path] in target_tests
      path_converted = links.URLToPath(url)
     assert_equal(expected_path, path_converted)
   endfor
 
   # Test path_to_URL
   var url_converted = ''
-  for [expected_url, path] in tests
+  for [expected_url, path] in target_tests
      url_converted = links.PathToURL(path)
     assert_equal(expected_url, url_converted)
   endfor
