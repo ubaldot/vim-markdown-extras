@@ -22,6 +22,7 @@ const references_comment =
 
 # To account for multi-byte chars, I had to spend one afternoon with chat GPT
 # to understand how the URLToPath and PathToURL function should look like.
+
 def PercentDecode(s: string): string
   var result = ''
   var i = 0
@@ -37,10 +38,13 @@ def PercentDecode(s: string): string
         bytes->add(n)
         i += 3
       endwhile
+
       if !empty(bytes)
-        # Convert bytes to UTF-8 string
-        var char = join(mapnew(bytes, (_, val) => printf('%c', val)), '')
-        result ..= char
+        # Convert list of bytes to blob, then decode blob to UTF-8 string
+        var decoded_list = list2blob(bytes)->blob2str({'encoding': 'utf-8'})
+        # blob2str returns a list of strings (split by newline bytes), join them safely
+        var decoded_str = join(decoded_list, "\n")
+        result ..= decoded_str
       endif
     else
       result ..= s[i]
@@ -49,7 +53,6 @@ def PercentDecode(s: string): string
   endwhile
   return result
 enddef
-
 export def URLToPath(url: string): string
   var rest = ''
   if has('win32') || has('win64')
@@ -60,34 +63,14 @@ export def URLToPath(url: string): string
     rest = substitute(url, '^file://', '', '')
   endif
 
-  # Percent decode rest
   rest = PercentDecode(rest)
 
   if has('win32') || has('win64')
-    # Convert slashes to backslashes on Windows
+    # Convert forward slashes to backslashes on Windows
     rest = substitute(rest, '/', '\\', 'g')
   endif
 
   return rest
-enddef
-
-# Percent-encode non-unreserved characters
-def PercentEncode(str: string): string
-  var out = ''
-  for c in split(str, '\zs')
-    var code = char2nr(c)
-    if (code >=# 0x30 && code <=# 0x39) ||  # 0-9
-       (code >=# 0x41 && code <=# 0x5A) ||  # A-Z
-       (code >=# 0x61 && code <=# 0x7A) ||  # a-z
-       c ==# '-' || c ==# '_' || c ==# '.' || c ==# '~' || c ==# '/' || c ==# ':' || c ==# '@'
-      out ..= c
-    else
-      for b in str2list(iconv(c, &encoding, 'utf-8'))
-        out ..= printf('%%%02X', b)
-      endfor
-    endif
-  endfor
-  return out
 enddef
 
 export def PathToURL(path: string): string
