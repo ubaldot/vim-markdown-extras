@@ -75,7 +75,7 @@ if markdown_extras.use_pandoc
     # TODO: pandoc compiler returns v:shell_error = 0 even if there are
     # errors. Add a condition on v:shell_error once pandoc compiler is fixed.
     if exists(':Open') != 0
-      exe $'Open {output_file}'
+      exe $'Open {fnameescape(output_file)}'
     endif
   enddef
 
