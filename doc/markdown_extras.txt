@@ -162,11 +162,8 @@ You could for example set the following:
 INDICES
 
 As the plugin can be used for note-taking, it may be desirable to access
-different indices in an ergonomic way. This can be achieved with the
-|g:markdown_extras_indices| list in combination with the |:MDEIndices|
-command. Note that `g:markdown_extras_indices` is nothing, but a list (or a dict)
-of files. If it is a dict, then the keys is what is displayed in the popup
-menu and the values are the corresponding links.
+different indices in an ergonomic way. This can be achieved with the |:MDEIndex|
+command.
 
 ==============================================================================
 CONFIGURATION       *markdown-extras-configuration* *g:markdown_extras_config*
@@ -223,8 +220,11 @@ filling it with he various keys.
 
 
 						*g:markdown_extras_indices*
-g:markdown_extras_indices list<string> or dict<string>.
+g:markdown_extras_indices list<string>, list<list<string>> or dict<string>.
 			  If list<string>, contain the path of indices files.
+			  If list<string<string>> the first element of each
+			  item of the list is the alias, whereas the second
+			  is the link.
 			  If dict<string>, the values are the actual links
 			  whereas the keys are aliases. In the popup menu only
 			  the alias are displayed.
@@ -250,9 +250,27 @@ COMMANDS                                         *markdown-extras-commands*
                                                         *:MDEConvertLinks*
 :MDEConvertLinks    Convert inline links into reference-style links.
 
-                                                            *:MDEIndices*
-:MDEIndices         Open a popup with all the filenames included in
-                    |g:markdown_extras_indices|.
+                                                            *:MDEIndex*
+:MDEIndex [{args}]  Open a popup with all the URLs specified in {args}.
+		    The type of {args} can be list<string>, list<list<string>>
+		    or dict<string>. If no argument is passed, then
+		    |g:markdown_extras_indices| is considered.
+		    Example:
+		    >
+	    :MDEIndex  # Uses g:markdown_extras_indices
+	    :MDEIndex ['path1', 'path2', 'path3]
+	    :MDEIndex {foo: 'path1', bar: 'path2', baz: 'path3}
+	    :MDEIndex [['foo', 'path1'], ['bar', 'path2'], ['baz', 'path3]]
+<
+		    Or you can use in a script, like for example:
+		    >
+		      const my_index = {
+			foo: '/Users/ubaldot/home/Documents/foo.vim',
+			bar: 'https://example.com',
+			banana: '/mnt/c/files/bar.md'
+		      }
+		      execute $"MDEIndex {my_index}"
+<
 
                                                             *:MDEMake*
 :MDEMake            Invoke |:make| and |:Open| the rendered file. It requires

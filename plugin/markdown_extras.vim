@@ -6,6 +6,7 @@ vim9script noclear
 
 import autoload './../autoload/mde_utils.vim' as utils
 import autoload './../autoload/mde_funcs.vim' as funcs
+import autoload './../autoload/mde_indices.vim' as indices
 
 if has('win32') && !has("patch-9.1.1270")
   # Needs Vim version 9.0 and above
@@ -23,10 +24,8 @@ endif
 var release_notes =<< FOO
 ## vim-markdown-extras: release notes
 
-Links must have a valid URL format to keep consistency with
-the markdown requirements.
-
-Hence, the following link:
+1. Links must have a valid URL format to keep consistency with
+the markdown requirements. Hence, the following link:
 
 [1]: C:\User\John\My Documents\foo bar.txt
 
@@ -39,6 +38,11 @@ Please, update the links in your markdown files.
 💡 **TIP**:
 You can ask any LLM to convert the links for you.
 Typically, they are quite accurate.
+
+2. `:MDEIndices` has been renamed to `:MDEIndex` and can take an argument, for
+example you can call as `:MDEIndices ['apple', 'banana', 'strawberry']`.
+Furthermore, such a command is no longer valid only for markdown files but
+it become global.
 
 Press <Esc> to close this popup.
 FOO
@@ -55,8 +59,6 @@ def ShowReleaseNotes()
   win_execute(popup_id, 'set filetype=markdown')
   win_execute(popup_id, 'set conceallevel=2')
 enddef
-
-command! -nargs=0 MDEReleaseNotes ShowReleaseNotes()
 
 augroup MARKDOWN_EXTRAS_VISITED_BUFFERS
     autocmd!
@@ -120,4 +122,7 @@ if use_pandoc && !executable('pandoc')
   endif
 endif
 
-g:markdown_extras_loaded = true
+command! -nargs=0 MDEReleaseNotes ShowReleaseNotes()
+command! -nargs=? MDEIndex indices.ShowIndices(<f-args>)
+
+g:markdown_extras_loaded = false
