@@ -106,7 +106,11 @@ nnoremap <buffer> <expr> <CR> empty(links.IsLink())
       \ ? '<ScriptCmd>SetLinkOpFunc()<CR>g@iw'
       \ : '<ScriptCmd>links.OpenLink()<CR>'
 
-nnoremap <buffer> <expr> <s-CR> empty(links.IsLink())
+noremap <buffer> <expr> gx empty(links.IsLink())
+      \ ? '<cmd>echo "Invalid URL"<cr>'
+      \ : '<ScriptCmd>links.OpenLink()<CR>'
+
+nmap <buffer> <expr> <s-CR> empty(links.IsLink())
       \ ? '<s-CR>'
       \ : '<ScriptCmd>links.OpenLink(true)<CR>'
 
