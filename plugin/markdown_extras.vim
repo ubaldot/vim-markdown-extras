@@ -54,6 +54,13 @@ If `:MDEIndices` is called without arguments, then the value of
 `g:markdown_extras_index` is used.
 Finally, such a command is now global.
 
+
+## :MDEPathToURL
+Convert the passed file name to a valid URL and store the result in a register.
+The default register is 'p' but that can be changed through the
+g:markdown_extras_config dictionary.
+
+
 Press <Esc> to close this popup.
 END
 
@@ -145,6 +152,19 @@ if use_pandoc && !executable('pandoc')
   endif
 endif
 
+# PathToURL
+def PathToURLReg(path: string)
+  var path_to_url_register = 'p'
+  if exists('g:markdown_extras_config') != 0
+      && has_key(g:markdown_extras_config, 'path_to_url_register')
+    path_to_url_register = g:markdown_extras_config['path_to_url_register']
+  endif
+
+  setreg(path_to_url_register, indices.PathToURL(fnamemodify(path, ':p')))
+  echo $"URL stored in register '{path_to_url_register}'"
+enddef
+
+command! -nargs=1 -complete=file MDEPathToURL PathToURLReg(<f-args>)
 command! -nargs=0 MDEReleaseNotes ShowReleaseNotes()
 command! -nargs=? MDEIndex indices.ShowIndex(<f-args>)
 

@@ -202,6 +202,9 @@ filling it with he various keys.
                           greater than 0.
         "fuzzy_search"    Fuzzy or exact search in the links popup.
                           Default: |true|.
+"path_to_url_register"    Register used when running the |:MDEPathToURL|
+			  command.
+                          Default: 'p'.
         "hack_CR"         Set to |false| for the standard behavior of <CR>.
                           Default: |true|.
 "large_files_threshold"   If you have large files linked to your document,
@@ -301,6 +304,12 @@ COMMANDS                                         *markdown-extras-commands*
 :MDEMake            Invoke |:make| and |:Open| the rendered file. It requires
                     `pandoc`. Its behavior can be further customized through
                     the |g:markdown_extras_config| dictionary.
+
+                                                            *:MDEPathToURL*
+:MDEPathToURL       Convert the passed file name to a valid URL and store the
+		    result in a register. The default register is 'p' but that
+		    can be changed through the |g:markdown_extras_config|
+		    dictionary.
 
 ==============================================================================
 MAPPINGS                                         *markdown-extras-mappings*
