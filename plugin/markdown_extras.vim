@@ -146,6 +146,6 @@ if use_pandoc && !executable('pandoc')
 endif
 
 command! -nargs=0 MDEReleaseNotes ShowReleaseNotes()
-command! -nargs=? MDEIndex indices.ShowIndices(<f-args>)
+command! -nargs=? MDEIndex indices.ShowIndex(<f-args>)
 
 g:markdown_extras_loaded = true

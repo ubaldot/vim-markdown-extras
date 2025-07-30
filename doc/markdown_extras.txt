@@ -219,8 +219,8 @@ filling it with he various keys.
                           Default: 0.
 
 
-						*g:markdown_extras_indices*
-g:markdown_extras_indices list<string>, list<list<string>> or dict<string>.
+						*g:markdown_extras_index*
+g:markdown_extras_index   list<string>, list<list<string>> or dict<string>.
 			  If list<string>, contain the path of indices files.
 			  If list<string<string>> the first element of each
 			  item of the list is the alias, whereas the second
@@ -254,14 +254,30 @@ COMMANDS                                         *markdown-extras-commands*
 :MDEIndex [{args}]  Open a popup with what is specified in {args}.
 		    The type of {args} can be list<string>, list<list<string>>
 		    or dict<string>. If no argument is passed, then
-		    |g:markdown_extras_indices| is considered.
+		    |g:markdown_extras_index| is considered.
+
+                    Note: This feature is the same as |:PoptoolsIndex| in
+                    vim-poptools plugin, although it originated for this
+		    plugin.
+
 		    Example:
 		    >
-  :MDEIndex  # Uses g:markdown_extras_indices
-  :MDEIndex ['local/path', 'some%20url', 'function("some_Funcref")']
-  :MDEIndex {foo: 'local/path', bar: 'some%20url', 'function("some_Funcref")'}
-  :MDEIndex [['foo', 'local/path'], ['bar', 'some%20url'],
-				      ['baz', 'function("some_Funcref")']]
+		      :MDEIndex  # Uses g:markdown_extras_index
+		      :MDEIndex [
+			    'local/path',
+			    'some%20url',
+			    'function("some_Funcref")'
+			  ]
+		      :MDEIndex {
+			    foo: 'local/path',
+			    bar: 'some%20url',
+			    baz: 'function("some_Funcref")'
+			  }
+		      :MDEIndex [
+			    ['foo', 'local/path'],
+			    ['bar', 'some%20url'],
+			    ['baz', 'function("some_Funcref")']
+			  ]
 <
 		    Or it can be used in a script, like for example:
 		    >

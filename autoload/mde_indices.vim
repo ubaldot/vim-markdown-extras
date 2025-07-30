@@ -3,23 +3,23 @@ vim9script
 import autoload "./mde_links.vim" as links
 import autoload "./mde_utils.vim" as utils
 
-var indices: any
-var indices_id = -1
+var index: any
+var index_id = -1
 
 def IndexCallback(id: number, idx: number)
   if idx > 0
 
     var selection = ''
-    if typename(indices) == "list<string>"
+    if typename(index) == "list<string>"
       selection = getbufline(winbufnr(id), idx)[0]
-    elseif typename(indices) == "list<list<string>>"
+    elseif typename(index) == "list<list<string>>"
       selection = getbufline(winbufnr(id), idx)[0]
-      var indices_names = indices->mapnew((_, val) => val[0])
-      var ii = index(indices_names, selection)
-      selection = indices[ii][1]
-    elseif typename(indices) == "dict<string>"
+      var index_names = index->mapnew((_, val) => val[0])
+      var ii = index(index_names, selection)
+      selection = index[ii][1]
+    elseif typename(index) == "dict<string>"
       var selection_key = getbufline(winbufnr(id), idx)[0]
-      selection = indices[selection_key]
+      selection = index[selection_key]
     endif
 
     if !empty(selection)
@@ -39,28 +39,28 @@ def IndexCallback(id: number, idx: number)
       endif
     endif
 
-    indices_id = -1
+    index_id = -1
   endif
 enddef
 
-export def ShowIndices(passed_indices: string='')
-  var indices_found = false
+export def ShowIndex(passed_index: string='')
+  var index_found = false
 
-  if !empty(passed_indices)
+  if !empty(passed_index)
     # TODO: remove the eval() with something better
-    indices = eval(passed_indices)
-    indices_found = true
+    index = eval(passed_index)
+    index_found = true
   elseif exists('g:markdown_extras_index') != 0
       && !empty('g:markdown_extras_index')
-    indices = g:markdown_extras_index
-    indices_found = true
+    index = g:markdown_extras_index
+    index_found = true
   else
-    utils.Echoerr("Cannot find indices" )
+    utils.Echoerr("Cannot find index" )
   endif
 
-  if indices_found
+  if index_found
     const popup_width = (&columns * 2) / 3
-    const popup_height = min([len(indices), &lines / 2])
+    const popup_height = min([len(index), &lines / 2])
     var opts = {
         pos: 'center',
         border: [1, 1, 1, 1],
@@ -76,19 +76,19 @@ export def ShowIndices(passed_indices: string='')
         wrap: 0,
         drag: 0,
       }
-    if typename(indices) == "list<string>"
-      indices_id = popup_create(indices, opts)
-      links.ShowPromptPopup(indices_id, indices, " indices: ")
-    elseif typename(indices) == "list<list<string>>"
-      var indices_names = indices->mapnew((_, val) => val[0])
-      indices_id = popup_create(indices_names, opts)
-      links.ShowPromptPopup(indices_id, indices_names, " indices: ")
-    elseif typename(indices) == "dict<string>"
-      indices_id = popup_create(keys(indices), opts)
-      links.ShowPromptPopup(indices_id, keys(indices), " indices: ")
+    if typename(index) == "list<string>"
+      index_id = popup_create(index, opts)
+      links.ShowPromptPopup(index_id, index, " index: ")
+    elseif typename(index) == "list<list<string>>"
+      var index_names = index->mapnew((_, val) => val[0])
+      index_id = popup_create(index_names, opts)
+      links.ShowPromptPopup(index_id, index_names, " index: ")
+    elseif typename(index) == "dict<string>"
+      index_id = popup_create(keys(index), opts)
+      links.ShowPromptPopup(index_id, keys(index), " index: ")
     else
       utils.Echoerr("Wrong argument type passed to ':MDEIndex' "
-            \ .. $" (you passed a {typename(indices)})")
+            \ .. $" (you passed a {typename(index)})")
     endif
   endif
 enddef
