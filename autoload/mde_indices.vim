@@ -6,7 +6,7 @@ import autoload "./mde_utils.vim" as utils
 var indices: any
 var indices_id = -1
 
-def IndicesCallback(id: number, idx: number)
+def IndexCallback(id: number, idx: number)
   if idx > 0
 
     var selection = ''
@@ -50,9 +50,9 @@ export def ShowIndices(passed_indices: string='')
     # TODO: remove the eval() with something better
     indices = eval(passed_indices)
     indices_found = true
-  elseif exists('g:markdown_extras_indices') != 0
-      && !empty('g:markdown_extras_indices')
-    indices = g:markdown_extras_indices
+  elseif exists('g:markdown_extras_index') != 0
+      && !empty('g:markdown_extras_index')
+    indices = g:markdown_extras_index
     indices_found = true
   else
     utils.Echoerr("Cannot find indices" )
@@ -71,7 +71,7 @@ export def ShowIndices(passed_indices: string='')
         maxheight: popup_height,
         scrollbar: 0,
         cursorline: 1,
-        callback: IndicesCallback,
+        callback: IndexCallback,
         mapping: 0,
         wrap: 0,
         drag: 0,
@@ -87,7 +87,8 @@ export def ShowIndices(passed_indices: string='')
       indices_id = popup_create(keys(indices), opts)
       links.ShowPromptPopup(indices_id, keys(indices), " indices: ")
     else
-      utils.Echoerr($"Wrong argument type to ':MDEIndex' ({typename(indices)})")
+      utils.Echoerr("Wrong argument type passed to ':MDEIndex' "
+            \ .. $" (you passed a {typename(indices)})")
     endif
   endif
 enddef

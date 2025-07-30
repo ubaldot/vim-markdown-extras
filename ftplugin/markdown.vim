@@ -8,9 +8,12 @@ import autoload '../autoload/mde_constants.vim' as constants
 import autoload '../autoload/mde_indices.vim' as indices
 import autoload '../plugin/markdown_extras.vim' as markdown_extras
 
+# This is the dictionary of the form [32]: https://example.com that takes into
+# account of all the links that the user place at the bottom of a markdown
+# file.
 b:markdown_extras_links = links.RefreshLinksDict()
 
-# UBA: check that the values of the dict are valid URL
+# Check that the values of the dict are valid URL
 for link in values(b:markdown_extras_links)
   if !links.IsURL(link)
     utils.Echowarn($'"{link}" is not a valid URL.'

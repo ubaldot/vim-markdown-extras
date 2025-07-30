@@ -21,10 +21,11 @@ if exists('g:markdown_extras_loaded') && g:markdown_extras_loaded
   finish
 endif
 
-var release_notes =<< FOO
-## vim-markdown-extras: release notes
+var release_notes =<< END
+# vim-markdown-extras: release notes
 
-1. Links must have a valid URL format to keep consistency with
+## Links
+Links must have a valid URL format to keep consistency with
 the markdown requirements. Hence, the following link:
 
 [1]: C:\User\John\My Documents\foo bar.txt
@@ -39,13 +40,22 @@ Please, update the links in your markdown files.
 You can ask any LLM to convert the links for you.
 Typically, they are quite accurate.
 
-2. `:MDEIndices` has been renamed to `:MDEIndex` and can take an argument, for
-example you can call as `:MDEIndices ['apple', 'banana', 'strawberry']`.
-Furthermore, such a command is no longer valid only for markdown files but
-it become global. See `:h :MDEIndex` for more info.
+
+## g:markdown_extras_indices
+The global variable `g:markdown_extras_indices` has been renamed to
+`g:markdown_extras_index`.
+
+
+## :MDEIndices
+The command `:MDEIndices` has been renamed to `:MDEIndex` and can take
+an optional argument.
+For example you can call `:MDEIndices ['apple', 'banana', 'strawberry']`.
+If `:MDEIndices` is called without arguments, then the value of
+`g:markdown_extras_index` is used.
+Finally, such a command is now global.
 
 Press <Esc> to close this popup.
-FOO
+END
 
 def ShowReleaseNotes()
 
@@ -59,6 +69,19 @@ def ShowReleaseNotes()
   win_execute(popup_id, 'set filetype=markdown')
   win_execute(popup_id, 'set conceallevel=2')
 enddef
+
+# Error/Warnings triggered with new releases
+if exists('g:markdown_extras_indices') != 0
+  utils.Echowarn("'g:markdown_extras_indices' has been renamed. "
+        \ .. "See `:MDEReleaseNotes`")
+endif
+
+augroup MARKDOWN_EXTRAS_OBSOLETE_COMMAND
+  autocmd!
+  autocmd CmdUndefined MDEIndices utils.Echowarn("Command `:MDEIndices` "
+        \ .. "has been renamed. See `:MDEReleaseNotes`")
+augroup END
+# --------------------------------
 
 augroup MARKDOWN_EXTRAS_VISITED_BUFFERS
     autocmd!
