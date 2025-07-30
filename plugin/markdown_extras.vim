@@ -42,7 +42,7 @@ Typically, they are quite accurate.
 2. `:MDEIndices` has been renamed to `:MDEIndex` and can take an argument, for
 example you can call as `:MDEIndices ['apple', 'banana', 'strawberry']`.
 Furthermore, such a command is no longer valid only for markdown files but
-it become global.
+it become global. See `:h :MDEIndex` for more info.
 
 Press <Esc> to close this popup.
 FOO
@@ -125,4 +125,4 @@ endif
 command! -nargs=0 MDEReleaseNotes ShowReleaseNotes()
 command! -nargs=? MDEIndex indices.ShowIndices(<f-args>)
 
-g:markdown_extras_loaded = false
+g:markdown_extras_loaded = true

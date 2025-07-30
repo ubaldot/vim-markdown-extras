@@ -157,7 +157,7 @@ As the plugin can be used for note-taking, it may be desirable to access
 different indices in an ergonomic way. This can be achieved with the command
 `:MDEIndex` that takes `list<string>`, `list<list<string>>` or
 `dict<string>` as argument. If no argument is passed, it reads the content
-of `g:markdown_extras_indices`.
+of `g:markdown_extras_indices`. See `:h MDEIndex` for more info.
 
 For more information about key-bindings, configuration, etc. take a look at
 `:h markdown-extras`.

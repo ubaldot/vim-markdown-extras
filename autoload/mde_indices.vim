@@ -22,20 +22,20 @@ def IndicesCallback(id: number, idx: number)
       selection = indices[selection_key]
     endif
 
-    echom "sel: " .. selection
-    echom "typesel: " .. typename(eval(selection))
-
     if !empty(selection)
-      if typename(eval(selection)) =~ "^func("
-        echom "IsFunc"
-        var Tmp = eval(selection)
-        Tmp()
       if links.IsURL(selection) && selection =~ '^file://'
         exe $'edit {fnameescape(links.URLToPath(selection))}'
       elseif links.IsURL(selection)
         exe $'Open {selection}'
-      else
+      elseif filereadable(fnameescape(selection))
         exe $'edit {fnameescape(selection)}'
+      elseif selection =~ "^function("
+        try
+          var Tmp = eval(selection)
+          Tmp()
+        catch
+          utils.Echoerr("Function must be global")
+        endtry
       endif
     endif
 
