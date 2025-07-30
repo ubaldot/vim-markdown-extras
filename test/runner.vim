@@ -47,7 +47,6 @@ def RunTests(test_file: string)
 		echom "current test: " .. test
     v:errors = []
     v:errmsg = ''
-      exe $'call {test}'
     try
       :%bw!
       exe $'call {test}'

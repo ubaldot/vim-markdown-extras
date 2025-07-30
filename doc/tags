@@ -1,8 +1,9 @@
 :MDEConvertLinks	markdown_extras.txt	/*:MDEConvertLinks*
 :MDEIndex	markdown_extras.txt	/*:MDEIndex*
 :MDEMake	markdown_extras.txt	/*:MDEMake*
+:MDEPathToURL	markdown_extras.txt	/*:MDEPathToURL*
 g:markdown_extras_config	markdown_extras.txt	/*g:markdown_extras_config*
-g:markdown_extras_indices	markdown_extras.txt	/*g:markdown_extras_indices*
+g:markdown_extras_index	markdown_extras.txt	/*g:markdown_extras_index*
 markdown-extras	markdown_extras.txt	/*markdown-extras*
 markdown-extras-commands	markdown_extras.txt	/*markdown-extras-commands*
 markdown-extras-configuration	markdown_extras.txt	/*markdown-extras-configuration*
