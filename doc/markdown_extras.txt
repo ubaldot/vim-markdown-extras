@@ -251,26 +251,35 @@ COMMANDS                                         *markdown-extras-commands*
 :MDEConvertLinks    Convert inline links into reference-style links.
 
                                                             *:MDEIndex*
-:MDEIndex [{args}]  Open a popup with all the URLs specified in {args}.
+:MDEIndex [{args}]  Open a popup with what is specified in {args}.
 		    The type of {args} can be list<string>, list<list<string>>
 		    or dict<string>. If no argument is passed, then
 		    |g:markdown_extras_indices| is considered.
 		    Example:
 		    >
-	    :MDEIndex  # Uses g:markdown_extras_indices
-	    :MDEIndex ['path1', 'path2', 'path3]
-	    :MDEIndex {foo: 'path1', bar: 'path2', baz: 'path3}
-	    :MDEIndex [['foo', 'path1'], ['bar', 'path2'], ['baz', 'path3]]
+  :MDEIndex  # Uses g:markdown_extras_indices
+  :MDEIndex ['local/path', 'some%20url', 'function("some_Funcref")']
+  :MDEIndex {foo: 'local/path', bar: 'some%20url', 'function("some_Funcref")'}
+  :MDEIndex [['foo', 'local/path'], ['bar', 'some%20url'],
+				      ['baz', 'function("some_Funcref")']]
 <
-		    Or you can use in a script, like for example:
+		    Or it can be used in a script, like for example:
 		    >
-		      const my_index = {
-			foo: '/Users/ubaldot/home/Documents/foo.vim',
-			bar: 'https://example.com',
-			banana: '/mnt/c/files/bar.md'
-		      }
-		      execute $"MDEIndex {my_index}"
+		      def Foo()
+			const my_index = {
+			  foo: '/Users/ubaldot/home/Documents/foo.vim',
+			  bar: 'https://example.com',
+			  banana: 'function("g:Foo")'
+			}
+			execute $"MDEIndex {my_index}"
+		      enddef
+
+		      command! MyIndex Foo()
 <
+		    The string used in the various cases can be a local path,
+		    a valid URL or a function reference.
+		    In the latter case, the referenced function must be global
+		    and shall take no arguments.
 
                                                             *:MDEMake*
 :MDEMake            Invoke |:make| and |:Open| the rendered file. It requires

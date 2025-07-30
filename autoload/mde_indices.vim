@@ -27,8 +27,15 @@ def IndicesCallback(id: number, idx: number)
         exe $'edit {fnameescape(links.URLToPath(selection))}'
       elseif links.IsURL(selection)
         exe $'Open {selection}'
-      else
+      elseif filereadable(fnameescape(selection))
         exe $'edit {fnameescape(selection)}'
+      elseif selection =~ "^function("
+        try
+          var Tmp = eval(selection)
+          Tmp()
+        catch
+          utils.Echoerr("Function must be global")
+        endtry
       endif
     endif
 
@@ -38,7 +45,6 @@ enddef
 
 export def ShowIndices(passed_indices: string='')
   var indices_found = false
-  echom typename(passed_indices)
 
   if !empty(passed_indices)
     # TODO: remove the eval() with something better

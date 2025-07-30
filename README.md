@@ -154,10 +154,10 @@ following:
 ### Indices
 
 As the plugin can be used for note-taking, it may be desirable to access
-different indices in an ergonomic way. This can be achieved with the
-`g:markdown_extras_indices` list in combination with the `:MDEIndices`
-command. Note that `g:markdown_extras_indices` is nothing, but a list or a
-dict of files.
+different indices in an ergonomic way. This can be achieved with the command
+`:MDEIndex` that takes `list<string>`, `list<list<string>>` or
+`dict<string>` as argument. If no argument is passed, it reads the content
+of `g:markdown_extras_indices`. See `:h MDEIndex` for more info.
 
 For more information about key-bindings, configuration, etc. take a look at
 `:h markdown-extras`.
