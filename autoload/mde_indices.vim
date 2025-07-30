@@ -22,7 +22,14 @@ def IndicesCallback(id: number, idx: number)
       selection = indices[selection_key]
     endif
 
+    # echom "sel: " .. selection
+    # echom "typesel: " .. typename(eval(selection))
+
     if !empty(selection)
+      # if typename(eval(selection)) =~ "^func("
+      #   echom "IsFunc"
+        # var Tmp = eval(selection)
+        # Tmp()
       if links.IsURL(selection) && selection =~ '^file://'
         exe $'edit {fnameescape(links.URLToPath(selection))}'
       elseif links.IsURL(selection)
@@ -38,7 +45,6 @@ enddef
 
 export def ShowIndices(passed_indices: string='')
   var indices_found = false
-  echom typename(passed_indices)
 
   if !empty(passed_indices)
     # TODO: remove the eval() with something better
