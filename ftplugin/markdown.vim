@@ -29,9 +29,10 @@ command! -buffer -nargs=0 MDEConvertLinks links.ConvertLinks()
 # Jump back to the previous file
 nnoremap <buffer> <backspace> <ScriptCmd>funcs.GoToPrevVisitedBuffer()<cr>
 
-
 # -------------- prettier ------------------------
-#
+# TODO: you may want to use the same mechanism used in my personal
+# after/ftplugin/python.vim, where I set the local opfunc to
+# FormatWithoutMoving and where I hack the 'gq' operator
 if markdown_extras.use_prettier
   if exists('g:markdown_extras_config') != 0
       && has_key(g:markdown_extras_config, 'formatprg')
@@ -51,6 +52,15 @@ if markdown_extras.use_prettier
     augroup END
   endif
 endif
+
+def SetMarkdownOpFunc()
+  &l:opfunc = function('utils.FormatWithoutMoving')
+enddef
+
+# Hack on 'gq'
+nnoremap <silent> gq <ScriptCmd>SetMarkdownOpFunc()<cr>g@
+xnoremap <silent> gq <ScriptCmd>SetMarkdownOpFunc()<cr>g@
+
 # --------------End prettier ------------------------
 
 # -------------------- pandoc -----------------------
