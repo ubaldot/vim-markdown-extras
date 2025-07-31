@@ -34,7 +34,8 @@ def IndexCallback(id: number, idx: number)
           var Tmp = eval(selection)
           Tmp()
         catch
-          utils.Echoerr("Function must be global")
+          utils.Echoerr("Function must be global "
+                \ .. "OR the function has some error(s)")
         endtry
       endif
     endif
