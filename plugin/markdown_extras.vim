@@ -20,9 +20,9 @@ endif
 if exists('g:markdown_extras_loaded') && g:markdown_extras_loaded
   finish
 endif
+g:markdown_extras_loaded = true
 
-var release_notes =<< END
-# vim-markdown-extras: release notes
+const release_notes =<< END
 
 ## Links
 Links must have a valid URL format to keep consistency with
@@ -61,16 +61,42 @@ The default register is 'p' but that can be changed through the
 g:markdown_extras_config dictionary.
 
 
-Press <Esc> to close this popup.
+Press <Esc> or 'q' to close this popup.
 END
 
-def ShowReleaseNotes()
 
+def ReleaseNotesFilter(id: number, key: string): bool
+  # To handle the keys when release notes popup is visible
+  # Close
+  if key ==# 'q' || key ==# "\<esc>"
+    popup_close(id)
+  # Move down
+  elseif ["\<tab>", "\<C-n>", "\<Down>", "\<ScrollWheelDown>"]->index(key) != -1
+    win_execute(id, "normal! \<c-e>")
+  # Move up
+  elseif ["\<S-Tab>", "\<C-p>", "\<Up>", "\<ScrollWheelUp>"]->index(key) != -1
+    win_execute(id, "normal! \<c-y>")
+  # Jump down
+  elseif key == "\<C-f>"
+    win_execute(id, "normal! \<c-f>")
+  # Jump up
+  elseif key == "\<C-b>"
+    win_execute(id, "normal! \<c-b>")
+  else
+    return false
+  endif
+  return true
+enddef
+
+def ShowReleaseNotes()
+  const title = ' vim-markdown-extras: release notes '
   const popup_options = {
-      border: [1, 1, 1, 1],
-      borderchars:  ['─', '│', '─', '│', '╭', '╮', '╯', '╰'],
-      filter: 'popup_filter_menu',
-    }
+    border: [1, 1, 1, 1],
+    borderchars:  ['─', '│', '─', '│', '╭', '╮', '╯', '╰'],
+    scrollbar: false,
+    title: title,
+    filter: ReleaseNotesFilter
+  }
 
   const popup_id = popup_create(release_notes, popup_options)
   win_execute(popup_id, 'set filetype=markdown')
@@ -167,5 +193,3 @@ enddef
 command! -nargs=1 -complete=file MDEPathToURL PathToURLReg(<f-args>)
 command! -nargs=0 MDEReleaseNotes ShowReleaseNotes()
 command! -nargs=? MDEIndex indices.ShowIndex(<f-args>)
-
-g:markdown_extras_loaded = true
