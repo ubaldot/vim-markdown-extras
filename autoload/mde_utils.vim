@@ -2,8 +2,6 @@ vim9script
 
 import autoload "./mde_constants.vim" as constants
 
-export var save_surround_view = {}
-
 export def Echoerr(msg: string)
   echohl ErrorMsg | echom $'[markdown_extras] {msg}' | echohl None
 enddef
@@ -332,10 +330,6 @@ export def SurroundSmart(style: string, type: string = '')
     endwhile
   endif
 
-  if !empty('save_surround_view')
-    winrestview(save_surround_view)
-    save_surround_view = {}
-  endif
 enddef
 
 export def IsLess(l1: list<number>, l2: list<number>): bool
