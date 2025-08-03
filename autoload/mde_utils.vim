@@ -58,13 +58,16 @@ enddef
 
 export def RemoveSurrounding(range_info: dict<list<list<number>>> = {})
     const style_interval = empty(range_info) ? IsInRange() : range_info
+    echom string(style_interval)
     if !empty(style_interval)
       const style = keys(style_interval)[0]
       const interval = values(style_interval)[0]
 
+      echom "Siamo qui!"
       # Remove left delimiter
       const lA = interval[0][0]
       const cA = interval[0][1]
+      echom $"(lA, cA): ({lA},{cA})"
       const lineA = getline(lA)
       var newline = strcharpart(lineA, 0,
               \ cA - 1 - strchars(constants.TEXT_STYLES_DICT[style].open_delim))
@@ -216,7 +219,7 @@ export def SurroundSmart(style: string, type: string = '')
   # so that all the styles are visible
 
   # Check if A falls in an existing interval
-  cursor(lA, cA)
+  setcursorcharpos(lA, cA)
   var old_right_delimiter = ''
   var found_interval = IsInRange()
   if !empty(found_interval)
@@ -255,7 +258,7 @@ export def SurroundSmart(style: string, type: string = '')
   endif
 
   # Check if B falls in an existing interval
-  cursor(lB, cB)
+  setcursorcharpos(lB, cB)
   var old_left_delimiter = ''
   found_interval = IsInRange()
   if !empty(found_interval)
@@ -427,13 +430,21 @@ export def IsInRange(): dict<list<list<number>>>
     return text_style_refined
   enddef
 
+  def SearchPosChar(pattern: string, options: string): list<number>
+    # Like 'searchpos()' but the column is converted in char index
+    var [l, c] = searchpos(pattern, options)
+    var c_char = strchars(strpart(getline(l), 0, c - 1)) + 1
+    return [l, c_char]
+  enddef
+
   # Main function start here
   # text_style comes from vim-markdown
-  const text_style = synIDattr(synID(line("."), charcol("."), 1), "name")
+  const text_style = synIDattr(synID(line("."), col("."), 1), "name")
+  echom "text_style: " .. text_style
   const text_style_adjusted =
     text_style == 'markdownItalic' || text_style == 'markdownBold'
-     ? StarOrUnderscore(synIDattr(synID(line("."), charcol("."), 1), "name"))
-     : synIDattr(synID(line("."), charcol("."), 1), "name")
+     ? StarOrUnderscore(synIDattr(synID(line("."), col("."), 1), "name"))
+     : synIDattr(synID(line("."), col("."), 1), "name")
   var return_val = {}
 
   if !empty(text_style_adjusted)
@@ -445,14 +456,17 @@ export def IsInRange(): dict<list<list<number>>>
     const open_delim =
       eval($'constants.TEXT_STYLES_DICT.{text_style_adjusted}.open_delim')
 
-    var open_delim_pos = searchpos($'\V{open_delim}', 'bW')
-    var current_style = synIDattr(synID(line("."), charcol("."), 1), "name")
+    # TODO: the searchpos() return a byte index!
+    var open_delim_pos = SearchPosChar($'\V{open_delim}', 'bW')
+
+    # echom $"open_del_pos_back: {open_delim_pos}"
+    var current_style = synIDattr(synID(line("."), col("."), 1), "name")
     # We search for a markdown delimiter or an htmlTag.
     while current_style != $'{text_style}Delimiter'
         && current_style != 'htmlTag'
       && open_delim_pos != [0, 0]
-      open_delim_pos = searchpos($'\V{open_delim}', 'bW')
-      current_style = synIDattr(synID(line("."), charcol("."), 1), "name")
+      open_delim_pos = SearchPosChar($'\V{open_delim}', 'bW')
+      current_style = synIDattr(synID(line("."), col("."), 1), "name")
     endwhile
 
     # To avoid infinite loops if some weird delimited text is highlighted
@@ -460,6 +474,7 @@ export def IsInRange(): dict<list<list<number>>>
       return {}
     endif
     open_delim_pos[1] += strchars(open_delim)
+    # echom "open del pos_back_plus_delim: " .. string(open_delim_pos)
 
     # Search end delimiter.
     # The end delimiter may be a blank line, hence
@@ -467,16 +482,22 @@ export def IsInRange(): dict<list<list<number>>>
     setcursorcharpos(saved_curpos[1 : 2])
     const close_delim =
      eval($'constants.TEXT_STYLES_DICT.{text_style_adjusted}.close_delim')
-    var close_delim_pos = searchpos($'\V{close_delim}', 'nW')
-    var blank_line_pos = searchpos($'^$', 'nW')
+    var close_delim_pos = SearchPosChar($'\V{close_delim}', 'W')
+    var blank_line_pos = SearchPosChar('^$', 'W')
     var first_met = [0, 0]
-    current_style = synIDattr(synID(line("."), charcol("."), 1), "name")
+    current_style = synIDattr(synID(line("."), col("."), 1), "name")
+    echom $"close_delim_pos: '{close_delim_pos}'"
+    echom $"blank_line_pos: '{blank_line_pos}'"
 
+    # The while loop is to robustify because you ultimately want to get a
+    # '*Delimiter' text-style, like for example 'markdownBoldDelimiter'
     while current_style != $'{text_style}Delimiter'
         && current_style != 'htmlEndTag'
         && getline(line('.')) !~ '^$'
-      close_delim_pos = searchpos($'\V{close_delim}', 'nW')
-      blank_line_pos = searchpos($'^$', 'nW')
+      close_delim_pos = SearchPosChar($'\V{close_delim}', 'W')
+      blank_line_pos = SearchPosChar('^$', 'W')
+      echom $"close_delim_pos_inside: '{close_delim_pos}'"
+      echom $"blank_line_pos_inside: '{blank_line_pos}'"
       if close_delim_pos == [0, 0]
         first_met = blank_line_pos
       elseif blank_line_pos == [0, 0]
@@ -487,8 +508,9 @@ export def IsInRange(): dict<list<list<number>>>
         : blank_line_pos
       endif
       setcursorcharpos(first_met)
-      current_style = synIDattr(synID(line("."), charcol("."), 1), "name")
+      current_style = synIDattr(synID(line("."), col("."), 1), "name")
     endwhile
+    echom $"first met_before: {first_met}"
 
     # If we hit a blank line, then we take the previous line and last column,
     # to keep consistency in returning open-intervals
@@ -498,6 +520,7 @@ export def IsInRange(): dict<list<list<number>>>
     else
       first_met[1] -= 1
     endif
+    echom $"first met: {first_met}"
 
     setcursorcharpos(saved_curpos[1 : 2])
     return_val =  {[text_style_adjusted]: [open_delim_pos, first_met]}

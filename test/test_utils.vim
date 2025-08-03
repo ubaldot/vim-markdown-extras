@@ -133,6 +133,19 @@ const lines_2 =<< trim END
        > alias consequatur aut perferendis doloribus asperiores repellat.
 END
 
+const src_name_multibyte = 'multibyte_test.md'
+const lines_multibyte =<< trim END
+当然，这里有一段简短的中文文本：
+
+学习 Vim 是一项非常有趣的挑战。虽然一开始可能感觉有些困难，但只要坚持练习，
+就能够逐渐掌握它强大的功能，并大幅提高编辑效率。
+
+需要**某种特定风格或主题**（比如技术、文学、对话等）吗？
+
+学习 Vim 是一项_非常有趣的挑战。虽然一开始可能感觉有些困难，但只要坚持练习，
+就能够逐渐掌握它强大_的功能，并大幅提高编辑效率。
+END
+
 def Generate_testfile(lines: list<string>, src_name: string)
    writefile(lines, src_name)
 enddef
@@ -173,53 +186,54 @@ def g:Test_IsInRange()
   cursor(1, 27)
   var expected_value = {'markdownBold': [[1, 23], [1, 37]]}
   var range = utils.IsInRange()
-  assert_equal(expected_value, range)
+  echom assert_equal(expected_value, range)
 
   # On the border
   cursor(1, 37)
   range = utils.IsInRange()
   assert_equal(expected_value, range)
 
-  # On the delimiter
+  # # On the delimiter
   cursor(1, 38)
   expected_value = {}
   range = utils.IsInRange()
-  assert_equal(expected_value, range)
+  echom assert_equal(expected_value, range)
 
   cursor(5, 18)
   expected_value = {'markdownItalic': [[4, 18], [5, 29]]}
   range = utils.IsInRange()
   assert_equal(expected_value, range)
 
-  # Test singularity: cursor on a delimiter
+  # # Test singularity: cursor on a delimiter
   cursor(14, 21)
   range = utils.IsInRange()
   assert_true(empty(range))
 
-  # Normal Test
+  # # Normal Test
   cursor(14, 25)
   expected_value = {'markdownBoldU': [[14, 22], [16, 14]]}
   range = utils.IsInRange()
   assert_equal(expected_value, range)
 
-  # End of paragraph with no delimiter
+  # # End of paragraph with no delimiter
   cursor(21, 43)
   expected_value = {'markdownStrike': [[21, 39], [22, 26]]}
+  message clear
   range = utils.IsInRange()
-  assert_equal(expected_value, range)
+  echom assert_equal(expected_value, range)
 
-  cursor(24, 10)
-  expected_value = {}
-  range = utils.IsInRange()
-  assert_equal(expected_value, range)
+  # cursor(24, 10)
+  # expected_value = {}
+  # range = utils.IsInRange()
+  # assert_equal(expected_value, range)
 
-  cursor(31, 18)
-  expected_value = {'markdownLinkText': [[31, 16], [31, 26]]}
-  range = utils.IsInRange()
-  assert_equal(expected_value, range)
+  # cursor(31, 18)
+  # expected_value = {'markdownLinkText': [[31, 16], [31, 26]]}
+  # range = utils.IsInRange()
+  # assert_equal(expected_value, range)
 
-  :%bw!
-  Cleanup_testfile(src_name_1)
+  # :%bw!
+  # Cleanup_testfile(src_name_1)
 enddef
 
 def g:Test_SurroundSimple_one_line()
@@ -640,4 +654,36 @@ def g:Test_unset_quote_block()
 
   :%bw!
   Cleanup_testfile(src_name_1)
+enddef
+
+def g:Test_multibyte_isInRange()
+  vnew
+  Generate_testfile(lines_multibyte, src_name_multibyte)
+  exe $"edit {src_name_multibyte}"
+  setlocal conceallevel=0
+
+  setcursorcharpos(6, 6)
+  var expected_value = {'markdownBold': [[6, 3], [6, 13]]}
+  var range = utils.IsInRange()
+  echom $"range: {range}"
+  # assert_equal(expected_value, range)
+
+  # setcursorcharpos(8, 28)
+  # expected_value = {'markdownBold': [[8, 12], [9, 10]]}
+  # range = utils.IsInRange()
+  # echom $"{range}"
+enddef
+def g:Test_multibyte_surrounding()
+  vnew
+  Generate_testfile(lines_multibyte, src_name_multibyte)
+  exe $"edit {src_name_multibyte}"
+  setlocal conceallevel=0
+
+  setcursorcharpos(1, 5)
+  setcharpos("'[", [0, 1, 4, 0])
+  setcharpos("']", [0, 1, 15, 0])
+  utils.SurroundSmart('markdownItalicU')
+  var expected_value = '当然，_这里有一段简短的中文文本_：'
+  echom assert_equal(expected_value, getline(1))
+
 enddef

@@ -34,7 +34,7 @@ REQUIREMENTS                                    *markdown-extras-requirements*
 Vim 9.0 is required.
 You must set a |localleader| key and your |vimrc| shall include the following
 lines:
->
+>vim
   filetype indent plugin on
   syntax on
 <
@@ -153,7 +153,7 @@ for possible rendering targets. The rendered file will automatically open
 You can also pass arguments to `pandoc` via the key
 `pandoc_args` of the |g:markdown_extras_config| dictionary.
 You could for example set the following:
->
+>vim
   g:markdown_extras_config = {}
   g:markdown_extras_config['pandoc_args'] =
     [$'--css="{$HOME}/dotfiles/my_css_style.css"',
@@ -178,7 +178,7 @@ filling it with he various keys.
                           Default |true|.
         "pandoc_args"     List of arguments to be passed to |compiler-pandoc|.
                           Example:
-                          >
+                          >vim
                           g:markdown_extras_config['pandoc_args'] =
                             ['--css="path/to/my_css_style.css"', '--metadata',
                             'key=value']`
@@ -241,7 +241,7 @@ If such a file does not exists, create it.
 
 For example, to trigger links autocompletion when you hit `[`, add the following
 lines to your `~/.vim/after/ftplugin/markdown.vim` file:
->
+>vim
     setlocal completeopt=menu,menuone,noselect
     import autoload "mde_funcs.vim"
     setlocal omnifunc=mde_funcs.OmniFunc
@@ -264,7 +264,7 @@ COMMANDS                                         *markdown-extras-commands*
 		    plugin.
 
 		    Example:
-		    >
+		    >vim
 		      :MDEIndex  # Uses g:markdown_extras_index
 		      :MDEIndex [
 			    'local/path',
@@ -283,7 +283,7 @@ COMMANDS                                         *markdown-extras-commands*
 			  ]
 <
 		    Or it can be used in a script, like for example:
-		    >
+		    >vim
 		      def Foo()
 			const my_index = {
 			  foo: '/Users/ubaldot/home/Documents/foo.vim',
@@ -316,7 +316,7 @@ MAPPINGS                                         *markdown-extras-mappings*
 
 Note: all the key-bindings that require a motion can also be used in visual
 mode. For example, you can set the following:
->
+>vim
  nnoremap <buffer> B <Plug>MarkdownBold
  xnoremap <buffer> B <Plug>MarkdownBold
 <

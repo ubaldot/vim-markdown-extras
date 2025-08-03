@@ -145,6 +145,7 @@ enddef
 export def RemoveAll()
   # TODO could be refactored to increase speed, but it may not be necessary
   const range_info = utils.IsInRange()
+  echom "A: " .. string(range_info)
   const prop_info = highlight.IsOnProp()
   const syn_info = synIDattr(synID(line("."), charcol("."), 1), "name")
   const is_quote_block = getline('.') =~ '^>\s'
