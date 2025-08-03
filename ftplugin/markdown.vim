@@ -54,6 +54,7 @@ if markdown_extras.use_prettier
 endif
 
 def SetMarkdownOpFunc()
+  utils.save_surround_view = winsaveview()
   &l:opfunc = function('utils.FormatWithoutMoving')
 enddef
 
@@ -136,6 +137,7 @@ if empty(maparg('<Plug>MarkdownToggleCheck'))
 endif
 
 def SetLinkOpFunc()
+  utils.save_surround_view = winsaveview()
   &l:opfunc = function(links.CreateLink)
 enddef
 
@@ -170,6 +172,7 @@ if exists('g:markdown_extras_config')
 endif
 
 def SetSurroundOpFunc(style: string)
+  utils.save_surround_view = winsaveview()
   &l:opfunc = function(Surround, [style])
 enddef
 
@@ -214,6 +217,7 @@ if empty(maparg('<Plug>MarkdownRemove'))
 endif
 
 def SetHighlightOpFunc()
+  utils.save_surround_view = winsaveview()
   &l:opfunc = function(highlights.AddProp)
 enddef
 
@@ -223,6 +227,7 @@ if empty(maparg('<Plug>MarkdownHighlight'))
 endif
 
 def SetCodeBlock()
+  utils.save_surround_view = winsaveview()
   &l:opfunc = function(utils.SetBlock)
 enddef
 
@@ -233,6 +238,7 @@ endif
 
 
 def SetQuoteBlockOpFunc()
+  utils.save_surround_view = winsaveview()
   &l:opfunc = function(utils.SetQuoteBlock)
 enddef
 

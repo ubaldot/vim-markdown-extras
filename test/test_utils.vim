@@ -144,6 +144,12 @@ const lines_multibyte =<< trim END
 
 学习 Vim 是一项_非常有趣的挑战。虽然一开始可能感觉有些困难，但只要坚持练习，
 就能够逐渐掌握它强大_的功能，并大幅提高编辑效率。
+
+学习 Vim 是一项非常~~有趣的挑战。虽然一开始可能感觉有些困难，但只要坚持练习，
+就能够逐渐掌握它强大的功能，并大幅提高编辑效率。
+
+学习 Vim 是一项非常有趣的挑战。虽然一开始可能感觉有些困难，但只要坚持练习，
+就能够逐渐掌握它强大的功能，并大幅提高编辑效率。
 END
 
 def Generate_testfile(lines: list<string>, src_name: string)
@@ -155,7 +161,7 @@ def Cleanup_testfile(src_name: string)
 enddef
 
 # Tests start here
-def g:Test_ListComparison()
+def g:Test_list_comparison()
   var A = [5, 19, 22]
   var B = [3, 43]
   assert_true(utils.IsGreater(A, B))
@@ -186,7 +192,7 @@ def g:Test_IsInRange()
   cursor(1, 27)
   var expected_value = {'markdownBold': [[1, 23], [1, 37]]}
   var range = utils.IsInRange()
-  echom assert_equal(expected_value, range)
+  assert_equal(expected_value, range)
 
   # On the border
   cursor(1, 37)
@@ -197,7 +203,7 @@ def g:Test_IsInRange()
   cursor(1, 38)
   expected_value = {}
   range = utils.IsInRange()
-  echom assert_equal(expected_value, range)
+  assert_equal(expected_value, range)
 
   cursor(5, 18)
   expected_value = {'markdownItalic': [[4, 18], [5, 29]]}
@@ -218,25 +224,24 @@ def g:Test_IsInRange()
   # # End of paragraph with no delimiter
   cursor(21, 43)
   expected_value = {'markdownStrike': [[21, 39], [22, 26]]}
-  message clear
   range = utils.IsInRange()
-  echom assert_equal(expected_value, range)
+  assert_equal(expected_value, range)
 
-  # cursor(24, 10)
-  # expected_value = {}
-  # range = utils.IsInRange()
-  # assert_equal(expected_value, range)
+  cursor(24, 10)
+  expected_value = {}
+  range = utils.IsInRange()
+  assert_equal(expected_value, range)
 
-  # cursor(31, 18)
-  # expected_value = {'markdownLinkText': [[31, 16], [31, 26]]}
-  # range = utils.IsInRange()
-  # assert_equal(expected_value, range)
+  cursor(31, 18)
+  expected_value = {'markdownLinkText': [[31, 16], [31, 26]]}
+  range = utils.IsInRange()
+  assert_equal(expected_value, range)
 
-  # :%bw!
-  # Cleanup_testfile(src_name_1)
+  :%bw!
+  Cleanup_testfile(src_name_1)
 enddef
 
-def g:Test_SurroundSimple_one_line()
+def g:Test_surround_simple_one_line()
   vnew
   Generate_testfile(lines_2, src_name_2)
   exe $"edit {src_name_2}"
@@ -272,7 +277,7 @@ def g:Test_SurroundSimple_one_line()
   Cleanup_testfile(src_name_2)
 enddef
 
-def g:Test_SurroundSimple_multi_line()
+def g:Test_surround_simple_multi_line()
   vnew
   Generate_testfile(lines_2, src_name_2)
   exe $"edit {src_name_2}"
@@ -308,7 +313,7 @@ def g:Test_SurroundSimple_multi_line()
   Cleanup_testfile(src_name_2)
 enddef
 
-def g:Test_SurroundSmart_one_line()
+def g:Test_surround_smart_one_line()
   vnew
   Generate_testfile(lines_2, src_name_2)
   exe $"edit {src_name_2}"
@@ -361,7 +366,7 @@ def g:Test_SurroundSmart_one_line()
   Cleanup_testfile(src_name_2)
 enddef
 
-def g:Test_SurroundSmart_one_line_1()
+def g:Test_surround_smart_one_line_1()
   vnew
   Generate_testfile(lines_2, src_name_2)
   exe $"edit {src_name_2}"
@@ -424,7 +429,7 @@ def g:Test_SurroundSmart_one_line_1()
   Cleanup_testfile(src_name_2)
 enddef
 
-def g:Test_RemoveSurrounding_one_line()
+def g:Test_remove_surrounding_one_line()
   Generate_testfile(lines_2, src_name_2)
   vnew
   exe $"edit {src_name_2}"
@@ -466,7 +471,7 @@ def g:Test_RemoveSurrounding_one_line()
   Cleanup_testfile(src_name_2)
 enddef
 
-def g:Test_SurroundSmart_multi_line()
+def g:Test_surround_smart_multi_line()
   vnew
   Generate_testfile(lines_2, src_name_2)
   exe $"edit {src_name_2}"
@@ -502,7 +507,7 @@ def g:Test_SurroundSmart_multi_line()
   Cleanup_testfile(src_name_2)
 enddef
 
-def g:Test_RemoveSurrounding_multi_line()
+def g:Test_remove_surrounding_multi_line()
   vnew
   Generate_testfile(lines_2, src_name_2)
   exe $"edit {src_name_2}"
@@ -519,11 +524,12 @@ def g:Test_RemoveSurrounding_multi_line()
   utils.RemoveSurrounding()
   var actual_value = getline(28, 30)
   assert_equal(expected_value, actual_value)
+
   :%bw!
   Cleanup_testfile(src_name_2)
 enddef
 
-def g:Test_RemoveSurrounding_multi_line2()
+def g:Test_remove_surrounding_multi_line2()
   vnew
   Generate_testfile(lines_2, src_name_2)
   exe $"edit {src_name_2}"
@@ -570,21 +576,21 @@ def g:Test_set_code_block()
   setcharpos("']", [0, 6, 22, 0])
   utils.SetBlock()
   var actual_value = getline(3, 10)
-  echom assert_equal(expected_value, actual_value)
+  assert_equal(expected_value, actual_value)
 
   # Check that it won't undo anything when inside a code block
   cursor(6, 10)
   setcharpos("'[", [0, 5, 21, 0])
   setcharpos("']", [0, 8, 10, 0])
   utils.SetBlock()
-  echom assert_equal(expected_value, actual_value)
+  assert_equal(expected_value, actual_value)
 
   # Check that it won't undo when on the border
   cursor(4, 2)
   setcharpos("'[", [0, 4, 2, 0])
   setcharpos("']", [0, 5, 10, 0])
   utils.SetBlock()
-  echom assert_equal(expected_value, actual_value)
+  assert_equal(expected_value, actual_value)
 
   unlet g:markdown_extras_config
 
@@ -607,7 +613,7 @@ def g:Test_unset_code_block()
   cursor(35, 1)
   utils.UnsetBlock()
   var actual_value = getline(33, 36)
-  echom assert_equal(expected_value, actual_value)
+  assert_equal(expected_value, actual_value)
 
   :%bw!
   Cleanup_testfile(src_name_1)
@@ -630,7 +636,7 @@ def g:Test_set_quote_block()
   setcharpos("']", [0, 6, 10, 0])
   utils.SetQuoteBlock()
   var actual_value = getline(3, 6)
-  echom assert_equal(expected_value, actual_value)
+  assert_equal(expected_value, actual_value)
 
   :%bw!
   Cleanup_testfile(src_name_1)
@@ -663,16 +669,25 @@ def g:Test_multibyte_isInRange()
   setlocal conceallevel=0
 
   setcursorcharpos(6, 6)
-  var expected_value = {'markdownBold': [[6, 3], [6, 13]]}
+  var expected_value = {'markdownBold': [[6, 5], [6, 13]]}
   var range = utils.IsInRange()
-  echom $"range: {range}"
-  # assert_equal(expected_value, range)
+  assert_equal(expected_value, range)
 
-  # setcursorcharpos(8, 28)
-  # expected_value = {'markdownBold': [[8, 12], [9, 10]]}
-  # range = utils.IsInRange()
-  # echom $"{range}"
+  setcursorcharpos(8, 28)
+  expected_value = {'markdownItalicU': [[8, 12], [9, 10]]}
+  range = utils.IsInRange()
+  assert_equal(expected_value, range)
+
+  # Range with blank line as end delimiter
+  setcursorcharpos(11, 28)
+  expected_value = {'markdownStrike': [[11, 15], [12, 24]]}
+  range = utils.IsInRange()
+  assert_equal(expected_value, range)
+
+  :%bw!
+  Cleanup_testfile(src_name_multibyte)
 enddef
+
 def g:Test_multibyte_surrounding()
   vnew
   Generate_testfile(lines_multibyte, src_name_multibyte)
@@ -684,6 +699,52 @@ def g:Test_multibyte_surrounding()
   setcharpos("']", [0, 1, 15, 0])
   utils.SurroundSmart('markdownItalicU')
   var expected_value = '当然，_这里有一段简短的中文文本_：'
-  echom assert_equal(expected_value, getline(1))
+  assert_equal(expected_value, getline(1))
 
+  setcursorcharpos(3, 11)
+  setcharpos("'[", [0, 3, 11, 0])
+  setcharpos("']", [0, 4, 8, 0])
+  utils.SurroundSmart('markdownStrike')
+  var expected_value_3_4 = [
+  "学习 Vim 是一项~~非常有趣的挑战。"
+      .. "虽然一开始可能感觉有些困难，但只要坚持练习，",
+  "就能够逐渐掌握它~~强大的功能，并大幅提高编辑效率。"
+  ]
+  assert_equal(expected_value_3_4, getline(3, 4))
+
+  :%bw!
+  Cleanup_testfile(src_name_multibyte)
+enddef
+
+def g:Test_multibyte_remove_surrounding()
+  vnew
+  Generate_testfile(lines_multibyte, src_name_multibyte)
+  exe $"edit {src_name_multibyte}"
+  setlocal conceallevel=0
+
+  setcursorcharpos(6, 9)
+  var expected_value = '需要某种特定风格或主题（比如技术、文学、对话等）吗？'
+  utils.RemoveSurrounding()
+  assert_equal(expected_value, getline(6))
+
+  setcursorcharpos(8, 14)
+  var expected_value_8_9 = [
+    "学习 Vim 是一项非常有趣的挑战。"
+        .. "虽然一开始可能感觉有些困难，但只要坚持练习，",
+    "就能够逐渐掌握它强大的功能，并大幅提高编辑效率。"
+  ]
+  utils.RemoveSurrounding()
+  assert_equal(expected_value_8_9, getline(8, 9))
+
+  setcursorcharpos(12, 10)
+  var expected_value_11_12 = [
+    "学习 Vim 是一项非常有趣的挑战。"
+        .. "虽然一开始可能感觉有些困难，但只要坚持练习，",
+    "就能够逐渐掌握它强大的功能，并大幅提高编辑效率。"
+  ]
+  utils.RemoveSurrounding()
+  assert_equal(expected_value_11_12, getline(11, 12))
+
+  :%bw!
+  Cleanup_testfile(src_name_multibyte)
 enddef

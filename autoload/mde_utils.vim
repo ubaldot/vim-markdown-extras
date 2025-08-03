@@ -2,6 +2,8 @@ vim9script
 
 import autoload "./mde_constants.vim" as constants
 
+export var save_surround_view = {}
+
 export def Echoerr(msg: string)
   echohl ErrorMsg | echom $'[markdown_extras] {msg}' | echohl None
 enddef
@@ -58,16 +60,13 @@ enddef
 
 export def RemoveSurrounding(range_info: dict<list<list<number>>> = {})
     const style_interval = empty(range_info) ? IsInRange() : range_info
-    echom string(style_interval)
     if !empty(style_interval)
       const style = keys(style_interval)[0]
       const interval = values(style_interval)[0]
 
-      echom "Siamo qui!"
       # Remove left delimiter
       const lA = interval[0][0]
       const cA = interval[0][1]
-      echom $"(lA, cA): ({lA},{cA})"
       const lineA = getline(lA)
       var newline = strcharpart(lineA, 0,
               \ cA - 1 - strchars(constants.TEXT_STYLES_DICT[style].open_delim))
@@ -104,6 +103,7 @@ export def RemoveSurrounding(range_info: dict<list<list<number>>> = {})
     endif
 enddef
 
+# TODO: REMOVE ME (also docs and config dict)
 export def SurroundSimple(style: string, type: string = '')
 
   if getcharpos("'[") == getcharpos("']")
@@ -294,14 +294,9 @@ export def SurroundSmart(style: string, type: string = '')
     if style != 'markdownCode'
       A_to_B = RemoveDelimiters(A_to_B)
     endif
-    # echom $'toA: ' .. toA
-    # echom $'fromB: ' .. fromB
-    # echom $'A_to_B:' .. A_to_B
-    # echom '----------\n'
 
     # Set the whole line
     setline(lA, toA .. A_to_B .. fromB)
-
   else
     # Set line A
     var afterA = strcharpart(getline(lA), cA - 1)
@@ -335,6 +330,11 @@ export def SurroundSmart(style: string, type: string = '')
       setline(lA + ii, middleline)
       ii += 1
     endwhile
+  endif
+
+  if !empty('save_surround_view')
+    winrestview(save_surround_view)
+    save_surround_view = {}
   endif
 enddef
 
@@ -433,14 +433,17 @@ export def IsInRange(): dict<list<list<number>>>
   def SearchPosChar(pattern: string, options: string): list<number>
     # Like 'searchpos()' but the column is converted in char index
     var [l, c] = searchpos(pattern, options)
-    var c_char = strchars(strpart(getline(l), 0, c - 1)) + 1
+    var c_char = charidx(getline(l), c - 1) + 1
     return [l, c_char]
   enddef
 
+  # ================================
   # Main function start here
-  # text_style comes from vim-markdown
+  # ================================
+  # TODO: text_style comes from vim-markdown. If vim-markdown changes, this will.
+  # It is not enough to find separators, but such separators must be
+  # named '*Delimiter' according to synIDAttr()
   const text_style = synIDattr(synID(line("."), col("."), 1), "name")
-  echom "text_style: " .. text_style
   const text_style_adjusted =
     text_style == 'markdownItalic' || text_style == 'markdownBold'
      ? StarOrUnderscore(synIDattr(synID(line("."), col("."), 1), "name"))
@@ -456,10 +459,8 @@ export def IsInRange(): dict<list<list<number>>>
     const open_delim =
       eval($'constants.TEXT_STYLES_DICT.{text_style_adjusted}.open_delim')
 
-    # TODO: the searchpos() return a byte index!
     var open_delim_pos = SearchPosChar($'\V{open_delim}', 'bW')
 
-    # echom $"open_del_pos_back: {open_delim_pos}"
     var current_style = synIDattr(synID(line("."), col("."), 1), "name")
     # We search for a markdown delimiter or an htmlTag.
     while current_style != $'{text_style}Delimiter'
@@ -474,30 +475,26 @@ export def IsInRange(): dict<list<list<number>>>
       return {}
     endif
     open_delim_pos[1] += strchars(open_delim)
-    # echom "open del pos_back_plus_delim: " .. string(open_delim_pos)
 
-    # Search end delimiter.
+    # ----- Search end delimiter. -------
     # The end delimiter may be a blank line, hence
     # things become a bit cumbersome.
     setcursorcharpos(saved_curpos[1 : 2])
     const close_delim =
      eval($'constants.TEXT_STYLES_DICT.{text_style_adjusted}.close_delim')
-    var close_delim_pos = SearchPosChar($'\V{close_delim}', 'W')
-    var blank_line_pos = SearchPosChar('^$', 'W')
+    var close_delim_pos = SearchPosChar($'\V{close_delim}', 'nW')
+    var blank_line_pos = SearchPosChar('^$', 'nW')
     var first_met = [0, 0]
     current_style = synIDattr(synID(line("."), col("."), 1), "name")
-    echom $"close_delim_pos: '{close_delim_pos}'"
-    echom $"blank_line_pos: '{blank_line_pos}'"
 
     # The while loop is to robustify because you ultimately want to get a
-    # '*Delimiter' text-style, like for example 'markdownBoldDelimiter'
+    # '*Delimiter' text-style, like for example 'markdownBoldDelimiter' and
+    # not just land on a '**'.
     while current_style != $'{text_style}Delimiter'
         && current_style != 'htmlEndTag'
         && getline(line('.')) !~ '^$'
       close_delim_pos = SearchPosChar($'\V{close_delim}', 'W')
       blank_line_pos = SearchPosChar('^$', 'W')
-      echom $"close_delim_pos_inside: '{close_delim_pos}'"
-      echom $"blank_line_pos_inside: '{blank_line_pos}'"
       if close_delim_pos == [0, 0]
         first_met = blank_line_pos
       elseif blank_line_pos == [0, 0]
@@ -510,7 +507,6 @@ export def IsInRange(): dict<list<list<number>>>
       setcursorcharpos(first_met)
       current_style = synIDattr(synID(line("."), col("."), 1), "name")
     endwhile
-    echom $"first met_before: {first_met}"
 
     # If we hit a blank line, then we take the previous line and last column,
     # to keep consistency in returning open-intervals
@@ -520,7 +516,6 @@ export def IsInRange(): dict<list<list<number>>>
     else
       first_met[1] -= 1
     endif
-    echom $"first met: {first_met}"
 
     setcursorcharpos(saved_curpos[1 : 2])
     return_val =  {[text_style_adjusted]: [open_delim_pos, first_met]}

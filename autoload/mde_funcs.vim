@@ -104,7 +104,7 @@ export def CR_Hacked()
       line_nr -= 1
       current_line = getline(line_nr)
       item_symbol = GetItemSymbol(current_line)
-      echom item_symbol
+      # echom item_symbol
       if !empty(item_symbol)
         break
       endif
@@ -145,7 +145,6 @@ enddef
 export def RemoveAll()
   # TODO could be refactored to increase speed, but it may not be necessary
   const range_info = utils.IsInRange()
-  echom "A: " .. string(range_info)
   const prop_info = highlight.IsOnProp()
   const syn_info = synIDattr(synID(line("."), charcol("."), 1), "name")
   const is_quote_block = getline('.') =~ '^>\s'
