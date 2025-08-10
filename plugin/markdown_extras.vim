@@ -17,10 +17,10 @@ elseif !has('patch-9.1.1071')
   finish
 endif
 
-if exists('g:markdown_extras_loaded') && g:markdown_extras_loaded
+if exists('g:loaded_markdown_extras') && g:loaded_markdown_extras
   finish
 endif
-g:markdown_extras_loaded = true
+g:loaded_markdown_extras = true
 
 const release_notes =<< END
 
