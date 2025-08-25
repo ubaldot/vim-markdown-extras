@@ -1,4 +1,4 @@
-vim9script noclear
+vim9script
 
 # Editing markdown files has never been so pleasant.
 # Maintainer:	Ubaldo Tiberi
@@ -17,9 +17,6 @@ elseif !has('patch-9.1.1071')
   finish
 endif
 
-if exists('g:loaded_markdown_extras') && g:loaded_markdown_extras
-  finish
-endif
 g:loaded_markdown_extras = true
 
 const release_notes =<< END
