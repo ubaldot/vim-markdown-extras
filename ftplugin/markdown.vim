@@ -58,8 +58,8 @@ def SetMarkdownOpFunc()
 enddef
 
 # Hack on 'gq'
-nnoremap <silent> gq <ScriptCmd>SetMarkdownOpFunc()<cr>g@
-xnoremap <silent> gq <ScriptCmd>SetMarkdownOpFunc()<cr>g@
+nnoremap <buffer> <silent> gq <ScriptCmd>SetMarkdownOpFunc()<cr>g@
+xnoremap <buffer> <silent> gq <ScriptCmd>SetMarkdownOpFunc()<cr>g@
 
 # --------------End prettier ------------------------
 
