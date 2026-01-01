@@ -8,6 +8,8 @@ import autoload '../autoload/mde_constants.vim' as constants
 import autoload '../autoload/mde_indices.vim' as indices
 import autoload '../plugin/markdown_extras.vim' as markdown_extras
 
+b:undo_ftplugin = "setlocal opfunc<"
+
 # This is the dictionary of the form [32]: https://example.com that takes into
 # account of all the links that the user place at the bottom of a markdown
 # file.
@@ -83,6 +85,10 @@ if markdown_extras.use_pandoc
     # TIP: use g< to show all the echoed messages since now
     # TIP2: redraw! is used to avoid the "PRESS ENTER" thing
     echo cmd->matchstr('.*\ze2>&1') | redraw!
+
+    if !empty(getqflist())
+      copen
+    endif
 
     # TODO: pandoc compiler returns v:shell_error = 0 even if there are
     # errors. Add a condition on v:shell_error once pandoc compiler is fixed.
