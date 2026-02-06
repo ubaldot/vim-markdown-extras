@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# Script to run the unit-tests for the vim-markdown_extras.vim
-# Copied and adapted from Vim LSP plugin
-
 GITHUB=1
 
 # No arguments passed, then no exit

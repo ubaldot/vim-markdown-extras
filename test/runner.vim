@@ -45,8 +45,10 @@ def RunTests(test_file: string)
   # writefile(['Executed test:'], 'results.txt', 'a')
   for test in test_functions
 		echom "current test: " .. test
+		messages clear
     v:errors = []
-    v:errmsg = ''
+		# no need because you only see the last message. Better to use messages.
+    # v:errmsg = ''
     try
       :%bw!
       exe $'call {test}'
@@ -54,12 +56,15 @@ def RunTests(test_file: string)
       add(v:errors, $'Error: Test {test} failed with exception {v:exception} at {v:throwpoint}')
     endtry
 
-    if v:errmsg != ''
-      add(v:errors, $'Error: Test {test} generated error {v:errmsg}')
-    endif
+    # if v:errmsg != ''
+    #   add(v:errmsg, $'Error: Test {test} generated error {v:errmsg}')
+    # endif
     if !v:errors->empty()
+			writefile(['messages log:', '--------------------'], 'results.txt', 'a')
+			writefile(execute('messages')->split("\n"), 'results.txt', 'a')
+			writefile(['', 'Assertions errors:', '--------------------'], 'results.txt', 'a')
       writefile(v:errors, 'results.txt', 'a')
-      writefile([$'{test}: FAIL'], 'results.txt', 'a')
+      writefile([$'{test}: FAIL', ''], 'results.txt', 'a')
     else
       writefile([$'{test}: pass'], 'results.txt', 'a')
     endif
@@ -73,8 +78,8 @@ for test_file in g:TestFiles
 		RunTests(test_file)
 		writefile([''], 'results.txt', 'a')
 	catch
-		writefile(['FAIL: Tests in ' .. test_file .. ' failed with exception '
-					\	.. v:exception .. ' at ' .. v:throwpoint], 'results.txt', 'a')
+		writefile([$'FAIL: Tests in {test_file} failed with exception '
+						.. $'{v:exception} at {v:throwpoint}'], 'results.txt', 'a')
 	endtry
 endfor
 

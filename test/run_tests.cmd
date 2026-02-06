@@ -52,8 +52,7 @@ if %ERRORLEVEL% EQU 0 (
 REM Check test results
 echo ----------------------------------
 echo MARKDOWN_EXTRAS unit-test results:
-echo/
-type results.txt
+powershell -NoProfile -Command "Get-Content -Encoding UTF8 results.txt"
 echo ----------------------------------
 
 REM Check for FAIL in results.txt
