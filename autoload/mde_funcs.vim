@@ -152,19 +152,38 @@ export def CR_Hacked()
   else
     # Table handling
     messages clear
-    var first_chunk = strcharpart(getline(line('.')), 0, charcol('.') - 1)->substitute('[^|]', ' ', 'g')
-    var second_chunk =  strcharpart(getline(line('.')), charcol('.'), col('$') - 1)->substitute('[^|]', '', 'g')
+    var curpos = getcursorcharpos()[1 : 2]
+    var cell_del_in = searchpos('|', 'b')[1]
+    var cell_del_out = searchpos('|')[1]
+    var cell_nr = strcharpart(getline(line('.')), 0, charcol('.') - 1)->filter("v:val == '|'")->len()
+    # echom "cell_del_out: " .. cell_del_out
+    # echom "cell_nr: " .. cell_nr
 
-    var cell_nr = strcharpart(getline(line('.')), 1, charcol('.') - 1)->filter("v:val == '|'")->len()
-    cursor(line('.'), 1)
-    for _ in range(cell_nr)
-      search('|')
-    endfor
-    var target_pos = [line('.') + 1, col('.') + 2]
+    setcursorcharpos(curpos)
+    var carry_over = strcharpart(getline(line('.')), col('.') - 1, cell_del_out - col('.'))
 
-    append(line('.'), first_chunk .. second_chunk)
-    cursor(target_pos)
-    norm! dt|
+    var current_line = strcharpart(getline(line('.')), 0, charcol('.') - 1)
+            .. ' ' .. strcharpart(getline(line('.')), charcol('.') + len(carry_over) - 1)
+
+    var next_line = strcharpart(getline(line('.')), 0, cell_del_in)->substitute('[^|]', ' ', 'g')
+    .. ' ' .. carry_over  .. strcharpart(getline(line('.')), charcol('.') - 1)->substitute('[^|]', '', 'g')
+
+    setline(line('.'), current_line)
+    append(line('.'), next_line)
+    setcursorcharpos(line('.') + 1, cell_del_in + 2)
+#     var first_line = strcharpart(getline(line('.')), 0, charcol('.') - 1)
+# ..strcharpart(getline(line('.')), charcol('.'), col('$') - 1)->substitute('[^|]', ' ', 'g')
+
+#     var second_line =  strcharpart(getline(line('.')), charcol('.'), col('$') - 1)->substitute('[^|]', '', 'g')
+
+#     for _ in range(cell_nr)
+#       search('|')
+#     endfor
+#     var target_pos = [line('.') + 1, col('.') + 2]
+
+#     append(line('.'), first_chunk .. second_chunk)
+#     cursor(target_pos)
+#     norm! dt|
   endif
 enddef
 
