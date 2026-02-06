@@ -149,9 +149,8 @@ export def CR_Hacked()
     append(line('.'), item_symbol .. second_chunk)
     cursor(line('.') + 1, strchars(item_symbol) + 1)
     startinsert
-  else
+  elseif getline(line('.')) =~ '^\s*|' && !empty(strcharpart(getline(line('.')), col('.') - 1)->filter("v:val =~ '|'"))
     # Table handling
-    messages clear
     var curpos = getcursorcharpos()[1 : 2]
     var cell_del_in = searchpos('|', 'b')[1]
     var cell_del_out = searchpos('|')[1]
@@ -171,19 +170,10 @@ export def CR_Hacked()
     setline(line('.'), current_line)
     append(line('.'), next_line)
     setcursorcharpos(line('.') + 1, cell_del_in + 2)
-#     var first_line = strcharpart(getline(line('.')), 0, charcol('.') - 1)
-# ..strcharpart(getline(line('.')), charcol('.'), col('$') - 1)->substitute('[^|]', ' ', 'g')
-
-#     var second_line =  strcharpart(getline(line('.')), charcol('.'), col('$') - 1)->substitute('[^|]', '', 'g')
-
-#     for _ in range(cell_nr)
-#       search('|')
-#     endfor
-#     var target_pos = [line('.') + 1, col('.') + 2]
-
-#     append(line('.'), first_chunk .. second_chunk)
-#     cursor(target_pos)
-#     norm! dt|
+  else
+    # Classic <cr>
+    append(line('.'), strcharpart(getline(line('.')), col('.') - 1))
+    cursor(line('.') + 1, 1)
   endif
 enddef
 
