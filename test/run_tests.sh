@@ -28,6 +28,9 @@ echo "">> "$VIMRC"
 echo "set runtimepath+=.." >> "$VIMRC"
 echo "filetype indent plugin on" >> "$VIMRC"
 echo "syntax on" >> "$VIMRC"
+echo "messages clear" >> "$VIMRC"
+echo "v:errmsg = ''" >> "$VIMRC"
+echo "v:errors = []" >> "$VIMRC"
 
 # Display vimrc content
 echo "----- vimrc content ---------"

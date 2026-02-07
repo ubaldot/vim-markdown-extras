@@ -44,11 +44,9 @@ def RunTests(test_file: string)
 	# Execute the test functions
   # writefile(['Executed test:'], 'results.txt', 'a')
   for test in test_functions
-		echom "current test: " .. test
-		messages clear
-    v:errors = []
-		# no need because you only see the last message. Better to use messages.
-    # v:errmsg = ''
+		v:errors = []
+		v:errmsg = ''
+		# echom "current test: " .. test
     try
       :%bw!
       exe $'call {test}'
@@ -56,12 +54,13 @@ def RunTests(test_file: string)
       add(v:errors, $'Error: Test {test} failed with exception {v:exception} at {v:throwpoint}')
     endtry
 
-    # if v:errmsg != ''
-    #   add(v:errmsg, $'Error: Test {test} generated error {v:errmsg}')
-    # endif
-    if !v:errors->empty()
+    # if v:errmsg is not empty something must happened. Store all messages log
+		if !empty(v:errmsg)
 			writefile(['messages log:', '--------------------'], 'results.txt', 'a')
 			writefile(execute('messages')->split("\n"), 'results.txt', 'a')
+		endif
+
+    if !empty(v:errors)
 			writefile(['', 'Assertions errors:', '--------------------'], 'results.txt', 'a')
       writefile(v:errors, 'results.txt', 'a')
       writefile([$'{test}: FAIL', ''], 'results.txt', 'a')
