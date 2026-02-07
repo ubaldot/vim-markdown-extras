@@ -3,6 +3,7 @@ vim9script
 # Test for the vim-markdown plugin
 # Copied and adjusted from Vim distribution
 
+import "../plugin/markdown_extras.vim"
 import "./common.vim"
 const WaitForAssert = common.WaitForAssert
 
@@ -107,7 +108,9 @@ END
 END
 
   const key_sequence = "Go\<bar> foo bar \<bar> ciao \<bar>\<esc>,a"
-  feedkeys( key_sequence, 'xt' )
+  redraw
+  execute $"silent norm {key_sequence}"
+
 
   actual_lines = getline(1, '$')
   assert_equal(expected_lines, actual_lines)
@@ -119,6 +122,6 @@ END
     echom "Test passed!"
   endif
 
-  :%bw!
-  Cleanup_testfile(src_name)
+  # :%bw!
+  # Cleanup_testfile(src_name)
 enddef

@@ -3,7 +3,7 @@ vim9script
 # Uncomment for manual tests.
 # The global variable g:TestFiles is a list containing all the tests filenames.
 # if !exists('g:TestFiles')
-# 	g:TestFiles = ['test_markdown_extras.vim', 'test_utils.vim', 'test_regex.vim']
+# 	g:TestFiles = ['test_replica_python.vim', 'test_replica_julia.vim']
 # endif
 
 delete('results.txt')
@@ -45,8 +45,10 @@ def RunTests(test_file: string)
   # writefile(['Executed test:'], 'results.txt', 'a')
   for test in test_functions
 		echom "current test: " .. test
+		messages clear
     v:errors = []
-    v:errmsg = ''
+		# no need because you only see the last message. Better to use messages.
+    # v:errmsg = ''
     try
       :%bw!
       exe $'call {test}'
@@ -54,17 +56,19 @@ def RunTests(test_file: string)
       add(v:errors, $'Error: Test {test} failed with exception {v:exception} at {v:throwpoint}')
     endtry
 
-    if v:errmsg != ''
-      add(v:errors, $'Error: Test {test} generated error {v:errmsg}')
-    endif
+    # if v:errmsg != ''
+    #   add(v:errmsg, $'Error: Test {test} generated error {v:errmsg}')
+    # endif
     if !v:errors->empty()
+			writefile(['messages log:', '--------------------'], 'results.txt', 'a')
+			writefile(execute('messages')->split("\n"), 'results.txt', 'a')
+			writefile(['', 'Assertions errors:', '--------------------'], 'results.txt', 'a')
       writefile(v:errors, 'results.txt', 'a')
-      writefile([$'{test}: FAIL'], 'results.txt', 'a')
+      writefile([$'{test}: FAIL', ''], 'results.txt', 'a')
     else
       writefile([$'{test}: pass'], 'results.txt', 'a')
     endif
   endfor
-	# Test results separator
 enddef
 
 # To test in stand-alone, remove the try block from the following
@@ -73,8 +77,8 @@ for test_file in g:TestFiles
 		RunTests(test_file)
 		writefile([''], 'results.txt', 'a')
 	catch
-		writefile(['FAIL: Tests in ' .. test_file .. ' failed with exception '
-					\	.. v:exception .. ' at ' .. v:throwpoint], 'results.txt', 'a')
+		writefile([$'FAIL: Tests in {test_file} failed with exception '
+						.. $'{v:exception} at {v:throwpoint}'], 'results.txt', 'a')
 	endtry
 endfor
 
