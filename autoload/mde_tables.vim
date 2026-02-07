@@ -184,13 +184,13 @@ def SearchRowDelimitersRange(): dict<any>
 
     # Search for first line
     var startline = line('.')
-    while getline(startline) !~ delim_regex && getline(startline) !~ '^$' && startline != 1
+    while getline(startline) !~ delim_regex && getline(startline) !~ '^$' && startline != 0
       startline -= 1
     endwhile
     setcursorcharpos(curpos)
 
-    if getline(startline) =~ '^$'
-      echoerr 'Upper delimiter not found!'
+    if startline == 0
+      echoerr 'You are on the first line'
       return delim_range
     endif
 
@@ -202,8 +202,8 @@ def SearchRowDelimitersRange(): dict<any>
 
     setcursorcharpos(curpos)
 
-    if getline(endline) =~ '^$' || endline == line('$')
-      echoerr 'Lower delimiter not found!'
+    if endline == line('$')
+      echoerr 'You are on the last line'
       return delim_range
     endif
 
@@ -213,7 +213,7 @@ def SearchRowDelimitersRange(): dict<any>
   return delim_range
 enddef
 
-var foo = ['ciao ciao',
+var foo = ['hello hello',
 'bella signora',
 'mi farei proprio una bella chiavata'
 ]
