@@ -124,3 +124,104 @@ export def Align()
   # Restore cursor
   setcursorcharpos(curpos)
 enddef
+
+def ReplaceCell(buf: list<string>)
+  const tab_col_prop = SearchRowDelimitersRange()
+
+  if empty(tab_col_prop)
+    return
+  endif
+
+  var tab_col_height = tab_col_prop.endline - tab_col_prop.startline - 1
+  var pad_size = len(buf) - tab_col_height
+
+  # Find total number of table columns (aka cells)
+  cursor(line('.'), 1)
+  const num_tab_cols = getline(line('.'))->filter("v:val == '\|'")->len()
+
+  # Find col1 and col2 of the target cell
+  for _ in range(tab_col_prop.tab_col_nr - 1)
+    searchpos('|')
+  endfor
+  const tab_col_delim_pos1 = getcursorcharpos()[2]
+  const tab_col_delim_pos2 = searchpos('|')[1]
+
+  # Replace lines
+  cursor(tab_col_prop.startline + 1, 1)
+  var ii_offset = -1
+  var new_line = ''
+  for [ii, val] in items(buf[: tab_col_height - 1])
+    ii_offset = ii + tab_col_prop.startline + 1
+    new_line = strcharpart(getline(ii_offset), 0, tab_col_delim_pos1)
+    .. $' {val} ' .. strcharpart(getline(ii_offset), tab_col_delim_pos2 - 1)
+    setline(ii_offset, new_line)
+  endfor
+
+  if len(buf) > tab_col_height
+    for [ii, val] in items(buf[tab_col_height : ])
+      ii_offset = tab_col_prop.startline + tab_col_height
+      new_line = repeat('| ', tab_col_prop.tab_col_nr) .. val .. ' |'
+      append(ii_offset, new_line)
+    endfor
+  endif
+
+  Align()
+enddef
+
+def SearchRowDelimitersRange(): dict<any>
+  messages clear
+    const delim_regex = '\v^\|\s*-+\s*(\|\s*-+\s*)*\|\s*$'
+    var delim_range = {}
+
+  if getline('.') =~# '^\s*|' && getline('.') !~ delim_regex
+
+    const tab_col_nr = strcharpart(getline(line('.')), 0, col('.') - 1)
+      ->filter("v:val == '\|'")->len()
+
+    # Start row delimiters search
+    # Save column and position
+    const curpos = getcursorcharpos()[1 : 2]
+
+    # Search for first line
+    var startline = line('.')
+    while getline(startline) !~ delim_regex && getline(startline) !~ '^$' && startline != 1
+      startline -= 1
+    endwhile
+    setcursorcharpos(curpos)
+
+    if getline(startline) =~ '^$'
+      echoerr 'Upper delimiter not found!'
+      return delim_range
+    endif
+
+    # Search for last line
+    var endline = line('.')
+    while getline(endline) !~ delim_regex && getline(endline) !~ '^$' && endline != line('$')
+      endline += 1
+    endwhile
+
+    setcursorcharpos(curpos)
+
+    if getline(endline) =~ '^$' || endline == line('$')
+      echoerr 'Lower delimiter not found!'
+      return delim_range
+    endif
+
+    delim_range = {tab_col_nr: tab_col_nr, startline: startline, endline: endline}
+  endif
+
+  return delim_range
+enddef
+
+var foo = ['ciao ciao',
+'bella signora',
+'mi farei proprio una bella chiavata'
+]
+
+command! RRR ReplaceCell(foo)
+
+# nmap ga <ScriptCmd>Align()<cr>
+
+# xnoremap <c-s> <ScriptCmd>SumBlock()<cr>
+# inoremap <silent> <Bar> <Bar><Esc><ScriptCmd>Align()<CR>a
+# command! -nargs=0 TableDelimiter InsertRowDelimiter()
