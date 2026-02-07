@@ -1,8 +1,5 @@
 vim9script
 
-# =========================
-# Helpers
-# =========================
 
 def IsTableLine(line: string): bool
   return line =~# '^\s*|\s*.*\s*|\s*$'
@@ -24,10 +21,6 @@ def IsDelimiterRow(row: list<string>): bool
   endfor
   return true
 enddef
-
-# =========================
-# Core alignment
-# =========================
 
 def AlignPipes(first: number, last: number)
   var lines = getline(first, last)
@@ -82,7 +75,7 @@ def AlignPipes(first: number, last: number)
 enddef
 
 # =========================
-# Public entry point
+#         MAIN
 # =========================
 
 export def InsertRowDelimiter()
@@ -125,57 +118,71 @@ export def Align()
   setcursorcharpos(curpos)
 enddef
 
-def ReplaceCell(buf: list<string>)
-  const tab_col_prop = SearchRowDelimitersRange()
+# =========================
+# Cells replacement
+# =========================
 
-  if empty(tab_col_prop)
+def ReplaceCell(buf: list<string>)
+  const cell_prop = SearchRowDelimitersRange()
+
+  if empty(cell_prop)
     return
   endif
 
-  var tab_col_height = tab_col_prop.endline - tab_col_prop.startline - 1
-  var pad_size = len(buf) - tab_col_height
+  var cell_height = cell_prop.endline - cell_prop.startline - 1
+  var pad_size = len(buf) - cell_height
 
-  # Find total number of table columns (aka cells)
+  # Find number of cells per row
   cursor(line('.'), 1)
-  const num_tab_cols = getline(line('.'))->filter("v:val == '\|'")->len()
+  const num_cells = getline(line('.'))->filter("v:val == '\|'")->len()
 
   # Find col1 and col2 of the target cell
-  for _ in range(tab_col_prop.tab_col_nr - 1)
+  for _ in range(cell_prop.cell_nr - 1)
     searchpos('|')
   endfor
-  const tab_col_delim_pos1 = getcursorcharpos()[2]
-  const tab_col_delim_pos2 = searchpos('|')[1]
+  const cell_delim_pos1 = getcursorcharpos()[2]
+  const cell_delim_pos2 = searchpos('|')[1]
 
   # Replace lines
-  cursor(tab_col_prop.startline + 1, 1)
+  cursor(cell_prop.startline + 1, 1)
   var ii_offset = -1
   var new_line = ''
-  for [ii, val] in items(buf[: tab_col_height - 1])
-    ii_offset = ii + tab_col_prop.startline + 1
-    new_line = strcharpart(getline(ii_offset), 0, tab_col_delim_pos1)
-    .. $' {val} ' .. strcharpart(getline(ii_offset), tab_col_delim_pos2 - 1)
+  for [ii, val] in items(buf[: cell_height - 1])
+    ii_offset = ii + cell_prop.startline + 1
+
+    new_line = strcharpart(getline(ii_offset), 0, cell_delim_pos1)
+      .. $' {val} ' .. strcharpart(getline(ii_offset), cell_delim_pos2 - 1)
+
     setline(ii_offset, new_line)
   endfor
 
-  if len(buf) > tab_col_height
-    for [ii, val] in items(buf[tab_col_height : ])
-      ii_offset = tab_col_prop.startline + tab_col_height
-      new_line = repeat('| ', tab_col_prop.tab_col_nr) .. val .. ' |'
+  # Padding if the buffer to insert is too large
+  if len(buf) > cell_height
+    for [ii, val] in items(buf[cell_height : ])
+      ii_offset = cell_prop.startline + cell_height
+
+      new_line = repeat('| ', cell_prop.cell_nr) .. val .. ' |'
+
       append(ii_offset, new_line)
     endfor
   endif
 
+  # Make it nice and put the cursor on a nice spot
   Align()
+  cursor(line('.'), 1)
+  for _ in range(cell_prop.cell_nr - 1)
+    search('|')
+  endfor
+  norm! w
+
 enddef
 
 def SearchRowDelimitersRange(): dict<any>
-  messages clear
-    const delim_regex = '\v^\|\s*-+\s*(\|\s*-+\s*)*\|\s*$'
-    var delim_range = {}
+  var delim_range = {}
 
-  if getline('.') =~# '^\s*|' && getline('.') !~ delim_regex
+  if IsTableLine(getline('.')) && !IsDelimiterRow(SplitRow(getline('.')))
 
-    const tab_col_nr = strcharpart(getline(line('.')), 0, col('.') - 1)
+    const cell_nr = strcharpart(getline(line('.')), 0, col('.') - 1)
       ->filter("v:val == '\|'")->len()
 
     # Start row delimiters search
@@ -184,7 +191,8 @@ def SearchRowDelimitersRange(): dict<any>
 
     # Search for first line
     var startline = line('.')
-    while getline(startline) !~ delim_regex && getline(startline) !~ '^$' && startline != 0
+    # while getline(startline) !~ delim_regex && getline(startline) !~ '^$' && startline != 0
+    while !IsDelimiterRow(SplitRow(getline(startline))) && getline(startline) !~ '^$' && startline != 0
       startline -= 1
     endwhile
     setcursorcharpos(curpos)
@@ -196,7 +204,7 @@ def SearchRowDelimitersRange(): dict<any>
 
     # Search for last line
     var endline = line('.')
-    while getline(endline) !~ delim_regex && getline(endline) !~ '^$' && endline != line('$')
+    while !IsDelimiterRow(SplitRow(getline(endline))) && getline(endline) !~ '^$' && endline != line('$')
       endline += 1
     endwhile
 
@@ -207,21 +215,16 @@ def SearchRowDelimitersRange(): dict<any>
       return delim_range
     endif
 
-    delim_range = {tab_col_nr: tab_col_nr, startline: startline, endline: endline}
+    delim_range = {cell_nr: cell_nr, startline: startline, endline: endline}
   endif
 
   return delim_range
 enddef
 
+# ------- TEST VALUES ---------
 var foo = ['hello hello',
-'bella signora',
-'mi farei proprio una bella chiavata'
+  'bella signora',
+  'mi farei proprio una bella chiavata'
 ]
 
 command! RRR ReplaceCell(foo)
-
-# nmap ga <ScriptCmd>Align()<cr>
-
-# xnoremap <c-s> <ScriptCmd>SumBlock()<cr>
-# inoremap <silent> <Bar> <Bar><Esc><ScriptCmd>Align()<CR>a
-# command! -nargs=0 TableDelimiter InsertRowDelimiter()
