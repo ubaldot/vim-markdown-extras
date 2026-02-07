@@ -9,9 +9,9 @@ import autoload '../autoload/mde_indices.vim' as indices
 import autoload '../autoload/mde_tables.vim' as tables
 import autoload '../plugin/markdown_extras.vim' as markdown_extras
 
-# This is the dictionary of the form [32]: https://example.com that takes into
-# account of all the links that the user place at the bottom of a markdown
-# file.
+# b:markdown_extras_links is the dictionary of the form
+# [32]: https://example.com that takes into  account of all the links that
+# the user place at the bottom of a markdown file.
 b:markdown_extras_links = links.RefreshLinksDict()
 
 # Check that the values of the dict are valid URL
@@ -262,7 +262,7 @@ endif
 
 if empty(maparg('<Plug>MarkdownAlign'))
   noremap <script> <buffer> <Plug>MarkdownAlign
-        \ <ScriptCmd>tables.SetAlign()<cr>
+        \ <ScriptCmd>tables.Align()<cr>
 endif
 
 # ------------------------------------------------------------
@@ -399,11 +399,9 @@ if use_default_mappings
     endif
   endif
 
-  if !hasmapto('<Plug>MarkdownAlign')
-    if empty(mapcheck('<bar>', 'i', 1))
-      # The final ea is to restore the cursor where it was left
-      inoremap <silent> <Bar> <Bar><c-o><Plug>MarkdownAlign<esc>ea
-    endif
+  if empty(mapcheck('<bar>', 'i', 1))
+    # The final ea is to restore the cursor where it was left
+    inoremap <silent> <bar> <bar><esc><ScriptCmd>tables.Align()<cr>a
   endif
 
   # ------------------------------------------------------
