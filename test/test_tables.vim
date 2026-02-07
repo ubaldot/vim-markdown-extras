@@ -41,58 +41,84 @@ END
   var expected_lines =<< END
 # Test table alignment
 
-| ciao       | notte                | quanto ti       |
-|------------|----------------------|-----------------|
-| ciao       | super                | quanto ti       |
-| sono       |                      |                 |
-|            |                      |                 |
-|            | come no mingle       |                 |
-|            | notte                |                 |
-|            | banana               |                 |
-| si si      | apple                |                 |
-|            | mango                |                 |
-|------------|----------------------|-----------------|
+| ciao  | notte          | quanto ti |
+|-------|----------------|-----------|
+| ciao  | super          | quanto ti |
+| sono  |                |           |
+|       |                |           |
+|       | come no mingle |           |
+|       | notte          |           |
+|       | banana         |           |
+| si si | apple          |           |
+|       | mango          |           |
+|-------|----------------|-----------|
 END
 
   vnew
   Generate_testfile(lines, src_name)
   exe $"edit {src_name}"
 
-  # cursor(6, 3)
-  # execute $"silent norm! \<Plug>MarkdownAlign"
+  cursor(6, 3)
+  execute $"silent norm! \<Plug>MarkdownAlign"
 
-  # var actual_lines = getline(1, '$')
-  # assert_equal(expected_lines, actual_lines)
+  var actual_lines = getline(1, '$')
+  assert_equal(expected_lines, actual_lines)
 
-  # ------ test MDETableDelimiter ----
-#   expected_lines =<< trim END
-# # Test table alignment
+  # ------ test MDETableRowDelimiter ----
+  expected_lines =<< trim END
+# Test table alignment
 
-# | ciao         | notte                  | quanto ti         |
-# | ------------ | ---------------------- | ----------------- |
-# | ciao         | super                  | quanto ti         |
-# | sono         |                        |                   |
-# |--------------|------------------------|-------------------|
-# |              |                        |                   |
-# |              | come no mingle         |                   |
-# |              | notte                  |                   |
-# |              | banana                 |                   |
-# | si si        | apple                  |                   |
-# |              | mango                  |                   |
-# | ------------ | ---------------------- | ----------------- |
-# END
+| ciao  | notte          | quanto ti |
+|-------|----------------|-----------|
+| ciao  | super          | quanto ti |
+| sono  |                |           |
+|-------|----------------|-----------|
+|       |                |           |
+|       | come no mingle |           |
+|       | notte          |           |
+|       | banana         |           |
+| si si | apple          |           |
+|       | mango          |           |
+|-------|----------------|-----------|
+END
 
-#   execute "MDETableDelimiter"
+  execute "MDETableRowDelimiter"
 
-#   actual_lines = getline(1, '$')
-  # assert_equal(expected_lines, actual_lines)
+  actual_lines = getline(1, '$')
+  assert_equal(expected_lines, actual_lines)
 
+  # ------ test insert ----
+  expected_lines =<< trim END
+# Test table alignment
+
+| ciao    | notte          | quanto ti |
+|---------|----------------|-----------|
+| ciao    | super          | quanto ti |
+| sono    |                |           |
+|---------|----------------|-----------|
+|         |                |           |
+|         | come no mingle |           |
+|         | notte          |           |
+|         | banana         |           |
+| si si   | apple          |           |
+|         | mango          |           |
+|---------|----------------|-----------|
+| foo bar | ciao           |           |
+END
+
+  const key_sequence = "Go\<bar> foo bar \<bar> ciao \<bar>\<esc>,a"
+  feedkeys( key_sequence, 'xt' )
+
+  actual_lines = getline(1, '$')
+  assert_equal(expected_lines, actual_lines)
+
+  # ---- teardown tests ----
   if !empty(v:errors) || !empty(v:errmsg)
     echoerr "Test failed!"
   else
-    echo "Test passed!"
+    echom "Test passed!"
   endif
 
-  # :%bw!
-  # Cleanup_testfile(src_name_1)
+  :%bw!
+  Cleanup_testfile(src_name)
 enddef

@@ -40,6 +40,7 @@ VIM_CMD="$VIM_PRG --clean -Es -u $VIMRC -i NONE --not-a-term"
 TESTS_LIST="['test_markdown_extras.vim', \
 	'test_utils.vim', \
 	'test_regex.vim', \
+	'test_tables.vim', \
 	'test_links.vim']"
 
 # All the tests are executed in the same Vim instance

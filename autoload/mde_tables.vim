@@ -1,102 +1,126 @@
 vim9script
 
-var sum = 0.0
-export def SumBlock()
+# =========================
+# Helpers
+# =========================
 
-  var tmp = getreg('s')
-  silent norm! "sy
+def IsTableLine(line: string): bool
+  return line =~# '^\s*|\s*.*\s*|\s*$'
+enddef
 
-  var numbers: list<any>
-  if @s =~ "\|"
-    numbers = split(@s, "\|")
-  else
-    numbers = split(@s)
-  endif
+def SplitRow(line: string): list<string>
+  # Drop leading/trailing |, then split
+  var inner = line
+    ->substitute('^\s*|\s*', '', '')
+    ->substitute('\s*|\s*$', '', '')
+  return split(inner, '\s*|\s*', true)
+enddef
 
-  for v in numbers
-    sum += str2float(v)
+def IsDelimiterRow(row: list<string>): bool
+  for cell in row
+    if cell !~# '^\s*[:-]\+\s*$'
+      return false
+    endif
   endfor
-
-  echo $"sum: {total}"
-  total = 0.0
-  setreg('s', tmp)
+  return true
 enddef
 
-export def InsertRowDelimiter()
-  const p = '^\s*|\s*.*\s*|\s*$'
-  const curr_line = line('.')
-  if getline(curr_line) =~ p
-    appendbufline('%', curr_line, getline(curr_line)
-      ->substitute('[^\|]', '-', 'g'))
-      # ->substitute('|-', '| ', 'g')
-      # ->substitute('-|', ' |', 'g'))
-  endif
-enddef
+# =========================
+# Core alignment
+# =========================
 
 def AlignPipes(first: number, last: number)
   var lines = getline(first, last)
 
-  # Split rows into cells
+  # Parse rows
   var rows: list<list<string>> = []
-  for line in lines
-    var cells = split(line, '|')
-      ->map((_, v) => trim(v))
-    rows->add(cells)
+  for l in lines
+    rows->add(SplitRow(l))
   endfor
 
-  # Compute max length per column (character-based)
-  var ncols = max(rows->mapnew((_, r) => len(r)))
+  # Compute column count
+  var ncols = 0
+  for r in rows
+    ncols = max([ncols, len(r)])
+  endfor
+
+  # Compute max width per column (character-based)
   var widths = repeat([0], ncols)
 
   for r in rows
+    if IsDelimiterRow(r)
+      continue
+    endif
     for i in range(len(r))
       widths[i] = max([widths[i], strcharlen(r[i])])
     endfor
   endfor
 
-  # Rebuild aligned lines
+  # Rebuild lines
   var out: list<string> = []
+
   for r in rows
+    var is_delim = IsDelimiterRow(r)
     var parts: list<string> = []
-    for i in range(len(r))
-      parts->add(
-        ' ' .. r[i] .. repeat(' ', widths[i] - strcharlen(r[i]) + 1)
-      )
+
+    for i in range(ncols)
+      var cell = i < len(r) ? r[i] : ''
+
+      if is_delim
+        parts->add(repeat('-', widths[i] + 2))
+      else
+        parts->add(
+          ' ' .. cell .. repeat(' ', widths[i] - strcharlen(cell) + 1)
+        )
+      endif
     endfor
-    out->add($'|{join(parts, "\|")}|')
+
+    out->add('|' .. join(parts, '|') .. '|')
   endfor
 
   setline(first, out)
 enddef
 
-export def Align()
+# =========================
+# Public entry point
+# =========================
+
+export def InsertRowDelimiter()
   const p = '^\s*|\s*.*\s*|\s*$'
-  if getline('.') =~# '^\s*|'
+  const curr_line = line('.')
 
-    # Save column and position
-    const curpos = getcursorcharpos()[1 : 2]
-
-    # Search for first line
-    var startline = line('.')
-    if startline != 1
-      while getline(startline - 1) =~ p
-        startline = search(p, 'bW')
-      endwhile
-    endif
-    setcursorcharpos(curpos)
-
-    # Search for last line
-    var endline = line('.')
-    if endline != line('$')
-      while getline(endline + 1) =~ p
-        endline = search(p, 'W')
-      endwhile
-    endif
-    setcursorcharpos(curpos)
-
-    # Easy align
-    AlignPipes(startline, endline)
-    setcursorcharpos(curpos)
-
+  if getline(curr_line) =~# p
+    appendbufline(
+      '%',
+      curr_line,
+      getline(curr_line)->substitute('[^|]', '-', 'g')
+    )
   endif
+enddef
+
+
+export def Align()
+  if !IsTableLine(getline('.'))
+    return
+  endif
+
+  # Save cursor position
+  var curpos = getcursorcharpos()[1 : 2]
+
+  # Find table start
+  var startline = line('.')
+  while startline > 1 && IsTableLine(getline(startline - 1))
+    startline -= 1
+  endwhile
+
+  # Find table end
+  var endline = line('.')
+  while endline < line('$') && IsTableLine(getline(endline + 1))
+    endline += 1
+  endwhile
+
+  AlignPipes(startline, endline)
+
+  # Restore cursor
+  setcursorcharpos(curpos)
 enddef

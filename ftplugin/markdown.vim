@@ -6,6 +6,7 @@ import autoload '../autoload/mde_utils.vim' as utils
 import autoload '../autoload/mde_highlight.vim' as highlights
 import autoload '../autoload/mde_constants.vim' as constants
 import autoload '../autoload/mde_indices.vim' as indices
+import autoload '../autoload/mde_tables.vim' as tables
 import autoload '../plugin/markdown_extras.vim' as markdown_extras
 
 # This is the dictionary of the form [32]: https://example.com that takes into
@@ -17,7 +18,7 @@ b:markdown_extras_links = links.RefreshLinksDict()
 for link in values(b:markdown_extras_links)
   if !links.IsURL(link)
     utils.Echowarn($'"{link}" is not a valid URL.'
-                .. ' Run :MDEReleaseNotes to read more')
+      .. ' Run :MDEReleaseNotes to read more')
     sleep 200m
     break
   endif
@@ -105,6 +106,9 @@ if markdown_extras.use_pandoc
 endif
 # ------------------- End pandoc ------------------------------------
 
+# --------- Tables handling -------------------
+command! -nargs=0 MDETableRowDelimiter tables.InsertRowDelimiter()
+
 # -------- Mappings ------------
 # Redefinition of <cr>. Unmap if user does not want it.
 inoremap <buffer> <silent> <CR> <ScriptCmd>funcs.CR_Hacked()<CR>
@@ -154,6 +158,20 @@ if empty(maparg('<Plug>MarkdownGotoLinkBackwards'))
         \ <ScriptCmd>links.SearchLink(true)<cr>
 endif
 
+if empty(maparg('<Plug>MarkdownSumBlock'))
+  noremap <script> <buffer> <Plug>MarkdownSumBlock
+        \ <ScriptCmd>tables.SumBlock()<cr>
+endif
+
+if empty(maparg('<Plug>MarkdownAlign'))
+  noremap <script> <buffer> <Plug>MarkdownAlign
+        \ <ScriptCmd>tables.Align()<cr>
+endif
+
+if empty(maparg('<Plug>MarkdownAlignInsert'))
+  noremap <script> <buffer> <Plug>MarkdownAlignInsert
+        \ <ScriptCmd>tables.Align()<cr>
+endif
 # -------------------------------------------
 
 if empty(maparg('<Plug>MarkdownLinkPreview'))
@@ -240,13 +258,24 @@ if empty(maparg('<Plug>MarkdownQuoteBlock'))
   noremap <script> <buffer> <Plug>MarkdownQuoteBlock
         \ <ScriptCmd>SetQuoteBlockOpFunc()<cr>g@
 endif
+
+if empty(maparg('<Plug>MarkdownSumBlock'))
+  noremap <script> <buffer> <Plug>MarkdownSumBlock
+        \ <ScriptCmd>tables.SetSumBlock()<cr>
+endif
+
+if empty(maparg('<Plug>MarkdownAlign'))
+  noremap <script> <buffer> <Plug>MarkdownAlign
+        \ <ScriptCmd>tables.SetAlign()<cr>
+endif
+
 # ------------------------------------------------------------
 
 # use_default_mappings
 var use_default_mappings = true
 if exists('g:markdown_extras_config') != 0
     && has_key(g:markdown_extras_config, 'use_default_mappings')
-      && g:markdown_extras_config['use_default_mappings']
+    && g:markdown_extras_config['use_default_mappings']
   use_default_mappings = g:markdown_extras_config['use_default_mappings']
 endif
 # -----------------------------------------------------------------
@@ -254,117 +283,137 @@ endif
 if use_default_mappings
   # ------------ Text style mappings ------------------
   if !hasmapto('<Plug>MarkdownBold')
-   if empty(mapcheck('<localleader>b', 'n', 1))
-    nnoremap <buffer> <localleader>b <Plug>MarkdownBold
-   endif
-   if empty(mapcheck('<localleader>b', 'x', 1))
-    xnoremap <buffer> <localleader>b <Plug>MarkdownBold
-   endif
+    if empty(mapcheck('<localleader>b', 'n', 1))
+      nnoremap <buffer> <localleader>b <Plug>MarkdownBold
+    endif
+    if empty(mapcheck('<localleader>b', 'x', 1))
+      xnoremap <buffer> <localleader>b <Plug>MarkdownBold
+    endif
   endif
 
   if !hasmapto('<Plug>MarkdownItalic')
-   if empty(mapcheck('<localleader>i', 'n', 1))
-    nnoremap <buffer> <localleader>i <Plug>MarkdownItalic
-   endif
-   if empty(mapcheck('<localleader>i', 'x', 1))
-    xnoremap <buffer> <localleader>i <Plug>MarkdownItalic
-   endif
+    if empty(mapcheck('<localleader>i', 'n', 1))
+      nnoremap <buffer> <localleader>i <Plug>MarkdownItalic
+    endif
+    if empty(mapcheck('<localleader>i', 'x', 1))
+      xnoremap <buffer> <localleader>i <Plug>MarkdownItalic
+    endif
   endif
 
   if !hasmapto('<Plug>MarkdownStrike')
-   if empty(mapcheck('<localleader>s', 'n', 1))
-    nnoremap <buffer> <localleader>s <Plug>MarkdownStrike
-   endif
-   if empty(mapcheck('<localleader>s', 'x', 1))
-    xnoremap <buffer> <localleader>s <Plug>MarkdownStrike
-   endif
+    if empty(mapcheck('<localleader>s', 'n', 1))
+      nnoremap <buffer> <localleader>s <Plug>MarkdownStrike
+    endif
+    if empty(mapcheck('<localleader>s', 'x', 1))
+      xnoremap <buffer> <localleader>s <Plug>MarkdownStrike
+    endif
   endif
 
   if !hasmapto('<Plug>MarkdownCode')
-   if empty(mapcheck('<localleader>c', 'n', 1))
-    nnoremap <buffer> <localleader>c <Plug>MarkdownCode
-   endif
-   if empty(mapcheck('<localleader>c', 'x', 1))
-    xnoremap <buffer> <localleader>c <Plug>MarkdownCode
-   endif
+    if empty(mapcheck('<localleader>c', 'n', 1))
+      nnoremap <buffer> <localleader>c <Plug>MarkdownCode
+    endif
+    if empty(mapcheck('<localleader>c', 'x', 1))
+      xnoremap <buffer> <localleader>c <Plug>MarkdownCode
+    endif
   endif
 
   if !hasmapto('<Plug>MarkdownUnderline')
-   if empty(mapcheck('<localleader>u', 'n', 1))
-    nnoremap <buffer> <localleader>u <Plug>MarkdownUnderline
-   endif
-   if empty(mapcheck('<localleader>u', 'x', 1))
-    xnoremap <buffer> <localleader>u <Plug>MarkdownUnderline
-   endif
+    if empty(mapcheck('<localleader>u', 'n', 1))
+      nnoremap <buffer> <localleader>u <Plug>MarkdownUnderline
+    endif
+    if empty(mapcheck('<localleader>u', 'x', 1))
+      xnoremap <buffer> <localleader>u <Plug>MarkdownUnderline
+    endif
   endif
 
   if !hasmapto('<Plug>MarkdownCodeBlock')
-   if empty(mapcheck('<localleader>f', 'n', 1))
-    nnoremap <buffer> <localleader>f <Plug>MarkdownCodeBlock
-   endif
-   if empty(mapcheck('<localleader>f', 'x', 1))
-    xnoremap <buffer> <localleader>f <Plug>MarkdownCodeBlock
-   endif
+    if empty(mapcheck('<localleader>f', 'n', 1))
+      nnoremap <buffer> <localleader>f <Plug>MarkdownCodeBlock
+    endif
+    if empty(mapcheck('<localleader>f', 'x', 1))
+      xnoremap <buffer> <localleader>f <Plug>MarkdownCodeBlock
+    endif
   endif
 
   if !hasmapto('<Plug>MarkdownQuoteBlock')
-   if empty(mapcheck('<localleader>q', 'n', 1))
-    nnoremap <buffer> <localleader>q <Plug>MarkdownQuoteBlock
-   endif
-   if empty(mapcheck('<localleader>q', 'x', 1))
-    xnoremap <buffer> <localleader>q <Plug>MarkdownQuoteBlock
-   endif
+    if empty(mapcheck('<localleader>q', 'n', 1))
+      nnoremap <buffer> <localleader>q <Plug>MarkdownQuoteBlock
+    endif
+    if empty(mapcheck('<localleader>q', 'x', 1))
+      xnoremap <buffer> <localleader>q <Plug>MarkdownQuoteBlock
+    endif
   endif
 
   # Toggle checkboxes
   if !hasmapto('<Plug>MarkdownToggleCheck')
-   if empty(mapcheck('<localleader>x', 'n', 1))
-    nnoremap <buffer> <silent> <localleader>x <Plug>MarkdownToggleCheck
-   endif
+    if empty(mapcheck('<localleader>x', 'n', 1))
+      nnoremap <buffer> <silent> <localleader>x <Plug>MarkdownToggleCheck
+    endif
   endif
 
   # ---------- Remove all --------------------------
   if !hasmapto('<Plug>MarkdownRemove')
-   if empty(mapcheck('<localleader>d', 'n', 1))
-    nnoremap <localleader>d <Plug>MarkdownRemove
-   endif
+    if empty(mapcheck('<localleader>d', 'n', 1))
+      nnoremap <localleader>d <Plug>MarkdownRemove
+    endif
   endif
   # ---------- Links --------------------------
   if !hasmapto('<Plug>MarkdownAddLink')
-   if empty(mapcheck('<localleader>l', 'n', 1))
-    nnoremap <buffer> <localleader>l <Plug>MarkdownAddLink
-   endif
-   if empty(mapcheck('<localleader>l', 'x', 1))
-    xnoremap <buffer> <localleader>l <Plug>MarkdownAddLink
-   endif
+    if empty(mapcheck('<localleader>l', 'n', 1))
+      nnoremap <buffer> <localleader>l <Plug>MarkdownAddLink
+    endif
+    if empty(mapcheck('<localleader>l', 'x', 1))
+      xnoremap <buffer> <localleader>l <Plug>MarkdownAddLink
+    endif
   endif
 
   if !hasmapto('<Plug>MarkdownGotoLinkForward')
-   if empty(mapcheck('<localleader>n', 'n', 1))
-    nnoremap <buffer> <silent> <localleader>n <Plug>MarkdownGotoLinkForward
-   endif
+    if empty(mapcheck('<localleader>n', 'n', 1))
+      nnoremap <buffer> <silent> <localleader>n <Plug>MarkdownGotoLinkForward
+    endif
   endif
 
   if !hasmapto('<Plug>MarkdownGotoLinkBackwards')
-   if empty(mapcheck('<localleader>N', 'n', 1))
-    nnoremap <buffer> <silent> <localleader>N <Plug>MarkdownGotoLinkBackwards
-   endif
+    if empty(mapcheck('<localleader>N', 'n', 1))
+      nnoremap <buffer> <silent> <localleader>N <Plug>MarkdownGotoLinkBackwards
+    endif
   endif
 
   # ---------- Highlight --------------------------
   if !hasmapto('<Plug>MarkdownHighlight')
-   if empty(mapcheck('<localleader>h', 'n', 1))
-    nnoremap <localleader>h <Plug>MarkdownHighlight
-   endif
-   if empty(mapcheck('<localleader>h', 'x', 1))
-    xnoremap <localleader>h <Plug>MarkdownHighlight
-   endif
+    if empty(mapcheck('<localleader>h', 'n', 1))
+      nnoremap <localleader>h <Plug>MarkdownHighlight
+    endif
+    if empty(mapcheck('<localleader>h', 'x', 1))
+      xnoremap <localleader>h <Plug>MarkdownHighlight
+    endif
+  endif
+
+  # ---------- Tables --------------------------
+  if !hasmapto('<Plug>MarkdownSumBlock')
+    if empty(mapcheck('<localleader>s', 'n', 1))
+      xnoremap <localleader>s <Plug>MarkdownSumBlock
+    endif
+  endif
+
+  if !hasmapto('<Plug>MarkdownAlign')
+    if empty(mapcheck('<localleader>a', 'n', 1))
+      nnoremap <localleader>a <Plug>MarkdownAlign
+    endif
+  endif
+
+  if !hasmapto('<Plug>MarkdownAlign')
+    if empty(mapcheck('<bar>', 'i', 1))
+      # The final ea is to restore the cursor where it was left
+      inoremap <silent> <Bar> <Bar><c-o><Plug>MarkdownAlignea
+    endif
   endif
 
   # ------------------------------------------------------
   if !hasmapto('<Plug>MarkdownLinkPreview')
-   if empty(mapcheck('K', 'n', 1))
-    nnoremap <buffer> <silent> K <Plug>MarkdownLinkPreview
-   endif
+    if empty(mapcheck('K', 'n', 1))
+      nnoremap <buffer> <silent> K <Plug>MarkdownLinkPreview
+    endif
   endif
 endif
