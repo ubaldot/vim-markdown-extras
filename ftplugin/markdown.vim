@@ -397,13 +397,13 @@ if use_default_mappings
     endif
   endif
 
-  if !hasmapto('<Plug>MarkdownAlign')
+  if !hasmapto('<Plug>MarkdownAlign', 'n')
     if empty(mapcheck('<localleader>a', 'n', 1))
       nnoremap <localleader>a <Plug>MarkdownAlign
     endif
   endif
 
-  if !hasmapto('<Plug>MarkdownAlign')
+  if !hasmapto('<Plug>MarkdownAlign', 'i')
     if empty(mapcheck('<bar>', 'i', 1))
       # The final ea is to restore the cursor where it was left
       inoremap <silent> <Bar> <Bar><c-o><Plug>MarkdownAlignea

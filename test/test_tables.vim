@@ -3,8 +3,6 @@ vim9script
 # Test for the vim-markdown plugin
 # Copied and adjusted from Vim distribution
 
-const local_execution = false
-
 import "../plugin/markdown_extras.vim"
 import "./common.vim"
 const WaitForAssert = common.WaitForAssert
@@ -20,11 +18,9 @@ enddef
 # Tests start here
 def g:Test_align_table_basic()
 
-  if local_execution
-    v:errors = []
-    v:errmsg = ''
-    messages clear
-  endif
+  messages clear
+  v:errors = []
+  v:errmsg = ''
 
   const src_name = 'testfile.md'
   const lines =<< trim END
@@ -120,14 +116,12 @@ END
   assert_equal(expected_lines, actual_lines)
 
   # ---- teardown tests ----
-  if local_execution
-    if !empty(v:errors) || !empty(v:errmsg)
-      echoerr "Test failed!"
-    else
-      echom "Test passed!"
-    endif
+  if !empty(v:errors) || !empty(v:errmsg)
+    silent throw string(v:errors)
+  else
+    echom "Test passed!"
   endif
 
-  :%bw!
-  Cleanup_testfile(src_name)
+  # :%bw!
+  # Cleanup_testfile(src_name)
 enddef
