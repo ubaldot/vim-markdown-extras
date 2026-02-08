@@ -113,15 +113,7 @@ def ReplaceCell(buf: list<string>, text_alignment: string = 'l')
   endif
 
   # Make the table nice
-  const table_firstline = search('^$', 'nbW') == 0
-    ? 1
-    : search('^$', 'nbW') + 1
-
-  const table_lastline = search('^$', 'nW') == 0
-    ? line('$')
-    : search('^$', 'nW') - 1
-
-  FormatTable(table_firstline, table_lastline)
+  FormatTable()
 
   # Put the cursor on a nice spot
   cursor(line('.'), 1)
@@ -132,7 +124,7 @@ def ReplaceCell(buf: list<string>, text_alignment: string = 'l')
 
 enddef
 
-def FormatTable(first: number, last: number)
+def FormatPipes(first: number, last: number)
   var lines = getline(first, last)
 
   # Parse rows into lists of cells
@@ -147,7 +139,7 @@ def FormatTable(first: number, last: number)
     ncols = max([ncols, len(r)])
   endfor
 
-  # Compute max width per column (ignore delimiters & blanks)
+  # Compute max width per column (text width only)
   var widths = repeat([0], ncols)
   for r in rows
     if IsDelimiterRow(r)
@@ -158,9 +150,8 @@ def FormatTable(first: number, last: number)
     endfor
   endfor
 
-  # Rebuild table
+  # Rebuild lines
   var out: list<string> = []
-
   for r in rows
     var is_delim = IsDelimiterRow(r)
     var parts: list<string> = []
@@ -169,48 +160,43 @@ def FormatTable(first: number, last: number)
       var cell = i < len(r) ? r[i] : ''
 
       if is_delim
-        # Blank rows → pure delimiter row without colons
-        if IsBlankRow(r)
-          parts->add(repeat('-', widths[i] + 2))
-        else
-          # Preserve markdown alignment colons
-          var left_colon  = cell =~# '^:' ? ':' : ''
-          var right_colon = cell =~# ':$' ? ':' : ''
-          var dash_count = widths[i] + 2
-                - strcharlen(left_colon)
-                - strcharlen(right_colon)
-          parts->add(left_colon .. repeat('-', dash_count) .. right_colon)
-        endif
+        # Preserve alignment colons
+        var left_colon  = cell =~# '^:' ? ':' : ''
+        var right_colon = cell =~# ':$' ? ':' : ''
+
+        # Compute number of dashes to pad
+        var dash_count = widths[i] + 2 - strcharlen(left_colon) - strcharlen(right_colon)
+        parts->add(left_colon .. repeat('-', dash_count) .. right_colon)
       else
-        # Normal content cell
-        parts->add(
-          ' ' .. cell .. repeat(' ', widths[i] - strcharlen(cell) + 1)
-        )
+        # Regular cell: pad spaces
+        parts->add(' ' .. cell .. repeat(' ', widths[i] - strcharlen(cell) + 1))
       endif
     endfor
 
+    # Join cells with | and add leading/trailing |
     out->add('|' .. join(parts, '|') .. '|')
   endfor
 
-  # Remove consecutive delimiter/blank rows (keep only one)
-  var out_cleaned: list<string> = []
-  var prev_was_delim = false
-
-  for l in out
-    var r = SplitRow(l)
-    var is_delim = IsDelimiterRow(r)
-
-    if is_delim && prev_was_delim
-      continue
-    endif
-
-    out_cleaned->add(l)
-    prev_was_delim = is_delim
-  endfor
-
-  setline(first, out_cleaned)
+  # Set the formatted lines back in buffer
+  setline(first, out)
 enddef
 
+export def FormatTable()
+  if !IsTableLine(getline('.'))
+    return
+  endif
+
+  # Make the table nice
+  const table_firstline = search('^$', 'nbW') == 0
+    ? 1
+    : search('^$', 'nbW') + 1
+
+  const table_lastline = search('^$', 'nW') == 0
+    ? line('$')
+    : search('^$', 'nW') - 1
+
+  FormatPipes(table_firstline, table_lastline)
+enddef
 
 def SearchCellDelimiters(): dict<any>
   # Extract information about the current cell, such as left and righ
