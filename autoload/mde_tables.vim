@@ -32,24 +32,24 @@ def IsDelimiterRow(row: list<string>): bool
   return true
 enddef
 
+
 def FormatPipes(first: number, last: number)
   var lines = getline(first, last)
 
-  # Parse rows
+  # Parse rows into lists of cells
   var rows: list<list<string>> = []
   for l in lines
     rows->add(SplitRow(l))
   endfor
 
-  # Compute column count
+  # Compute number of columns
   var ncols = 0
   for r in rows
     ncols = max([ncols, len(r)])
   endfor
 
-  # Compute max width per column (character-based)
+  # Compute max width per column (text width only)
   var widths = repeat([0], ncols)
-
   for r in rows
     if IsDelimiterRow(r)
       continue
@@ -61,7 +61,6 @@ def FormatPipes(first: number, last: number)
 
   # Rebuild lines
   var out: list<string> = []
-
   for r in rows
     var is_delim = IsDelimiterRow(r)
     var parts: list<string> = []
@@ -70,19 +69,27 @@ def FormatPipes(first: number, last: number)
       var cell = i < len(r) ? r[i] : ''
 
       if is_delim
-        parts->add(repeat('-', widths[i] + 2))
+        # Preserve alignment colons
+        var left_colon  = cell =~# '^:' ? ':' : ''
+        var right_colon = cell =~# ':$' ? ':' : ''
+
+        # Compute number of dashes to pad
+        var dash_count = widths[i] + 2 - strcharlen(left_colon) - strcharlen(right_colon)
+        parts->add(left_colon .. repeat('-', dash_count) .. right_colon)
       else
-        parts->add(
-          ' ' .. cell .. repeat(' ', widths[i] - strcharlen(cell) + 1)
-        )
+        # Regular cell: pad spaces
+        parts->add(' ' .. cell .. repeat(' ', widths[i] - strcharlen(cell) + 1))
       endif
     endfor
 
+    # Join cells with | and add leading/trailing |
     out->add('|' .. join(parts, '|') .. '|')
   endfor
 
+  # Set the formatted lines back in buffer
   setline(first, out)
 enddef
+
 
 # =========================
 #         MAIN
