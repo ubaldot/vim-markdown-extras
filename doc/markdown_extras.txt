@@ -28,6 +28,8 @@ This plugin adds some spice to the bundled |ft-markdown-plugin|, such as:
 - Render with `pandoc`,
 - ... and more.
 
+TODO: table handling, new mappings ,a and ,s and insert <bar> and
+MDETableDelimiter
 ==============================================================================
 REQUIREMENTS                                    *markdown-extras-requirements*
 

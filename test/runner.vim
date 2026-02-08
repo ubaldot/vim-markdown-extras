@@ -3,16 +3,22 @@ vim9script
 # Uncomment for manual tests.
 # The global variable g:TestFiles is a list containing all the tests filenames.
 # if !exists('g:TestFiles')
-# 	g:TestFiles = ['test_markdown_extras.vim', 'test_utils.vim', 'test_regex.vim']
+# 	g:TestFiles = ['test_markdown_extras.vim', 'test_utils.vim', 'test_regex.vim', 'test_tables.vim', 'test_links.vim']
 # endif
 
-delete('results.txt')
+const RED = "\033[31m"
+const GREEN = "\033[32m"
+const END = "\033[0m"
+
+const base_path = $'{expand('<sfile>:h:h')}'
+const test_results_filepath = $'{base_path}/test/results.txt'
+delete(test_results_filepath)
 
 def RunTests(test_file: string)
   set nomore
   set debug=beep
 
-	writefile([$'o {test_file}'], 'results.txt', 'a')
+	writefile([$'o {test_file}'], test_results_filepath, 'a')
 
 	# Load test functions in memory
 	execute $"source {test_file}"
@@ -26,61 +32,44 @@ def RunTests(test_file: string)
 
 	# Check is user defined some function name erroneously
 	var wrong_test_functions = copy(all_functions)->filter('v:val !~ "^Test_"')
-	echom "wrong_functions: " .. string(wrong_test_functions)
   if !empty(wrong_test_functions)
-		writefile([$'WARNING: The following tests are skipped: {wrong_test_functions}'], 'results.txt', 'a')
-		writefile([''], 'results.txt', 'a')
+		writefile([$'WARNING: The following tests are skipped: {wrong_test_functions}'], test_results_filepath, 'a')
+		writefile([''], test_results_filepath, 'a')
 	endif
 
 	# Pick the good functions
 	var test_functions = copy(all_functions)->filter('v:val =~ "^Test_"')
-	echom "test_functions: " .. string(test_functions)
-  if test_functions->empty()
+  if empty(test_functions)
     # No tests are found
-		writefile([$'No tests are found in {test_file}'], 'results.txt', 'a')
+		writefile([$'No tests are found in {test_file}'], test_results_filepath, 'a')
     return
   endif
 
 	# Execute the test functions
-  # writefile(['Executed test:'], 'results.txt', 'a')
   for test in test_functions
-		echom "current test: " .. test
 		messages clear
-    v:errors = []
-		# no need because you only see the last message. Better to use messages.
-    # v:errmsg = ''
-    try
-      :%bw!
-      exe $'call {test}'
-    catch
-      add(v:errors, $'Error: Test {test} failed with exception {v:exception} at {v:throwpoint}')
-    endtry
 
-    # if v:errmsg != ''
-    #   add(v:errmsg, $'Error: Test {test} generated error {v:errmsg}')
-    # endif
-    if !v:errors->empty()
-			writefile(['messages log:', '--------------------'], 'results.txt', 'a')
-			writefile(execute('messages')->split("\n"), 'results.txt', 'a')
-			writefile(['', 'Assertions errors:', '--------------------'], 'results.txt', 'a')
-      writefile(v:errors, 'results.txt', 'a')
-      writefile([$'{test}: FAIL', ''], 'results.txt', 'a')
-    else
-      writefile([$'{test}: pass'], 'results.txt', 'a')
-    endif
+		try
+			silent! exe $'call {test}'
+		catch
+			writefile([$'{test}: {RED}FAIL{END}'], test_results_filepath, 'a')
+			writefile(['', 'Assertions errors:', '--------------------'], test_results_filepath, 'a')
+			writefile([v:exception], test_results_filepath, 'a')
+			# echoerr, throw and errors, always populate :messages. Hence, when an
+			# error is thrown, it is always good idea to check :messages
+			writefile(['', 'Other errors log:', '--------------------'], test_results_filepath, 'a')
+			writefile(execute('messages')->split("\n"), test_results_filepath, 'a')
+			break
+		endtry
+
+		writefile([$'{test}: {GREEN}OK{END}'], test_results_filepath, 'a')
   endfor
-	# Test results separator
 enddef
 
 # To test in stand-alone, remove the try block from the following
 for test_file in g:TestFiles
-	try
 		RunTests(test_file)
-		writefile([''], 'results.txt', 'a')
-	catch
-		writefile([$'FAIL: Tests in {test_file} failed with exception '
-						.. $'{v:exception} at {v:throwpoint}'], 'results.txt', 'a')
-	endtry
+    writefile([''], test_results_filepath, 'a')
 endfor
 
 qall!
