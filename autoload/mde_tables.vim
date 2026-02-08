@@ -302,14 +302,6 @@ enddef
 
 # ----- TEST POPUP -----
 
-def UTF8_pop_last(s: string): string
-  var n = strchars(s)
-  if n > 0
-    return strcharpart(s, 0, n - 1)
-  endif
-  return ''
-enddef
-
 def PopupFilter(id: number, key: string): bool
   var k = keytrans(key)
 
@@ -427,14 +419,14 @@ command! QQQ CreateCellPopup()
 command! AAA CreateCellSplitWindow()
 
 # dict use for testing individual functions
-# export var funcs_ref_dict = {
-#   IsTableLine: IsTableLine,
-#   SplitRow: SplitRow,
-#   IsDelimiterRow: IsDelimiterRow,
-#   IsBlankRow: IsBlankRow,
-#   InsertRowDelimiter: InsertRowDelimiter,
-#   ReplaceCell: ReplaceCell,
-#   FormatPipes: FormatPipes,
-#   FormatTable: FormatTable,
-#   SearchCellDelimiters: SearchCellDelimiters
-# }
+export var funcs_ref_dict = {
+  IsTableLine: IsTableLine,
+  SplitRow: SplitRow,
+  IsDelimiterRow: IsDelimiterRow,
+  IsBlankRow: IsBlankRow,
+  InsertRowDelimiter: InsertRowDelimiter,
+  ReplaceCell: ReplaceCell,
+  FormatPipes: FormatPipes,
+  FormatTable: FormatTable,
+  SearchCellDelimiters: SearchCellDelimiters
+}
