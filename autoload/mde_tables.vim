@@ -231,13 +231,29 @@ def SearchCellDelimiters(): dict<any>
 
     setcursorcharpos(curpos)
 
+    # Find text alignment
+    var text_alignment = ''
+    var cell_head_delim = strcharpart(getline(startline), startcol, endcol - startcol - 1)
+    if cell_head_delim =~ '^\s*:-*:\s*$'
+      text_alignment = 'c'
+    elseif cell_head_delim =~ '^\s*-*:\s*$'
+      text_alignment = 'r'
+    else
+      # Default,
+      #  ':-----'
+      #  '------'
+      #  '^$'
+      text_alignment = 'l'
+    endif
+
     # Assemble result
     cell_info = {cell_nr: cell_nr,
       num_cells: num_cells,
       startcol: startcol,
       endcol: endcol,
       startline: startline,
-      endline: endline}
+      endline: endline,
+      text_alignment: text_alignment}
   endif
 
   return cell_info

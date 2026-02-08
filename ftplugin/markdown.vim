@@ -163,9 +163,9 @@ if empty(maparg('<Plug>MarkdownSumBlock'))
         \ <ScriptCmd>tables.SumBlock()<cr>
 endif
 
-if empty(maparg('<Plug>MarkdownAlign'))
-  noremap <script> <buffer> <Plug>MarkdownAlign
-        \ <ScriptCmd>tables.Align()<cr>
+if empty(maparg('<Plug>MarkdownFormatTable'))
+  noremap <script> <buffer> <Plug>MarkdownFormatTable
+        \ <ScriptCmd>tables.FormatTable()<cr>
 endif
 
 # -------------------------------------------
@@ -260,9 +260,9 @@ if empty(maparg('<Plug>MarkdownSumBlock'))
         \ <ScriptCmd>tables.SetSumBlock()<cr>
 endif
 
-if empty(maparg('<Plug>MarkdownAlign'))
-  noremap <script> <buffer> <Plug>MarkdownAlign
-        \ <ScriptCmd>tables.Align()<cr>
+if empty(maparg('<Plug>MarkdownFormatTable'))
+  noremap <script> <buffer> <Plug>MarkdownFormatTable
+        \ <ScriptCmd>tables.FormatTable()<cr>
 endif
 
 # ------------------------------------------------------------
@@ -393,15 +393,15 @@ if use_default_mappings
     endif
   endif
 
-  if !hasmapto('<Plug>MarkdownAlign')
+  if !hasmapto('<Plug>MarkdownFormatTable')
     if empty(mapcheck('<localleader>a', 'n', 1))
-      nnoremap <localleader>a <Plug>MarkdownAlign
+      nnoremap <localleader>a <Plug>MarkdownFormatTable
     endif
   endif
 
   if empty(mapcheck('<bar>', 'i', 1))
     # The final ea is to restore the cursor where it was left
-    inoremap <silent> <bar> <bar><esc><ScriptCmd>tables.Align()<cr>a
+    inoremap <silent> <bar> <bar><esc><ScriptCmd>tables.FormatTable()<cr>a
   endif
 
   # ------------------------------------------------------
