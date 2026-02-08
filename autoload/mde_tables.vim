@@ -1,6 +1,7 @@
 vim9script
 
 
+
 def IsTableLine(line: string): bool
   # It is enough that you have one column delimited by | ... | to be a table
   return line =~# '^\s*|\s*.*\s*|\s*$'
@@ -78,6 +79,8 @@ def ReplaceCell(buf: list<string>, text_alignment: string = 'l')
   var ii_offset = -1
   var new_line = ''
   var aligned_val = ''
+
+  # TODO: write logis for different text alignment
   for [ii, val] in items(buf[: cell_height - 1])
     ii_offset = ii + cell_info.startline + 1
 
@@ -313,3 +316,16 @@ var foo_long = ['hello hello',
   'mi farei proprio una bella chiavata'
 ]
 command! RRR ReplaceCell(foo_short)
+
+# dict use for testing individual functions
+export const funcs_ref_dict = {
+  IsTableLine: IsTableLine,
+  SplitRow: SplitRow,
+  IsDelimiterRow: IsDelimiterRow,
+  IsBlankRow: IsBlankRow,
+  InsertRowDelimiter: InsertRowDelimiter,
+  ReplaceCell: ReplaceCell,
+  FormatPipes: FormatPipes,
+  FormatTable: FormatTable,
+  SearchCellDelimiters: SearchCellDelimiters
+}

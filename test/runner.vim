@@ -6,6 +6,10 @@ vim9script
 # 	g:TestFiles = ['test_markdown_extras.vim', 'test_utils.vim', 'test_regex.vim', 'test_tables.vim', 'test_links.vim']
 # endif
 
+const RED = "\033[31m"
+const GREEN = "\033[32m"
+const END = "\033[0m"
+
 const base_path = $'{expand('<sfile>:h:h')}'
 const test_results_filepath = $'{base_path}/test/results.txt'
 delete(test_results_filepath)
@@ -46,9 +50,9 @@ def RunTests(test_file: string)
 		messages clear
 
 		try
-			exe $'call {test}'
+			silent! exe $'call {test}'
 		catch
-      writefile([$'{test}: FAIL'], test_results_filepath, 'a')
+			writefile([$'{test}: {RED}FAIL{END}'], test_results_filepath, 'a')
 			writefile(['', 'Assertions errors:', '--------------------'], test_results_filepath, 'a')
 			writefile([v:exception], test_results_filepath, 'a')
 			# echoerr, throw and errors, always populate :messages. Hence, when an
@@ -58,7 +62,7 @@ def RunTests(test_file: string)
 			break
 		endtry
 
-		writefile([$'{test}: OK'], test_results_filepath, 'a')
+		writefile([$'{test}: {GREEN}OK{END}'], test_results_filepath, 'a')
   endfor
 enddef
 
