@@ -2,11 +2,14 @@ vim9script
 
 
 def IsTableLine(line: string): bool
+  # It is enough that you have one column delimited by | ... | to be a table
   return line =~# '^\s*|\s*.*\s*|\s*$'
 enddef
 
 def SplitRow(line: string): list<string>
-  # Drop leading/trailing |, then split
+  # Drop leading/trailing |, then split.
+  #
+  # For delimiters, we expect to have lists like ['-----', ':----:', '---:']
   var inner = line
     ->substitute('^\s*|\s*', '', '')
     ->substitute('\s*|\s*$', '', '')
@@ -14,6 +17,13 @@ def SplitRow(line: string): list<string>
 enddef
 
 def IsDelimiterRow(row: list<string>): bool
+  # The ':' in a table delimiter establish the text alignment in
+  # markdown. For instance, ':------' is left-align text, ':-------:' is
+  # center-aligned text and '------:' is right-aligned text.
+  #
+  # Therefore, the idea to detect delimiters is to check lists like
+  # ['------', '-----', '-----'] or lists like this:
+  # [':------', ':--------:', '---------'], etc.
   for cell in row
     if cell !~# '^\s*[:-]\+\s*$'
       return false
@@ -22,7 +32,7 @@ def IsDelimiterRow(row: list<string>): bool
   return true
 enddef
 
-def AlignPipes(first: number, last: number)
+def FormatPipes(first: number, last: number)
   var lines = getline(first, last)
 
   # Parse rows
@@ -92,7 +102,7 @@ export def InsertRowDelimiter()
 enddef
 
 
-export def Align()
+export def FormatTable()
   if !IsTableLine(getline('.'))
     return
   endif
@@ -112,7 +122,7 @@ export def Align()
     endline += 1
   endwhile
 
-  AlignPipes(startline, endline)
+  FormatPipes(startline, endline)
 
   # Restore cursor
   setcursorcharpos(curpos)
@@ -122,36 +132,26 @@ enddef
 # Cells replacement
 # =========================
 
-def ReplaceCell(buf: list<string>)
-  const cell_prop = SearchRowDelimitersRange()
+def ReplaceCell(buf: list<string>, text_alignment: string = 'l')
+  const cell_info = SearchCellDelimiters()
 
-  if empty(cell_prop)
+  if empty(cell_info)
     return
   endif
 
-  var cell_height = cell_prop.endline - cell_prop.startline - 1
+  var cell_height = cell_info.endline - cell_info.startline - 1
   var pad_size = len(buf) - cell_height
 
-  # Find number of cells per row
-  cursor(line('.'), 1)
-  const num_cells = getline(line('.'))->filter("v:val == '\|'")->len()
-
-  # Find col1 and col2 of the target cell
-  for _ in range(cell_prop.cell_nr - 1)
-    searchpos('|')
-  endfor
-  const cell_delim_pos1 = getcursorcharpos()[2]
-  const cell_delim_pos2 = searchpos('|')[1]
-
   # Replace lines
-  cursor(cell_prop.startline + 1, 1)
+  cursor(cell_info.startline + 1, 1)
   var ii_offset = -1
   var new_line = ''
+  var aligned_val = ''
   for [ii, val] in items(buf[: cell_height - 1])
-    ii_offset = ii + cell_prop.startline + 1
+    ii_offset = ii + cell_info.startline + 1
 
-    new_line = strcharpart(getline(ii_offset), 0, cell_delim_pos1)
-      .. $' {val} ' .. strcharpart(getline(ii_offset), cell_delim_pos2 - 1)
+    new_line = strcharpart(getline(ii_offset), 0, cell_info.startcol)
+      .. $' {val} ' .. strcharpart(getline(ii_offset), cell_info.endcol - 1)
 
     setline(ii_offset, new_line)
   endfor
@@ -159,35 +159,31 @@ def ReplaceCell(buf: list<string>)
   # Padding if the buffer to insert is too large
   if len(buf) > cell_height
     for [ii, val] in items(buf[cell_height : ])
-      ii_offset = cell_prop.startline + cell_height
+      ii_offset = cell_info.startline + cell_height
 
-      new_line = repeat('| ', cell_prop.cell_nr) .. val .. ' |'
+      new_line = repeat('| ', cell_info.cell_nr) .. val .. ' |'
 
       append(ii_offset, new_line)
     endfor
   endif
 
   # Make it nice and put the cursor on a nice spot
-  Align()
+  FormatTable()
   cursor(line('.'), 1)
-  for _ in range(cell_prop.cell_nr - 1)
+  for _ in range(cell_info.cell_nr - 1)
     search('|')
   endfor
   norm! w
 
 enddef
 
-def SearchRowDelimitersRange(): dict<any>
-  var delim_range = {}
+def SearchCellDelimiters(): dict<any>
+  # Extract information about the current cell, such as left and righ
+  # columns, upper and lower lines, number of cells, etc.
+
+  var cell_info = {}
 
   if IsTableLine(getline('.')) && !IsDelimiterRow(SplitRow(getline('.')))
-
-    const cell_nr = strcharpart(getline(line('.')), 0, col('.') - 1)
-      ->filter("v:val == '\|'")->len()
-
-    # Start row delimiters search
-    # Save column and position
-    const curpos = getcursorcharpos()[1 : 2]
 
     # Search for first line
     var startline = line('.')
@@ -195,11 +191,10 @@ def SearchRowDelimitersRange(): dict<any>
     while !IsDelimiterRow(SplitRow(getline(startline))) && getline(startline) !~ '^$' && startline != 0
       startline -= 1
     endwhile
-    setcursorcharpos(curpos)
 
     if startline == 0
       echoerr 'You are on the first line'
-      return delim_range
+      return cell_info
     endif
 
     # Search for last line
@@ -208,17 +203,44 @@ def SearchRowDelimitersRange(): dict<any>
       endline += 1
     endwhile
 
-    setcursorcharpos(curpos)
-
     if endline == line('$')
       echoerr 'You are on the last line'
-      return delim_range
+      return cell_info
     endif
 
-    delim_range = {cell_nr: cell_nr, startline: startline, endline: endline}
+    # Find number of cells per row
+    const curpos = getcursorcharpos()[1 : 2]
+    cursor(line('.'), 1)
+
+    const num_cells = getline(line('.'))->filter("v:val == '\|'")->len()
+
+    setcursorcharpos(curpos)
+
+    # Search for cell_nr
+    const cell_nr = strcharpart(getline(line('.')), 0, col('.') - 1)
+      ->filter("v:val == '\|'")->len()
+
+    # Find startcol and endcol
+    cursor(line('.'), 1)
+
+    for _ in range(cell_nr - 1)
+      searchpos('|')
+    endfor
+    const startcol = getcursorcharpos()[2]
+    const endcol = searchpos('|')[1]
+
+    setcursorcharpos(curpos)
+
+    # Assemble result
+    cell_info = {cell_nr: cell_nr,
+      num_cells: num_cells,
+      startcol: startcol,
+      endcol: endcol,
+      startline: startline,
+      endline: endline}
   endif
 
-  return delim_range
+  return cell_info
 enddef
 
 # ------- TEST VALUES ---------
