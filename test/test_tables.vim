@@ -4,8 +4,11 @@ vim9script
 # Copied and adjusted from Vim distribution
 
 import "../plugin/markdown_extras.vim"
+import "../autoload/mde_tables.vim"
 import "./common.vim"
+
 const WaitForAssert = common.WaitForAssert
+const funcs_ref_dict = mde_tables.funcs_ref_dict
 
 def Generate_testfile(lines: list<string>, src_name: string)
    writefile(lines, src_name)

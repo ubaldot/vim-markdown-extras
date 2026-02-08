@@ -1,6 +1,7 @@
 vim9script
 
-
+const popup_cursor: string = '|'
+var popup_text: list<string> = ['']
 
 def IsTableLine(line: string): bool
   # It is enough that you have one column delimited by | ... | to be a table
@@ -64,15 +65,25 @@ enddef
 # Cells replacement
 # =========================
 
-def ReplaceCell(buf: list<string>, text_alignment: string = 'l')
+def ReplaceCell(buf: list<string>, text_alignment: string = '')
   const cell_info = SearchCellDelimiters()
 
   if empty(cell_info)
     return
   endif
 
+  var buf_padded = buf
+
   var cell_height = cell_info.endline - cell_info.startline - 1
-  var pad_size = len(buf) - cell_height
+  var cell_width = cell_info.endcol - cell_info.startcol + 1
+
+  # Pad buffer if needed (buf is too short, we add blank chunks)
+  if len(buf) < cell_height
+    var pad_string = repeat(' ', cell_width)
+    for _ in range(cell_height - len(buf))
+      add(buf_padded, pad_string)
+    endfor
+  endif
 
   # Replace lines
   cursor(cell_info.startline + 1, 1)
@@ -80,8 +91,8 @@ def ReplaceCell(buf: list<string>, text_alignment: string = 'l')
   var new_line = ''
   var aligned_val = ''
 
-  # TODO: write logis for different text alignment
-  for [ii, val] in items(buf[: cell_height - 1])
+  # TODO: write logic for different text alignment
+  for [ii, val] in items(buf_padded[: cell_height - 1])
     ii_offset = ii + cell_info.startline + 1
 
     new_line = strcharpart(getline(ii_offset), 0, cell_info.startcol)
@@ -90,28 +101,14 @@ def ReplaceCell(buf: list<string>, text_alignment: string = 'l')
     setline(ii_offset, new_line)
   endfor
 
-  # Padding if the buffer to insert is too large
-  if len(buf) > cell_height
-    for [ii, val] in items(buf[cell_height : ])
+  # Pad other cells if the buffer to insert is too large
+  if len(buf_padded) > cell_height
+    for [ii, val] in items(buf_padded[cell_height : ])
       ii_offset = cell_info.startline + cell_height
 
       new_line = repeat('| ', cell_info.cell_nr) .. val .. ' |'
 
       append(ii_offset, new_line)
-    endfor
-  endif
-
-  # Padding if the buffer to insert is too small
-  if len(buf) < cell_height
-
-    var range_to_pad = range(cell_info.startline + len(buf) + 1, cell_info.endline - 1)
-    for ii in range_to_pad
-
-      new_line = strcharpart(getline(ii), 0, cell_info.startcol - 1)
-         .. repeat(' ', cell_info.endcol - cell_info.startcol)
-        .. strcharpart(getline(ii), cell_info.endcol - 1)
-
-      setline(ii, new_line)
     endfor
   endif
 
@@ -235,10 +232,10 @@ def SearchCellDelimiters(): dict<any>
       startline -= 1
     endwhile
 
-    if startline == 0
-      echoerr 'You are on the first line'
-      return cell_info
-    endif
+    # if startline == 0
+    #   echoerr 'You are on the first line'
+    #   return cell_info
+    # endif
 
     # Search for last line
     var endline = line('.')
@@ -303,6 +300,116 @@ def SearchCellDelimiters(): dict<any>
   return cell_info
 enddef
 
+# ----- TEST POPUP -----
+
+def UTF8_pop_last(s: string): string
+  var n = strchars(s)
+  if n > 0
+    return strcharpart(s, 0, n - 1)
+  endif
+  return ''
+enddef
+
+def PopupFilter(id: number, key: string): bool
+  var k = keytrans(key)
+
+  if k == "<Esc>"
+    popup_close(id, -1)
+    return true
+  endif
+
+  # Get rid off the cursor, you will append it later on again
+  popup_text[-1] = strcharpart(popup_text[-1], 0, strchars(popup_text[-1]) - 1)
+
+  # Try/catch because you never know a user what can type
+  try
+    # All characters that don't start with '<'
+    if  k !~ '^<'
+      popup_text[-1] ..= k
+    # Now all characters that start with '<', e.g., <BS>, <CR>, <Tab>, ...
+    elseif k == '<Space>'
+      popup_text[-1] ..= ' '
+    elseif k == '<Tab>'
+      popup_text[-1] ..= '    '
+    elseif k ==# '<S-CR>'
+      add(popup_text, '')
+    elseif k ==# '<BS>'
+      # Either remove a char or it goes to the previous line if the current
+      # line is empty
+      var n = strchars(popup_text[-1])
+      if n > 0
+        popup_text[-1] = strcharpart(popup_text[-1], 0, n - 1)
+      elseif n == 0 && len(popup_text) > 1
+        remove(popup_text, -1)
+      endif
+    elseif k == "<C-U>"
+       popup_text[-1] = ''
+    elseif k == "<CR>"
+      FillCell(id)
+      popup_close(id, -1)
+      return true
+    else
+      echo "unknown key"
+    endif
+  catch
+    popup_clear()
+    throw "Undefined error. Perhaps you are in the first or last line of the buffer?"
+  endtry
+
+  popup_text[-1] ..= popup_cursor
+  popup_settext(id, popup_text)
+  return true
+enddef
+
+def FillCell(id: number)
+			var bufnr = winbufnr(id)
+			var cell_text = getbufline(bufnr, 1, '$')
+      cell_text[-1] = strcharpart(cell_text[-1], 0, strchars(cell_text[-1]) - 1)
+      ReplaceCell(cell_text)
+enddef
+
+export def CreateCellPopup()
+  if !IsTableLine(getline('.'))
+    return
+  endif
+
+  var cell_info = SearchCellDelimiters()
+
+  var opts = {
+    border: [1, 1, 1, 1],
+    borderchars: ['─', '│', '─', '│', '╭', '╮', '╯', '╰'],
+    line: cell_info.startline + 1,
+    col: cell_info.startcol + 4,
+    filter: PopupFilter,
+    scrollbar: 0,
+    mapping: 0
+  }
+
+  popup_text = [popup_cursor]
+  var prompt_id = popup_create(popup_text, opts)
+  popup_settext(prompt_id, popup_text)
+enddef
+
+def FillCellFromSplitWindow()
+  stopinsert
+  var cell_text = getline(1, '$')
+  close
+  ReplaceCell(cell_text)
+enddef
+
+export def CreateCellSplitWindow()
+  if !IsTableLine(getline('.'))
+    return
+  endif
+
+  new
+	setlocal buftype=nofile bufhidden=wipe noswapfile
+  resize 5
+  startinsert
+
+  inoremap <buffer> <CR> <ScriptCmd>FillCellFromSplitWindow()<CR>
+  inoremap <buffer> <S-CR> <CR>
+enddef
 # ------- TEST VALUES ---------
 var foo_short = ['hello hello',
 ]
@@ -315,17 +422,19 @@ var foo_long = ['hello hello',
   'bella signora',
   'mi farei proprio una bella chiavata'
 ]
-command! RRR ReplaceCell(foo_short)
+command! RRR ReplaceCell(foo_long)
+command! QQQ CreateCellPopup()
+command! AAA CreateCellSplitWindow()
 
 # dict use for testing individual functions
-export const funcs_ref_dict = {
-  IsTableLine: IsTableLine,
-  SplitRow: SplitRow,
-  IsDelimiterRow: IsDelimiterRow,
-  IsBlankRow: IsBlankRow,
-  InsertRowDelimiter: InsertRowDelimiter,
-  ReplaceCell: ReplaceCell,
-  FormatPipes: FormatPipes,
-  FormatTable: FormatTable,
-  SearchCellDelimiters: SearchCellDelimiters
-}
+# export var funcs_ref_dict = {
+#   IsTableLine: IsTableLine,
+#   SplitRow: SplitRow,
+#   IsDelimiterRow: IsDelimiterRow,
+#   IsBlankRow: IsBlankRow,
+#   InsertRowDelimiter: InsertRowDelimiter,
+#   ReplaceCell: ReplaceCell,
+#   FormatPipes: FormatPipes,
+#   FormatTable: FormatTable,
+#   SearchCellDelimiters: SearchCellDelimiters
+# }
