@@ -33,15 +33,8 @@ type "%VIMRC%"
 echo/
 
 REM Run Vim with the specified configuration and additional commands
-REM SET "TEST_FILES=test_markdown_extras.vim ^
-REM test_utils.vim ^
-REM test_regex.vim ^
-REM test_links.vim ^
-REM test_tables.vim"
-
 SET "TEST_FILES=['test_markdown_extras.vim', 'test_utils.vim', 'test_regex.vim', 'test_links.vim', 'test_tables.vim']"
-
-%VIM_CMD% -c "vim9cmd g:TestFiles = split('%TEST_FILES%', ' ')" -S "runner.vim"
+%VIM_CMD% -c "vim9cmd g:TestFiles =  %TEST_FILES%" -S "runner.vim"
 REM If things go wrong uncomment the following line and see e.g. if the
 REM vimrc_for_test is valid, check :messages and so on.
 REM %VIM_CMD% -c "vim9cmd g:TestName = 'test_markdown_extras.vim'" -c "e README.md"
