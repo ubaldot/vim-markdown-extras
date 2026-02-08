@@ -177,8 +177,25 @@ def FormatPipes(first: number, last: number)
     out->add('|' .. join(parts, '|') .. '|')
   endfor
 
+  # Remove blank table rows
+  var out_clean: list<string> = []
+  for l in out
+      var cells = SplitRow(l)
+      # Keep the line if there is at least one non-empty cell
+      if !empty(filter(cells, 'v:val !=# ""'))
+          out_clean->add(l)
+      endif
+  endfor
+
   # Set the formatted lines back in buffer
-  setline(first, out)
+  setline(first, out_clean)
+
+  # Delete old trailing rows in case we removed intermediate blank rows
+  if len(out) > len(out_clean)
+    const first_line_to_be_removed = first + len(out_clean)
+    const last_line_to_be_removed = first + len(out) - 1
+    deletebufline('%', first_line_to_be_removed, last_line_to_be_removed)
+  endif
 enddef
 
 export def FormatTable()
