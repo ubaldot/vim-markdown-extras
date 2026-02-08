@@ -32,64 +32,15 @@ def IsDelimiterRow(row: list<string>): bool
   return true
 enddef
 
-
-def FormatPipes(first: number, last: number)
-  var lines = getline(first, last)
-
-  # Parse rows into lists of cells
-  var rows: list<list<string>> = []
-  for l in lines
-    rows->add(SplitRow(l))
-  endfor
-
-  # Compute number of columns
-  var ncols = 0
-  for r in rows
-    ncols = max([ncols, len(r)])
-  endfor
-
-  # Compute max width per column (text width only)
-  var widths = repeat([0], ncols)
-  for r in rows
-    if IsDelimiterRow(r)
-      continue
-    endif
-    for i in range(len(r))
-      widths[i] = max([widths[i], strcharlen(r[i])])
-    endfor
-  endfor
-
-  # Rebuild lines
-  var out: list<string> = []
-  for r in rows
-    var is_delim = IsDelimiterRow(r)
-    var parts: list<string> = []
-
-    for i in range(ncols)
-      var cell = i < len(r) ? r[i] : ''
-
-      if is_delim
-        # Preserve alignment colons
-        var left_colon  = cell =~# '^:' ? ':' : ''
-        var right_colon = cell =~# ':$' ? ':' : ''
-
-        # Compute number of dashes to pad
-        var dash_count = widths[i] + 2 - strcharlen(left_colon) - strcharlen(right_colon)
-        parts->add(left_colon .. repeat('-', dash_count) .. right_colon)
-      else
-        # Regular cell: pad spaces
-        parts->add(' ' .. cell .. repeat(' ', widths[i] - strcharlen(cell) + 1))
-      endif
-    endfor
-
-    # Join cells with | and add leading/trailing |
-    out->add('|' .. join(parts, '|') .. '|')
-  endfor
-
-  # Set the formatted lines back in buffer
-  setline(first, out)
+def IsBlankRow(row: list<string>): bool
+    # A row is blank if all cells are empty strings
+    return empty(row->filter('v:val !=# ""'))
 enddef
 
+def IsDelimiterRowExtended(row: list<string>): bool
+  # A delimiter is either a classic markdown delimiter or a blank line
+  return IsDelimiterRow(row) || IsBlankRow(row)
+enddef
 
 # =========================
 #         MAIN
@@ -106,33 +57,6 @@ export def InsertRowDelimiter()
       getline(curr_line)->substitute('[^|]', '-', 'g')
     )
   endif
-enddef
-
-
-export def FormatTable()
-  if !IsTableLine(getline('.'))
-    return
-  endif
-
-  # Save cursor position
-  var curpos = getcursorcharpos()[1 : 2]
-
-  # Find table start
-  var startline = line('.')
-  while startline > 1 && IsTableLine(getline(startline - 1))
-    startline -= 1
-  endwhile
-
-  # Find table end
-  var endline = line('.')
-  while endline < line('$') && IsTableLine(getline(endline + 1))
-    endline += 1
-  endwhile
-
-  FormatPipes(startline, endline)
-
-  # Restore cursor
-  setcursorcharpos(curpos)
 enddef
 
 # =========================
@@ -174,8 +98,32 @@ def ReplaceCell(buf: list<string>, text_alignment: string = 'l')
     endfor
   endif
 
-  # Make it nice and put the cursor on a nice spot
-  FormatTable()
+  # Padding if the buffer to insert is too small
+  if len(buf) < cell_height
+
+    var range_to_pad = range(cell_info.startline + len(buf) + 1, cell_info.endline - 1)
+    for ii in range_to_pad
+
+      new_line = strcharpart(getline(ii), 0, cell_info.startcol - 1)
+         .. repeat(' ', cell_info.endcol - cell_info.startcol)
+        .. strcharpart(getline(ii), cell_info.endcol - 1)
+
+      setline(ii, new_line)
+    endfor
+  endif
+
+  # Make the table nice
+  const table_firstline = search('^$', 'nbW') == 0
+    ? 1
+    : search('^$', 'nbW') + 1
+
+  const table_lastline = search('^$', 'nW') == 0
+    ? line('$')
+    : search('^$', 'nW') - 1
+
+  FormatTable(table_firstline, table_lastline)
+
+  # Put the cursor on a nice spot
   cursor(line('.'), 1)
   for _ in range(cell_info.cell_nr - 1)
     search('|')
@@ -184,18 +132,100 @@ def ReplaceCell(buf: list<string>, text_alignment: string = 'l')
 
 enddef
 
+def FormatTable(first: number, last: number)
+  var lines = getline(first, last)
+
+  # Parse rows into lists of cells
+  var rows: list<list<string>> = []
+  for l in lines
+    rows->add(SplitRow(l))
+  endfor
+
+  # Compute number of columns
+  var ncols = 0
+  for r in rows
+    ncols = max([ncols, len(r)])
+  endfor
+
+  # Compute max width per column (ignore delimiters & blanks)
+  var widths = repeat([0], ncols)
+  for r in rows
+    if IsDelimiterRow(r)
+      continue
+    endif
+    for i in range(len(r))
+      widths[i] = max([widths[i], strcharlen(r[i])])
+    endfor
+  endfor
+
+  # Rebuild table
+  var out: list<string> = []
+
+  for r in rows
+    var is_delim = IsDelimiterRow(r)
+    var parts: list<string> = []
+
+    for i in range(ncols)
+      var cell = i < len(r) ? r[i] : ''
+
+      if is_delim
+        # Blank rows → pure delimiter row without colons
+        if IsBlankRow(r)
+          parts->add(repeat('-', widths[i] + 2))
+        else
+          # Preserve markdown alignment colons
+          var left_colon  = cell =~# '^:' ? ':' : ''
+          var right_colon = cell =~# ':$' ? ':' : ''
+          var dash_count = widths[i] + 2
+                - strcharlen(left_colon)
+                - strcharlen(right_colon)
+          parts->add(left_colon .. repeat('-', dash_count) .. right_colon)
+        endif
+      else
+        # Normal content cell
+        parts->add(
+          ' ' .. cell .. repeat(' ', widths[i] - strcharlen(cell) + 1)
+        )
+      endif
+    endfor
+
+    out->add('|' .. join(parts, '|') .. '|')
+  endfor
+
+  # Remove consecutive delimiter/blank rows (keep only one)
+  var out_cleaned: list<string> = []
+  var prev_was_delim = false
+
+  for l in out
+    var r = SplitRow(l)
+    var is_delim = IsDelimiterRow(r)
+
+    if is_delim && prev_was_delim
+      continue
+    endif
+
+    out_cleaned->add(l)
+    prev_was_delim = is_delim
+  endfor
+
+  setline(first, out_cleaned)
+enddef
+
+
 def SearchCellDelimiters(): dict<any>
   # Extract information about the current cell, such as left and righ
   # columns, upper and lower lines, number of cells, etc.
 
   var cell_info = {}
 
-  if IsTableLine(getline('.')) && !IsDelimiterRow(SplitRow(getline('.')))
+  if IsTableLine(getline('.'))
+      && !IsDelimiterRowExtended(SplitRow(getline('.')))
 
     # Search for first line
     var startline = line('.')
     # while getline(startline) !~ delim_regex && getline(startline) !~ '^$' && startline != 0
-    while !IsDelimiterRow(SplitRow(getline(startline))) && getline(startline) !~ '^$' && startline != 0
+    while !IsDelimiterRowExtended(SplitRow(getline(startline)))
+        && getline(startline) !~ '^$' && startline != 0
       startline -= 1
     endwhile
 
@@ -206,7 +236,8 @@ def SearchCellDelimiters(): dict<any>
 
     # Search for last line
     var endline = line('.')
-    while !IsDelimiterRow(SplitRow(getline(endline))) && getline(endline) !~ '^$' && endline != line('$')
+    while !IsDelimiterRowExtended(SplitRow(getline(endline)))
+        && getline(endline) !~ '^$' && endline != line('$')
       endline += 1
     endwhile
 
@@ -219,7 +250,7 @@ def SearchCellDelimiters(): dict<any>
     const curpos = getcursorcharpos()[1 : 2]
     cursor(line('.'), 1)
 
-    const num_cells = getline(line('.'))->filter("v:val == '\|'")->len()
+    const num_cells = getline(line('.'))->filter("v:val == '\|'")->len() - 1
 
     setcursorcharpos(curpos)
 
@@ -267,9 +298,15 @@ def SearchCellDelimiters(): dict<any>
 enddef
 
 # ------- TEST VALUES ---------
-var foo = ['hello hello',
+var foo_short = ['hello hello',
+]
+
+var foo_equal = ['hello hello',
+  'bella signora',
+]
+
+var foo_long = ['hello hello',
   'bella signora',
   'mi farei proprio una bella chiavata'
 ]
-
-command! RRR ReplaceCell(foo)
+command! RRR ReplaceCell(foo_short)
