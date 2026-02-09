@@ -35,7 +35,7 @@ g:TestFiles = [
 	'test_utils.vim',
 	'test_regex.vim',
 	'test_tables.vim',
-	'test_links.vim']"
+	'test_links.vim'
   ]
 EOF
 
