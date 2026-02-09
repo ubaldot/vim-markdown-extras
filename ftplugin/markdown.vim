@@ -167,8 +167,8 @@ if empty(maparg('<Plug>MarkdownSumBlock'))
         \ <ScriptCmd>tables.SumBlock()<cr>
 endif
 
-if empty(maparg('<Plug>MarkdownFormatTable'))
-  noremap <script> <buffer> <Plug>MarkdownFormatTable
+if empty(maparg('<Plug>MarkdownTableFormat'))
+  noremap <script> <buffer> <Plug>MarkdownTableFormat
         \ <ScriptCmd>tables.FormatTable()<cr>
 endif
 
@@ -264,8 +264,8 @@ if empty(maparg('<Plug>MarkdownSumBlock'))
         \ <ScriptCmd>tables.SetSumBlock()<cr>
 endif
 
-if empty(maparg('<Plug>MarkdownFormatTable'))
-  noremap <script> <buffer> <Plug>MarkdownFormatTable
+if empty(maparg('<Plug>MarkdownTableFormat'))
+  noremap <script> <buffer> <Plug>MarkdownTableFormat
         \ <ScriptCmd>tables.FormatTable()<cr>
 endif
 
@@ -391,15 +391,16 @@ if use_default_mappings
   endif
 
   # ---------- Tables --------------------------
+  #  All key-bindings use capital letters <localleader>A
   if !hasmapto('<Plug>MarkdownSumBlock')
-    if empty(mapcheck('<localleader>s', 'n', 1))
+    if empty(mapcheck('<localleader>S', 'n', 1))
       xnoremap <localleader>s <Plug>MarkdownSumBlock
     endif
   endif
 
-  if !hasmapto('<Plug>MarkdownFormatTable')
-    if empty(mapcheck('<localleader>a', 'n', 1))
-      nnoremap <localleader>a <Plug>MarkdownFormatTable
+  if !hasmapto('<Plug>MarkdownTableFormat')
+    if empty(mapcheck('<localleader>A', 'n', 1))
+      nnoremap <localleader>A <Plug>MarkdownTableFormat
     endif
   endif
 
