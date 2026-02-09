@@ -6,6 +6,7 @@ SETLOCAL
 REM Define the paths and files
 SET "VIMPRG=vim.exe"
 SET "VIMRC=vimrc_for_tests"
+SET VIM_CMD=%VIMPRG% --clean -Es -u %VIMRC% -i NONE --not-a-term -S "runner.vim"
 
 REM Create or overwrite the vimrc file with the initial setting
 REM
@@ -16,9 +17,16 @@ REM
     echo set runtimepath+=..
     echo filetype plugin indent on
     echo syntax on
+    echo/
+    echo g:TestFiles = [
+    echo  'test_markdown_extras.vim',
+    echo  'test_utils.vim',
+    echo  'test_regex.vim',
+    echo  'test_links.vim',
+    echo  'test_tables.vim'
+    echo ]
 ) >> "%VIMRC%"
 
-SET "VIM_CMD=%VIMPRG% --clean -Es -u %VIMRC% -i NONE --not-a-term"
 
 REM Check if the vimrc file was created successfully
 if NOT EXIST "%VIMRC%" (
@@ -33,11 +41,7 @@ type "%VIMRC%"
 echo/
 
 REM Run Vim with the specified configuration and additional commands
-SET "TEST_FILES=['test_markdown_extras.vim', 'test_utils.vim', 'test_regex.vim', 'test_links.vim', 'test_tables.vim']"
-%VIM_CMD% -c "vim9cmd g:TestFiles =  %TEST_FILES%" -S "runner.vim"
-REM If things go wrong uncomment the following line and see e.g. if the
-REM vimrc_for_test is valid, check :messages and so on.
-REM %VIM_CMD% -c "vim9cmd g:TestName = 'test_markdown_extras.vim'" -c "e README.md"
+%VIM_CMD%
 
 REM Check the exit code of Vim command
 if %ERRORLEVEL% EQU 0 (

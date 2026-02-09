@@ -8,6 +8,7 @@ if [ "$#" -eq 0 ]; then
 fi
 
 VIM_PRG=${VIM_PRG:=$(which vim)}
+
 if [ -z "$VIM_PRG" ]; then
   echo "ERROR: vim (\$VIM_PRG) is not found in PATH"
   if [ "$GITHUB" -eq 1 ]; then
@@ -20,28 +21,43 @@ fi
 # source before running the tests anyway. See Vim9-conversion-aid
 VIMRC="VIMRC"
 
-echo "vim9script" > "$VIMRC"
-echo "">> "$VIMRC"
-echo "set runtimepath+=.." >> "$VIMRC"
-echo "filetype indent plugin on" >> "$VIMRC"
-echo "syntax on" >> "$VIMRC"
+tmp="$(mktemp "${VIMRC}.XXXX")"
+
+cat >"$tmp" <<'EOF' &&
+vim9script
+
+set runtimepath+=..
+filetype indent plugin on
+syntax on
+
+g:TestFiles = [
+	'test_markdown_extras.vim',
+	'test_utils.vim',
+	'test_regex.vim',
+	'test_tables.vim',
+	'test_links.vim']"
+  ]
+EOF
+
+mv "$tmp" "$VIMRC"
 
 # Display vimrc content
 echo "----- vimrc content ---------"
 cat $VIMRC
 echo ""
-# Construct the VIM_CMD with correct variable substitution and quoting
-VIM_CMD="$VIM_PRG --clean -Es -u $VIMRC -i NONE --not-a-term"
 
-# Add test files here: OBS! <space> after ','
-TESTS_LIST="['test_markdown_extras.vim', \
-	'test_utils.vim', \
-	'test_regex.vim', \
-	'test_tables.vim', \
-	'test_links.vim']"
+VIM_CMD=(
+    "$VIM_PRG"
+    --clean
+		-Es
+    -u "$VIMRC"
+    -i NONE
+    --not-a-term
+    -S runner.vim
+)
 
-# All the tests are executed in the same Vim instance
-eval $VIM_CMD " -c \"vim9cmd g:TestFiles = $TESTS_LIST\" -S runner.vim"
+# Execute Vim
+"${VIM_CMD[@]}"
 
 # Check that Vim started and that the runner did its job
 if [ $? -eq 0 ]; then

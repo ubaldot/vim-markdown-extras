@@ -50,14 +50,16 @@ def RunTests(test_file: string)
 		messages clear
 
 		try
-			silent! exe $'call {test}'
+			exe $'call {test}'
 		catch
 			writefile([$'{test}: {RED}FAIL{END}'], test_results_filepath, 'a')
 			writefile(['', 'Assertions errors:', '--------------------'], test_results_filepath, 'a')
 			writefile([v:exception], test_results_filepath, 'a')
+
+			# From :messages
 			# echoerr, throw and errors, always populate :messages. Hence, when an
 			# error is thrown, it is always good idea to check :messages
-			writefile(['', 'Other errors log:', '--------------------'], test_results_filepath, 'a')
+			writefile(['', 'messages:', '------------'], test_results_filepath, 'a')
 			writefile(execute('messages')->split("\n"), test_results_filepath, 'a')
 			break
 		endtry
