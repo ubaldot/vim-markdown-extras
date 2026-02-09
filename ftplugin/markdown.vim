@@ -162,15 +162,6 @@ if empty(maparg('<Plug>MarkdownGotoLinkBackwards'))
         \ <ScriptCmd>links.SearchLink(true)<cr>
 endif
 
-if empty(maparg('<Plug>MarkdownSumBlock'))
-  noremap <script> <buffer> <Plug>MarkdownSumBlock
-        \ <ScriptCmd>tables.SumBlock()<cr>
-endif
-
-if empty(maparg('<Plug>MarkdownTableFormat'))
-  noremap <script> <buffer> <Plug>MarkdownTableFormat
-        \ <ScriptCmd>tables.FormatTable()<cr>
-endif
 
 # -------------------------------------------
 
@@ -259,9 +250,11 @@ if empty(maparg('<Plug>MarkdownQuoteBlock'))
         \ <ScriptCmd>SetQuoteBlockOpFunc()<cr>g@
 endif
 
-if empty(maparg('<Plug>MarkdownSumBlock'))
-  noremap <script> <buffer> <Plug>MarkdownSumBlock
-        \ <ScriptCmd>tables.SetSumBlock()<cr>
+# ------------- Tables <Plug> definitions ---------------------
+
+if empty(maparg('<Plug>MarkdownTableSumBlock'))
+  noremap <script> <buffer> <Plug>MarkdownTableSumBlock
+        \ <ScriptCmd>tables.SumBlock()<cr>
 endif
 
 if empty(maparg('<Plug>MarkdownTableFormat'))
@@ -269,6 +262,29 @@ if empty(maparg('<Plug>MarkdownTableFormat'))
         \ <ScriptCmd>tables.FormatTable()<cr>
 endif
 
+if empty(maparg('<Plug>MarkdownTableChange'))
+  if exists('g:markdown_extras_config')
+      && has_key(g:markdown_extras_config, 'table_change_with_split_window')
+      && g:markdown_extras_config.table_change_with_split_window
+    noremap <script> <buffer> <Plug>MarkdownTableChange
+          \ <ScriptCmd>tables.CreateCellSplitWindow()<cr>
+  else
+    noremap <script> <buffer> <Plug>MarkdownTableChange
+          \ <ScriptCmd>tables.CreateCellPopup()<cr>
+  endif
+endif
+
+if empty(maparg('<Plug>MarkdownTableAppend'))
+  if exists('g:markdown_extras_config')
+      && has_key(g:markdown_extras_config, 'table_change_with_split_window')
+      && g:markdown_extras_config.table_change_with_split_window
+    noremap <script> <buffer> <Plug>MarkdownTableAppend
+          \ <ScriptCmd>tables.AppendTextToCellPopup()<cr>
+  else
+    noremap <script> <buffer> <Plug>MarkdownTableAppend
+          \ <ScriptCmd>tables.AppendTextToCellWindow()<cr>
+  endif
+endif
 # ------------------------------------------------------------
 
 # use_default_mappings
@@ -392,15 +408,27 @@ if use_default_mappings
 
   # ---------- Tables --------------------------
   #  All key-bindings use capital letters <localleader>A
-  if !hasmapto('<Plug>MarkdownSumBlock')
+  if !hasmapto('<Plug>MarkdownTableSumBlock')
     if empty(mapcheck('<localleader>S', 'n', 1))
-      xnoremap <localleader>s <Plug>MarkdownSumBlock
+      xnoremap <localleader>S <Plug>MarkdownTableSumBlock
     endif
   endif
 
   if !hasmapto('<Plug>MarkdownTableFormat')
+    if empty(mapcheck('<localleader>F', 'n', 1))
+      nnoremap <localleader>F <Plug>MarkdownTableFormat
+    endif
+  endif
+
+  if !hasmapto('<Plug>MarkdownTableChange')
+    if empty(mapcheck('<localleader>C', 'n', 1))
+      nnoremap <localleader>C <Plug>MarkdownTableChange
+    endif
+  endif
+
+  if !hasmapto('<Plug>MarkdownTableAppend')
     if empty(mapcheck('<localleader>A', 'n', 1))
-      nnoremap <localleader>A <Plug>MarkdownTableFormat
+      nnoremap <localleader>A <Plug>MarkdownTableAppend
     endif
   endif
 

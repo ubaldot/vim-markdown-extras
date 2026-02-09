@@ -1,7 +1,6 @@
 vim9script
 
-const popup_cursor: string = '|'
-var popup_text: list<string> = ['']
+var gui_cursor: list<dict<any>>
 
 def IsTableLine(line: string): bool
   # It is enough that you have one column delimited by | ... | to be a table
@@ -61,68 +60,30 @@ export def InsertRowDelimiter()
   endif
 enddef
 
-# =========================
-# Cells replacement
-# =========================
+export def SumBlock()
+  var sum: float = 0.0
 
-def ReplaceCell(buf: list<string>, text_alignment: string = '')
-  const cell_info = SearchCellDelimiters()
+  var tmp = getreg('s')
+  silent norm! "sy
 
-  if empty(cell_info)
-    return
+  var numbers: list<any>
+  if @s =~ "\|"
+    numbers = split(@s, "\|")
+  else
+    numbers = split(@s)
   endif
 
-  var buf_padded = buf
-
-  var cell_height = cell_info.endline - cell_info.startline - 1
-  var cell_width = cell_info.endcol - cell_info.startcol + 1
-
-  # Pad buffer if needed (buf is too short, we add blank chunks)
-  if len(buf) < cell_height
-    var pad_string = repeat(' ', cell_width)
-    for _ in range(cell_height - len(buf))
-      add(buf_padded, pad_string)
-    endfor
-  endif
-
-  # Replace lines
-  cursor(cell_info.startline + 1, 1)
-  var ii_offset = -1
-  var new_line = ''
-  var aligned_val = ''
-
-  # TODO: write logic for different text alignment
-  for [ii, val] in items(buf_padded[: cell_height - 1])
-    ii_offset = ii + cell_info.startline + 1
-
-    new_line = strcharpart(getline(ii_offset), 0, cell_info.startcol)
-      .. $' {val} ' .. strcharpart(getline(ii_offset), cell_info.endcol - 1)
-
-    setline(ii_offset, new_line)
+  for v in numbers
+    sum += str2float(v)
   endfor
 
-  # Pad other cells if the buffer to insert is too large
-  if len(buf_padded) > cell_height
-    for [ii, val] in items(buf_padded[cell_height : ])
-      ii_offset = cell_info.startline + cell_height
-
-      new_line = repeat('| ', cell_info.cell_nr) .. val .. ' |'
-
-      append(ii_offset, new_line)
-    endfor
-  endif
-
-  # Make the table nice
-  FormatTable()
-
-  # Put the cursor on a nice spot
-  cursor(line('.'), 1)
-  for _ in range(cell_info.cell_nr - 1)
-    search('|')
-  endfor
-  norm! w
-
+  echo $'sum: {sum}'
+  setreg('s', tmp)
 enddef
+
+# ======================
+#   TABLE FORMATTING
+# ======================
 
 def FormatPipes(first: number, last: number)
   var lines = getline(first, last)
@@ -232,11 +193,6 @@ def SearchCellDelimiters(): dict<any>
       startline -= 1
     endwhile
 
-    # if startline == 0
-    #   echoerr 'You are on the first line'
-    #   return cell_info
-    # endif
-
     # Search for last line
     var endline = line('.')
     while !IsDelimiterRowExtended(SplitRow(getline(endline)))
@@ -244,6 +200,7 @@ def SearchCellDelimiters(): dict<any>
       endline += 1
     endwhile
 
+    # TODO: fix this
     if endline == line('$')
       echoerr 'You are on the last line'
       return cell_info
@@ -300,13 +257,102 @@ def SearchCellDelimiters(): dict<any>
   return cell_info
 enddef
 
-# ----- TEST POPUP -----
+# =========================
+# Cells replacement
+# =========================
 
-def PopupFilter(id: number, key: string): bool
+def GetCellText()
+  echo "TODO"
+enddef
+
+def ReplaceCell(buf: list<string>, text_alignment: string = '')
+  const cell_info = SearchCellDelimiters()
+
+  if empty(cell_info)
+    return
+  endif
+
+  var buf_padded = buf
+
+  var cell_height = cell_info.endline - cell_info.startline - 1
+  var cell_width = cell_info.endcol - cell_info.startcol + 1
+
+  # Pad buffer if needed (buf is too short, we add blank chunks)
+  if len(buf) < cell_height
+    var pad_string = repeat(' ', cell_width)
+    for _ in range(cell_height - len(buf))
+      add(buf_padded, pad_string)
+    endfor
+  endif
+
+  # Replace lines
+  cursor(cell_info.startline + 1, 1)
+  var ii_offset = -1
+  var new_line = ''
+  var aligned_val = ''
+
+  # TODO: write logic for different text alignment
+  for [ii, val] in items(buf_padded[: cell_height - 1])
+    ii_offset = ii + cell_info.startline + 1
+
+    new_line = strcharpart(getline(ii_offset), 0, cell_info.startcol)
+      .. $' {val} ' .. strcharpart(getline(ii_offset), cell_info.endcol - 1)
+
+    setline(ii_offset, new_line)
+  endfor
+
+  # Pad other cells if the buffer to insert is too large
+  if len(buf_padded) > cell_height
+    for [ii, val] in items(buf_padded[cell_height : ])
+      ii_offset = cell_info.startline + cell_height
+
+      new_line = repeat('| ', cell_info.cell_nr) .. val .. ' |'
+
+      append(ii_offset, new_line)
+    endfor
+  endif
+
+  # Make the table nice
+  FormatTable()
+
+  # Put the cursor on a nice spot
+  cursor(line('.'), 1)
+  for _ in range(cell_info.cell_nr - 1)
+    search('|')
+  endfor
+  norm! w
+enddef
+
+# =========================
+#   CELLS UPDATE IN POPUP
+# =========================
+
+def HideCursor()
+  # hide cursor
+  set t_ve=
+  gui_cursor = hlget("Cursor")
+  hlset([{name: 'Cursor', cleared: true}])
+enddef
+
+def RestoreCursor()
+  set t_ve&
+  if hlget("Cursor")[0]->get('cleared', false)
+    hlset(gui_cursor)
+  endif
+enddef
+
+def PopupFilter(
+      id: number,
+      key: string,
+      popup_text: list<string>,
+      popup_cursor: string
+    ): bool
+
   var k = keytrans(key)
 
   if k == "<Esc>"
     popup_close(id, -1)
+    RestoreCursor()
     return true
   endif
 
@@ -339,12 +385,14 @@ def PopupFilter(id: number, key: string): bool
     elseif k == "<CR>"
       FillCell(id)
       popup_close(id, -1)
+      RestoreCursor()
       return true
     else
       echo "unknown key"
     endif
   catch
     popup_clear()
+    RestoreCursor()
     throw "Undefined error. Perhaps you are in the first or last line of the buffer?"
   endtry
 
@@ -353,6 +401,7 @@ def PopupFilter(id: number, key: string): bool
   return true
 enddef
 
+
 def FillCell(id: number)
 			var bufnr = winbufnr(id)
 			var cell_text = getbufline(bufnr, 1, '$')
@@ -360,26 +409,44 @@ def FillCell(id: number)
       ReplaceCell(cell_text)
 enddef
 
-export def CreateCellPopup()
+
+def AppendTextToCellPopup()
+  echom "TODO"
+enddef
+
+
+export def CreateCellPopup(starting_text: list<string> = [''])
   if !IsTableLine(getline('.'))
     return
   endif
 
-  var cell_info = SearchCellDelimiters()
+  HideCursor()
+
+  const cursor_shape = '|'
+  var popup_text = empty(starting_text) ? [cursor_shape] : starting_text
+
+  const cell_info = SearchCellDelimiters()
 
   var opts = {
     border: [1, 1, 1, 1],
     borderchars: ['─', '│', '─', '│', '╭', '╮', '╯', '╰'],
-    line: cell_info.startline + 1,
-    col: cell_info.startcol + 4,
-    filter: PopupFilter,
+    line: getcursorcharpos()[1],
+    col: getcursorcharpos()[2],
+    filter: (id, key) => PopupFilter(id, key, popup_text, cursor_shape),
     scrollbar: 0,
     mapping: 0
   }
 
-  popup_text = [popup_cursor]
   var prompt_id = popup_create(popup_text, opts)
   popup_settext(prompt_id, popup_text)
+enddef
+
+# ==================================
+#   CELLS UPDATE IN SPLIT WINDOWS
+# ==================================
+
+def AppendTextToCellWindow()
+  echo "TODO"
 enddef
 
 def FillCellFromSplitWindow()
@@ -402,6 +469,8 @@ export def CreateCellSplitWindow()
   inoremap <buffer> <CR> <ScriptCmd>FillCellFromSplitWindow()<CR>
   inoremap <buffer> <S-CR> <CR>
 enddef
+
+
 # ------- TEST VALUES ---------
 var foo_short = ['hello hello',
 ]
