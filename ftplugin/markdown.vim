@@ -416,7 +416,7 @@ if use_default_mappings
 
   if !hasmapto('<Plug>MarkdownTableFormat')
     if empty(mapcheck('<localleader>F', 'n', 1))
-      nnoremap <localleader>F <Plug>MarkdownTableFormat
+      xnoremap <localleader>F <Plug>MarkdownTableFormat
     endif
   endif
 
