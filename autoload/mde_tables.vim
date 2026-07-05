@@ -47,17 +47,59 @@ enddef
 #         MAIN
 # =========================
 
-export def InsertRowDelimiter()
-  const p = '^\s*|\s*.*\s*|\s*$'
-  const curr_line = line('.')
+def VisibleWidth(lnum: number, startcol: number, endcol: number): number
+  # Character may be concealed, or there can be multi-bytes characters that
+  # mess up the displayed columns
+  var line = getline(lnum)
+  var width = 0
+  var bcol = 1
 
-  if getline(curr_line) =~# p
-    appendbufline(
-      '%',
-      curr_line,
-      getline(curr_line)->substitute('[^|]', '-', 'g')
-    )
+  for ch in split(line, '\zs')
+    if bcol >= endcol
+      break
+    endif
+
+    if bcol >= startcol
+      var [concealed, _, _] = synconcealed(lnum, bcol)
+
+      if !concealed
+        width += strdisplaywidth(ch)
+      endif
+    endif
+
+    bcol += len(ch)
+  endfor
+
+  return width
+enddef
+
+export def InsertRowDelimiter()
+
+  const p = '^\s*|\s*.*\s*|\s*$'
+
+  if getline('.') !~# p
+    return
   endif
+
+  const saved_cur = getcursorcharpos()
+
+
+  var curr_line = saved_cur[1]
+  var curr_col = 1
+  cursor(curr_line, curr_col)
+
+  # Compute delim
+  var delim = ''
+  while curr_line == saved_cur[1]
+    var pos = searchpos('|')
+    curr_line = pos[0]
+    delim ..= '|' .. repeat('-', VisibleWidth(curr_line, curr_col + 1, pos[1]))
+    curr_col = pos[1]
+  endwhile
+
+  appendbufline('%', saved_cur[1], delim)
+
+  setcursorcharpos(saved_cur[1 : 2])
 enddef
 
 export def SumBlock()
