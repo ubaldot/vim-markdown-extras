@@ -75,14 +75,11 @@ enddef
 
 export def InsertRowDelimiter()
 
-  const p = '^\s*|\s*.*\s*|\s*$'
-
-  if getline('.') !~# p
+  if !IsTableLine(getline('.'))
     return
   endif
 
   const saved_cur = getcursorcharpos()
-
 
   var curr_line = saved_cur[1]
   var curr_col = 1
@@ -91,7 +88,7 @@ export def InsertRowDelimiter()
   # Compute delim
   var delim = ''
   while curr_line == saved_cur[1]
-    var pos = searchpos('|')
+    var pos = searchpos('|', 'W')
     curr_line = pos[0]
     delim ..= '|' .. repeat('-', VisibleWidth(curr_line, curr_col + 1, pos[1]))
     curr_col = pos[1]
