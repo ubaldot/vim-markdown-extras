@@ -123,79 +123,96 @@ enddef
 # ======================
 #   TABLE FORMATTING
 # ======================
+def MarkdownDisplayWidth(text: string): number
+  var t = text
+
+  # bold
+  t = substitute(t, '\*\*\(.\{-}\)\*\*', '\1', 'g')
+
+  # italic
+  t = substitute(t, '\*\(.\{-}\)\*', '\1', 'g')
+
+  # reference links
+  t = substitute(t, '\[\([^]]*\)\]\(\[[^]]*\]\)', '\1\2', 'g')
+
+  return strdisplaywidth(t)
+enddef
 
 def FormatPipes(first: number, last: number)
-  var lines = getline(first, last)
-
-  # Parse rows into lists of cells
   var rows: list<list<string>> = []
-  for l in lines
-    rows->add(SplitRow(l))
+
+  for line in getline(first, last)
+    rows->add(SplitRow(line))
   endfor
 
-  # Compute number of columns
   var ncols = 0
-  for r in rows
-    ncols = max([ncols, len(r)])
+
+  for row in rows
+    ncols = max([ncols, len(row)])
   endfor
 
-  # Compute max width per column (text width only)
   var widths = repeat([0], ncols)
-  for r in rows
-    if IsDelimiterRow(r)
+
+  # Compute max visible width per column.
+  for row in rows
+    if IsDelimiterRow(row)
       continue
     endif
-    for i in range(len(r))
-      widths[i] = max([widths[i], strcharlen(r[i])])
+
+    for c in range(len(row))
+      widths[c] = max([
+        widths[c],
+        MarkdownDisplayWidth(row[c])
+      ])
     endfor
   endfor
 
-  # Rebuild lines
+  # Rebuild.
   var out: list<string> = []
-  for r in rows
-    var is_delim = IsDelimiterRow(r)
+
+  for row in rows
     var parts: list<string> = []
 
-    for i in range(ncols)
-      var cell = i < len(r) ? r[i] : ''
+    if IsDelimiterRow(row)
+      for c in range(ncols)
+        var cell = c < len(row) ? row[c] : ''
 
-      if is_delim
-        # Preserve alignment colons
-        var left_colon  = cell =~# '^:' ? ':' : ''
+        var left_colon = cell =~# '^:' ? ':' : ''
         var right_colon = cell =~# ':$' ? ':' : ''
 
-        # Compute number of dashes to pad
-        var dash_count = widths[i] + 2 - strcharlen(left_colon) - strcharlen(right_colon)
-        parts->add(left_colon .. repeat('-', dash_count) .. right_colon)
-      else
-        # Regular cell: pad spaces
-        parts->add(' ' .. cell .. repeat(' ', widths[i] - strcharlen(cell) + 1))
-      endif
-    endfor
+        var dashes =
+          widths[c]
+          + 2
+          - strlen(left_colon)
+          - strlen(right_colon)
 
-    # Join cells with | and add leading/trailing |
+        parts->add(
+          left_colon
+          .. repeat('-', max([3, dashes]))
+          .. right_colon
+        )
+      endfor
+    else
+      for c in range(ncols)
+        var cell = c < len(row) ? row[c] : ''
+
+        parts->add(
+          ' '
+          .. cell
+          .. repeat(
+               ' ',
+               widths[c]
+               - MarkdownDisplayWidth(cell)
+               + 1
+             )
+        )
+      endfor
+    endif
+
     out->add('|' .. join(parts, '|') .. '|')
   endfor
 
-  # Remove blank table rows
-  var out_clean: list<string> = []
-  for l in out
-      var cells = SplitRow(l)
-      # Keep the line if there is at least one non-empty cell
-      if !empty(filter(cells, 'v:val !=# ""'))
-          out_clean->add(l)
-      endif
-  endfor
-
-  # Set the formatted lines back in buffer
-  setline(first, out_clean)
-
-  # Delete old trailing rows in case we removed intermediate blank rows
-  if len(out) > len(out_clean)
-    const first_line_to_be_removed = first + len(out_clean)
-    const last_line_to_be_removed = first + len(out) - 1
-    deletebufline('%', first_line_to_be_removed, last_line_to_be_removed)
-  endif
+  setline(first, out)
 enddef
 
 export def FormatTable()
