@@ -120,7 +120,7 @@ END
 |-------|----------------|-----------|
 END
 
-  execute "MDETableRowDelimiter"
+  execute $"norm! \<Plug>MarkdownTableInsertRowDelimiter"
 
   var actual_lines = getline(1, '$')
   assert_equal(expected_lines, actual_lines)
