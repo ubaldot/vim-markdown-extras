@@ -505,7 +505,7 @@ def PopupFilter(
 
   var k = keytrans(key)
 
-  if k == "<Esc>"
+  if k == '<Esc>'
     popup_close(id, -1)
     RestoreCursor()
     return true
@@ -528,7 +528,6 @@ def PopupFilter(
   # Try/catch because you never know a user what can type
   try
     # All characters that don't start with '<', like a,b,c,1,2,3,...
-    # TODO: Check support for multi-byte characters
     if  k !~ '^<'
       popup_text[-1] ..= k
     # Now all characters that start with '<', e.g., <BS>, <CR>, <Tab>, ...
@@ -548,7 +547,7 @@ def PopupFilter(
       elseif n == 0 && len(popup_text) > 1
         remove(popup_text, -1)
       endif
-    elseif k == "<C-U>"
+    elseif k == '<C-U>'
        popup_text[-1] = ''
     elseif k == "<CR>"
       FillCell(id)

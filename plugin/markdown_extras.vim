@@ -100,6 +100,61 @@ def ShowReleaseNotes()
   win_execute(popup_id, 'set conceallevel=2')
 enddef
 
+def ShowDefaultMappings()
+
+const default_mappings =<< END
+
+<BS> - go to previous visited markdown buffer
+K - markdown link preview
+
+The following mappings start with <localleader>
+
+Text styles:
+  b - bold
+  i - italic
+  s - strikethrough
+  u - underline
+  h - highlight
+
+Misc
+  q - quote block
+  x - Toggle checkbox
+
+Code
+  c - code
+  f - fenced code-block
+
+Links
+  l - create link
+  n - jump to next link
+  N - jump to previous link
+
+Tables
+  S - sum block (only in visual mode)
+  F - table format
+  _ - insert row delimiter
+  C - change text in a cell
+  A - append text in a cell
+
+Remove all
+  r - remove text styles, Highlight, links, etc.
+
+Press <Esc> or 'q' to close this popup.
+END
+
+  const title = ' vim-markdown-extras: default mappings'
+  const popup_options = {
+    border: [1, 1, 1, 1],
+    borderchars:  ['─', '│', '─', '│', '╭', '╮', '╯', '╰'],
+    scrollbar: false,
+    title: title,
+    filter: ReleaseNotesFilter
+  }
+
+  const popup_id = popup_create(default_mappings, popup_options)
+  win_execute(popup_id, 'set filetype=text')
+enddef
+
 # Error/Warnings triggered with new releases
 if exists('g:markdown_extras_indices') != 0
   utils.Echowarn("'g:markdown_extras_indices' has been renamed. "
@@ -111,6 +166,8 @@ augroup MARKDOWN_EXTRAS_OBSOLETE_COMMAND
   autocmd CmdUndefined MDEIndices utils.Echowarn("Command `:MDEIndices` "
         \ .. "has been renamed. See `:MDEReleaseNotes`")
 augroup END
+
+
 # --------------------------------
 
 augroup MARKDOWN_EXTRAS_VISITED_BUFFERS
@@ -176,6 +233,7 @@ if use_pandoc && !executable('pandoc')
 endif
 
 # PathToURL
+# TODO: there is a new function in new Vim releases
 def PathToURLReg(path: string)
   var path_to_url_register = 'p'
   if exists('g:markdown_extras_config') != 0
@@ -189,4 +247,5 @@ enddef
 
 command! -nargs=1 -complete=file MDEPathToURL PathToURLReg(<f-args>)
 command! -nargs=0 MDEReleaseNotes ShowReleaseNotes()
+command! -nargs=0 MDEDefaultMappings ShowDefaultMappings()
 command! -nargs=? MDEIndex indices.ShowIndex(<f-args>)

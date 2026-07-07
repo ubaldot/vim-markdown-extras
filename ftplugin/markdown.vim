@@ -110,9 +110,6 @@ if markdown_extras.use_pandoc
 endif
 # ------------------- End pandoc ------------------------------------
 
-# --------- Tables handling -------------------
-command! -nargs=0 MDETableRowDelimiter tables.InsertRowDelimiter()
-
 # -------- Mappings ------------
 # Redefinition of <cr>. Unmap if user does not want it.
 inoremap <buffer> <silent> <CR> <ScriptCmd>funcs.CR_Hacked()<CR>
@@ -257,6 +254,11 @@ if empty(maparg('<Plug>MarkdownTableSumBlock'))
         \ <ScriptCmd>tables.SumBlock()<cr>
 endif
 
+if empty(maparg('<Plug>MarkdownTableInsertRowDelimiter'))
+  noremap <script> <buffer> <Plug>MarkdownTableInsertRowDelimiter
+        \ <ScriptCmd>tables.InsertRowDelimiter()<cr>
+endif
+
 if empty(maparg('<Plug>MarkdownTableFormat'))
   noremap <script> <buffer> <Plug>MarkdownTableFormat
         \ <ScriptCmd>tables.FormatTable()<cr>
@@ -325,21 +327,21 @@ if use_default_mappings
     endif
   endif
 
-  if !hasmapto('<Plug>MarkdownCode')
-    if empty(mapcheck('<localleader>c', 'n', 1))
-      nnoremap <buffer> <localleader>c <Plug>MarkdownCode
-    endif
-    if empty(mapcheck('<localleader>c', 'x', 1))
-      xnoremap <buffer> <localleader>c <Plug>MarkdownCode
-    endif
-  endif
-
   if !hasmapto('<Plug>MarkdownUnderline')
     if empty(mapcheck('<localleader>u', 'n', 1))
       nnoremap <buffer> <localleader>u <Plug>MarkdownUnderline
     endif
     if empty(mapcheck('<localleader>u', 'x', 1))
       xnoremap <buffer> <localleader>u <Plug>MarkdownUnderline
+    endif
+  endif
+
+  if !hasmapto('<Plug>MarkdownCode')
+    if empty(mapcheck('<localleader>c', 'n', 1))
+      nnoremap <buffer> <localleader>c <Plug>MarkdownCode
+    endif
+    if empty(mapcheck('<localleader>c', 'x', 1))
+      xnoremap <buffer> <localleader>c <Plug>MarkdownCode
     endif
   endif
 
@@ -370,8 +372,8 @@ if use_default_mappings
 
   # ---------- Remove all --------------------------
   if !hasmapto('<Plug>MarkdownRemove')
-    if empty(mapcheck('<localleader>d', 'n', 1))
-      nnoremap <localleader>d <Plug>MarkdownRemove
+    if empty(mapcheck('<localleader>r', 'n', 1))
+      nnoremap <localleader>r <Plug>MarkdownRemove
     endif
   endif
   # ---------- Links --------------------------
@@ -423,6 +425,12 @@ if use_default_mappings
     endif
   endif
 
+  if !hasmapto('<Plug>MarkdownTableInsertRowDelimiter')
+    if empty(mapcheck('<localleader>_', 'n', 1))
+      nnoremap <localleader>_ <Plug>MarkdownTableInsertRowDelimiter
+    endif
+  endif
+
   if !hasmapto('<Plug>MarkdownTableChange')
     if empty(mapcheck('<localleader>C', 'n', 1))
       nnoremap <localleader>C <Plug>MarkdownTableChange
@@ -436,7 +444,7 @@ if use_default_mappings
   endif
 
   if empty(mapcheck('<bar>', 'i', 1))
-    # The final ea is to restore the cursor where it was left
+    # The final a is to restore the cursor where it was left
     inoremap <silent> <bar> <bar><esc><ScriptCmd>tables.FormatTable()<cr>a
   endif
 
