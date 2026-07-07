@@ -516,10 +516,12 @@ def PopupFilter(
 
   # Try/catch because you never know a user what can type
   try
-    # All characters that don't start with '<'
+    # All characters that don't start with '<', like a,b,c,1,2,3,...
+    # TODO: Check support for multi-byte characters
     if  k !~ '^<'
       popup_text[-1] ..= k
     # Now all characters that start with '<', e.g., <BS>, <CR>, <Tab>, ...
+    # This is needed to mimic tab, space, backspace, etc
     elseif k == '<Space>'
       popup_text[-1] ..= ' '
     elseif k == '<Tab>'
@@ -585,8 +587,6 @@ export def CreateCellPopup(starting_text: list<string> = [''])
   var opts = {
     border: [1, 1, 1, 1],
     borderchars: ['─', '│', '─', '│', '╭', '╮', '╯', '╰'],
-    # line: getcursorcharpos()[1],
-    # col: getcursorcharpos()[2],
     filter: (id, key) => PopupFilter(id, key, popup_text, cursor_shape),
     scrollbar: 0,
     mapping: 0
