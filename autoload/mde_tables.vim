@@ -511,8 +511,19 @@ def PopupFilter(
     return true
   endif
 
+  if k ==# '<CursorHold>'
+        || k ==# '<CursorMoved>'
+        || k ==# '<FocusGained>'
+        || k ==# '<FocusLost>'
+    return true
+  endif
+
   # Get rid off the cursor, you will append it later on again
-  popup_text[-1] = strcharpart(popup_text[-1], 0, strchars(popup_text[-1]) - 1)
+  var n = strchars(popup_text[-1])
+
+  if n > 0
+    popup_text[-1] = strcharpart(popup_text[-1], 0, n - 1)
+  endif
 
   # Try/catch because you never know a user what can type
   try
@@ -531,7 +542,7 @@ def PopupFilter(
     elseif k ==# '<BS>'
       # Either remove a char or it goes to the previous line if the current
       # line is empty
-      var n = strchars(popup_text[-1])
+      n = strchars(popup_text[-1])
       if n > 0
         popup_text[-1] = strcharpart(popup_text[-1], 0, n - 1)
       elseif n == 0 && len(popup_text) > 1
@@ -550,7 +561,7 @@ def PopupFilter(
   catch
     popup_clear()
     RestoreCursor()
-    throw "Undefined error. Perhaps you are in the first or last line of the buffer?"
+    throw v:exception
   endtry
 
   popup_text[-1] ..= popup_cursor
