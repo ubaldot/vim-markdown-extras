@@ -585,14 +585,14 @@ export def CreateCellPopup(starting_text: list<string> = [''])
   var opts = {
     border: [1, 1, 1, 1],
     borderchars: ['─', '│', '─', '│', '╭', '╮', '╯', '╰'],
-    line: getcursorcharpos()[1],
-    col: getcursorcharpos()[2],
+    # line: getcursorcharpos()[1],
+    # col: getcursorcharpos()[2],
     filter: (id, key) => PopupFilter(id, key, popup_text, cursor_shape),
     scrollbar: 0,
     mapping: 0
   }
 
-  var prompt_id = popup_create(popup_text, opts)
+  var prompt_id = popup_atcursor(popup_text, opts)
   popup_settext(prompt_id, popup_text)
 enddef
 
