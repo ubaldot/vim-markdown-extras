@@ -139,7 +139,7 @@ Tables (no text-object needed)
   A - append text in a cell
 
 Remove all
-  r - remove text styles, Highlight, links, etc.
+  r - remove text styles, highlight, links, etc.
 
 Press <Esc> or 'q' to close this popup.
 END
