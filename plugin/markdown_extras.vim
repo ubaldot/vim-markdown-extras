@@ -105,18 +105,20 @@ def ShowDefaultMappings()
 const default_mappings =<< END
 
 <BS> - go to previous visited markdown buffer
+<enter> - create link on word under cursor
 K - markdown link preview
 
-The following mappings start with <localleader>
+The following mappings start with <localleader> and are generally followed by
+a text-object, e.g. <localleader>biw reads "bold inside the word under the cursor"
 
-Text styles:
+Text styles
   b - bold
   i - italic
   s - strikethrough
   u - underline
   h - highlight
 
-Misc
+Miscellanea
   q - quote block
   x - Toggle checkbox
 
@@ -129,7 +131,7 @@ Links
   n - jump to next link
   N - jump to previous link
 
-Tables
+Tables (no text-object needed)
   S - sum block (only in visual mode)
   F - table format
   _ - insert row delimiter
