@@ -318,6 +318,11 @@ COMMANDS                                         *markdown-extras-commands*
 		    can be changed through the |g:markdown_extras_config|
 		    dictionary.
 
+                                                        *:MDEDefaultMappings*
+:MDEDefaultMappings Display default_mappings.
+
+                                                        *:MDEReleaseNotes*
+:MDEReleaseNotes    Show release notes.
 ==============================================================================
 MAPPINGS                                         *markdown-extras-mappings*
 
