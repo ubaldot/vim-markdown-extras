@@ -47,9 +47,9 @@ enddef
 #         MAIN
 # =========================
 
-def VisibleWidth(lnum: number, startcol: number, endcol: number): number
-  # Character may be concealed, or there can be multi-bytes characters that
-  # mess up the displayed columns
+def CellWidthSmart(lnum: number, startcol: number, endcol: number): number
+  # Computes the width of a cell in chars by taking into account concealed
+  # characters
   var line = getline(lnum)
   var width = 0
   var bcol = 1
@@ -73,6 +73,16 @@ def VisibleWidth(lnum: number, startcol: number, endcol: number): number
   return width
 enddef
 
+def CellWidth(lnum: number, startcol: number, endcol: number): number
+  var text = strpart(
+    getline(lnum),
+    startcol - 1,
+    endcol - startcol
+  )
+
+  return strdisplaywidth(text)
+enddef
+
 export def InsertRowDelimiter()
 
   if !IsTableLine(getline('.'))
@@ -85,12 +95,19 @@ export def InsertRowDelimiter()
   var curr_col = 1
   cursor(curr_line, curr_col)
 
+  var ComputeCellWidth = CellWidth
+  if exists('g:markdown_extras_config')
+        && has_key(g:markdown_extras_config, 'smart_table_format')
+        && g:markdown_extras_config.smart_table_format
+    ComputeCellWidth = CellWidthSmart
+  endif
+
   # Compute delim
   var delim = ''
   while curr_line == saved_cur[1]
     var pos = searchpos('|', 'W')
     curr_line = pos[0]
-    delim ..= '|' .. repeat('-', VisibleWidth(curr_line, curr_col + 1, pos[1]))
+    delim ..= '|' .. repeat('-', ComputeCellWidth(curr_line, curr_col + 1, pos[1]))
     curr_col = pos[1]
   endwhile
 
@@ -123,6 +140,82 @@ enddef
 # ======================
 #   TABLE FORMATTING
 # ======================
+
+def FormatPipes(first: number, last: number)
+  var lines = getline(first, last)
+
+  # Parse rows into lists of cells
+  var rows: list<list<string>> = []
+  for l in lines
+    rows->add(SplitRow(l))
+  endfor
+
+  # Compute number of columns
+  var ncols = 0
+  for r in rows
+    ncols = max([ncols, len(r)])
+  endfor
+
+  # Compute max width per column (text width only)
+  var widths = repeat([0], ncols)
+  for r in rows
+    if IsDelimiterRow(r)
+      continue
+    endif
+    for i in range(len(r))
+      widths[i] = max([widths[i], strcharlen(r[i])])
+    endfor
+  endfor
+
+  # Rebuild lines
+  var out: list<string> = []
+  for r in rows
+    var is_delim = IsDelimiterRow(r)
+    var parts: list<string> = []
+
+    for i in range(ncols)
+      var cell = i < len(r) ? r[i] : ''
+
+      if is_delim
+        # Preserve alignment colons
+        var left_colon  = cell =~# '^:' ? ':' : ''
+        var right_colon = cell =~# ':$' ? ':' : ''
+
+        # Compute number of dashes to pad
+        var dash_count = widths[i] + 2 - strcharlen(left_colon) - strcharlen(right_colon)
+        parts->add(left_colon .. repeat('-', dash_count) .. right_colon)
+      else
+        # Regular cell: pad spaces
+        parts->add(' ' .. cell .. repeat(' ', widths[i] - strcharlen(cell) + 1))
+      endif
+    endfor
+
+    # Join cells with | and add leading/trailing |
+    out->add('|' .. join(parts, '|') .. '|')
+  endfor
+
+  # Remove blank table rows
+  var out_clean: list<string> = []
+  for l in out
+      var cells = SplitRow(l)
+      # Keep the line if there is at least one non-empty cell
+      if !empty(filter(cells, 'v:val !=# ""'))
+          out_clean->add(l)
+      endif
+  endfor
+
+  # Set the formatted lines back in buffer
+  setline(first, out_clean)
+
+  # Delete old trailing rows in case we removed intermediate blank rows
+  if len(out) > len(out_clean)
+    const first_line_to_be_removed = first + len(out_clean)
+    const last_line_to_be_removed = first + len(out) - 1
+    deletebufline('%', first_line_to_be_removed, last_line_to_be_removed)
+  endif
+enddef
+
+
 def MarkdownDisplayWidth(text: string): number
   var t = text
 
@@ -138,7 +231,7 @@ def MarkdownDisplayWidth(text: string): number
   return strdisplaywidth(t)
 enddef
 
-def FormatPipes(first: number, last: number)
+def FormatPipesSmart(first: number, last: number)
   var rows: list<list<string>> = []
 
   for line in getline(first, last)
@@ -229,7 +322,13 @@ export def FormatTable()
     ? line('$')
     : search('^$', 'nW') - 1
 
-  FormatPipes(table_firstline, table_lastline)
+  if exists('g:markdown_extras_config') != 0
+      && has_key(g:markdown_extras_config, 'smart_table_format')
+      && g:markdown_extras_config['smart_table_format']
+    FormatPipesSmart(table_firstline, table_lastline)
+  else
+    FormatPipes(table_firstline, table_lastline)
+  endif
 enddef
 
 def SearchCellDelimiters(): dict<any>
@@ -552,6 +651,9 @@ export var funcs_ref_dict = {
   InsertRowDelimiter: InsertRowDelimiter,
   ReplaceCell: ReplaceCell,
   FormatPipes: FormatPipes,
+  FormatPipesSmart: FormatPipesSmart,
+  CellWidth: CellWidth,
+  CellWidthSmart: CellWidthSmart,
   FormatTable: FormatTable,
   SearchCellDelimiters: SearchCellDelimiters
 }

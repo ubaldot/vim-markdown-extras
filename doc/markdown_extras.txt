@@ -222,7 +222,12 @@ filling it with he various keys.
 			  is performed on every file.
 			  To disable this feature, set this value to 0.
                           Default: 0.
-
+"smart_table_format"      If |true| the table are formatted taking into
+			  account concealed characters. If on the one hand
+			  this makes the markdown source file more readable
+			  when |conceallevel| is not 0, on the other hand
+			  some markdown renderes may struggle in correctly
+			  render the table.
 
 						*g:markdown_extras_index*
 g:markdown_extras_index   list<string>, list<list<string>> or dict<string>.

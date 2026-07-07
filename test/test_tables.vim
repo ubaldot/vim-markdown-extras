@@ -10,6 +10,7 @@ import "./common.vim"
 const WaitForAssert = common.WaitForAssert
 const funcs_ref_dict = mde_tables.funcs_ref_dict
 
+
 def Generate_testfile(lines: list<string>, src_name: string)
    writefile(lines, src_name)
 enddef
@@ -61,14 +62,49 @@ END
   Generate_testfile(lines, src_name)
   exe $"edit {src_name}"
 
-  cursor(6, 3)
   execute $"norm! \<Plug>MarkdownFormatTable"
 
   var actual_lines = getline(1, '$')
   assert_equal(expected_lines, actual_lines)
 
-  # ------ test MDETableRowDelimiter ----
-  expected_lines =<< trim END
+  # ---- teardown tests ----
+  if !empty(v:errors) || !empty(v:errmsg)
+    echom "Test failed!"
+  else
+    echom "Test passed!"
+  endif
+
+  :%bw!
+  Cleanup_testfile(src_name)
+enddef
+
+def g:Test_insert_row_delimiter()
+  messages clear
+  v:errors = []
+  v:errmsg = ''
+
+  const src_name = 'testfile.md'
+  var lines =<< END
+# Test table alignment
+
+| ciao  | notte          | quanto ti |
+|-------|----------------|-----------|
+| ciao  | super          | quanto ti |
+| sono  |                |           |
+|       | come no mingle |           |
+|       | notte          |           |
+|       | banana         |           |
+| si si | apple          |           |
+|       | mango          |           |
+|-------|----------------|-----------|
+END
+
+  vnew
+  Generate_testfile(lines, src_name)
+  exe $"edit {src_name}"
+  cursor(6, 3)
+
+  var expected_lines =<< trim END
 # Test table alignment
 
 | ciao  | notte          | quanto ti |
@@ -86,7 +122,7 @@ END
 
   execute "MDETableRowDelimiter"
 
-  actual_lines = getline(1, '$')
+  var actual_lines = getline(1, '$')
   assert_equal(expected_lines, actual_lines)
 
   # ------ test insert ----
@@ -114,4 +150,39 @@ END
 
   :%bw!
   Cleanup_testfile(src_name)
+enddef
+
+def g:Test_compute_cell_width()
+  messages clear
+  v:errors = []
+  v:errmsg = ''
+
+  const CellWidth = funcs_ref_dict.CellWidth
+
+  vnew
+  const test_text =  '**ciao**'
+  setline(1, test_text)
+  set ft=markdown
+  set conceallevel=2
+
+  var expected_result = 6
+  var actual_result = CellWidth(1, 1 + 1, col('$') - 1)
+
+  assert_equal(expected_result, actual_result)
+
+  # Smart case: takes into account the conceallevel
+  const CellWidthSmart = funcs_ref_dict.CellWidthSmart
+  expected_result = 4
+  actual_result = CellWidthSmart(1, 1 + 1, col('$') - 1)
+
+  assert_equal(expected_result, actual_result)
+
+  # ---- teardown tests ----
+  if !empty(v:errors) || !empty(v:errmsg)
+    echom "Test failed!"
+  else
+    echom "Test passed!"
+  endif
+
+  :%bw!
 enddef
