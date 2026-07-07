@@ -1,15 +1,17 @@
-# vim-MarkDown-Extras (MDE)
+# vim-Markdown-Extras (MDE)
 
 [![asciicast](https://asciinema.org/a/UbDuIOCSPp1H1F4a7VIcZm5Qj.svg)](https://asciinema.org/a/UbDuIOCSPp1H1F4a7VIcZm5Qj)
 
 This plugin adds some spice to the bundled [vim-markdown][3], such as:
 
 - Easy toggle italic, bold, strike-through, code text-styles,
-- Easy to add/jump/remove/preview links,
-- Toggle quoted and code blocks,
-- Format with `gq` and on save,
+- Easy links management,
+- Easy tables management,
+- Format with `gq` and on save with `prettier`,
 - Render with `pandoc`,
 - ... and more.
+
+It is an excellent note taking plugin and markdown files editor.
 
 # Requirements
 
