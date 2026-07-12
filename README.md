@@ -119,6 +119,10 @@ shall be a valid Unicode point value.
 > If you have [vim-outline][4] installed, then you can use `<localleader>o` to
 > display the unchecked items of the to-do list in a scratch buffer.
 
+### Tables
+
+#### TODO
+
 ### Formatting
 
 You can format text as usual by using `gq`. Here `gq` uses `prettier`,

@@ -416,9 +416,40 @@ enddef
 # Cells replacement
 # =========================
 
-def GetCellText()
-  echo "TODO"
+def GetCellText(): list<string>
+  var cell_info = SearchCellDelimiters()
+
+  if empty(cell_info)
+    return ['']
+  endif
+
+  var text: list<string> = []
+
+  for lnum in range(
+        cell_info.startline + 1,
+        cell_info.endline - 1
+      )
+
+    var line = getline(lnum)
+
+    var cell =
+      strcharpart(
+        line,
+        cell_info.startcol + 1,
+        cell_info.endcol - cell_info.startcol - 2
+      )
+
+    add(text, trim(cell))
+  endfor
+
+  # Remove trailing empty lines
+  while !empty(text) && empty(text[-1])
+    remove(text, -1)
+  endwhile
+
+  return empty(text) ? [''] : text
 enddef
+
 
 def ReplaceCell(buf: list<string>, text_alignment: string = '')
   const cell_info = SearchCellDelimiters()
@@ -496,93 +527,234 @@ def RestoreCursor()
   endif
 enddef
 
+var popup_state = {}
+
+def RenderPopupText(
+    id: number,
+    lines: list<string>,
+    cursor: string
+    ): list<string>
+
+  var display = copy(lines)
+  if empty(display)
+    display = ['']
+  endif
+
+  var state = popup_state[id]
+
+  display[state.row] =
+    strcharpart(display[state.row], 0, state.col)
+    .. cursor
+    .. strcharpart(display[state.row], state.col)
+
+  return display
+enddef
+
 def PopupFilter(
-      id: number,
-      key: string,
-      popup_text: list<string>,
-      popup_cursor: string
+    id: number,
+    key: string,
     ): bool
+
+  var state = popup_state[id]
+  var text = state.text
 
   var k = keytrans(key)
 
-  if k == '<Esc>'
+  if k ==# '<Esc>'
+    remove(popup_state, id)
     popup_close(id, -1)
     RestoreCursor()
     return true
   endif
 
   if k ==# '<CursorHold>'
-        || k ==# '<CursorMoved>'
-        || k ==# '<FocusGained>'
-        || k ==# '<FocusLost>'
+      || k ==# '<CursorMoved>'
+      || k ==# '<FocusGained>'
+      || k ==# '<FocusLost>'
     return true
   endif
 
-  # Get rid off the cursor, you will append it later on again
-  var n = strchars(popup_text[-1])
-
-  if n > 0
-    popup_text[-1] = strcharpart(popup_text[-1], 0, n - 1)
-  endif
-
-  # Try/catch because you never know a user what can type
   try
-    # All characters that don't start with '<', like a,b,c,1,2,3,...
-    if  k !~ '^<'
-      popup_text[-1] ..= k
-    # Now all characters that start with '<', e.g., <BS>, <CR>, <Tab>, ...
-    # This is needed to mimic tab, space, backspace, etc
-    elseif k == '<Space>'
-      popup_text[-1] ..= ' '
-    elseif k == '<Tab>'
-      popup_text[-1] ..= '    '
-    elseif k ==# '<S-CR>'
-      add(popup_text, '')
-    elseif k ==# '<BS>'
-      # Either remove a char or it goes to the previous line if the current
-      # line is empty
-      n = strchars(popup_text[-1])
-      if n > 0
-        popup_text[-1] = strcharpart(popup_text[-1], 0, n - 1)
-      elseif n == 0 && len(popup_text) > 1
-        remove(popup_text, -1)
+
+    # Printable characters
+    if k !~ '^<'
+
+      var line = text[state.row]
+
+      text[state.row] =
+        strcharpart(line, 0, state.col)
+        .. k
+        .. strcharpart(line, state.col)
+
+      state.col += strchars(k)
+
+    elseif k ==# '<Space>'
+
+      var line = text[state.row]
+
+      text[state.row] =
+        strcharpart(line, 0, state.col)
+        .. ' '
+        .. strcharpart(line, state.col)
+
+      state.col += 1
+
+    elseif k ==# '<Tab>'
+
+      var tab = repeat(' ', &tabstop)
+      var line = text[state.row]
+
+      text[state.row] =
+        strcharpart(line, 0, state.col)
+        .. tab
+        .. strcharpart(line, state.col)
+
+      state.col += strchars(tab)
+
+    elseif k ==# '<Left>'
+
+      if state.col > 0
+        state.col -= 1
+      elseif state.row > 0
+        state.row -= 1
+        state.col = strchars(text[state.row])
       endif
-    elseif k == '<C-U>'
-       popup_text[-1] = ''
-    elseif k == "<CR>"
+
+    elseif k ==# '<Right>'
+
+      var lenline = strchars(text[state.row])
+
+      if state.col < lenline
+        state.col += 1
+      elseif state.row < len(text) - 1
+        state.row += 1
+        state.col = 0
+      endif
+
+    elseif k ==# '<Up>'
+
+      if state.row > 0
+        state.row -= 1
+        state.col = min([
+          state.col,
+          strchars(text[state.row])
+        ])
+      endif
+
+    elseif k ==# '<Down>'
+
+      if state.row < len(text) - 1
+        state.row += 1
+        state.col = min([
+          state.col,
+          strchars(text[state.row])
+        ])
+      endif
+
+    elseif k ==# '<BS>'
+
+      if state.col > 0
+
+        var line = text[state.row]
+
+        text[state.row] =
+          strcharpart(line, 0, state.col - 1)
+          .. strcharpart(line, state.col)
+
+        state.col -= 1
+
+      elseif state.row > 0
+
+        var prevlen = strchars(text[state.row - 1])
+
+        text[state.row - 1] ..= text[state.row]
+
+        remove(text, state.row)
+
+        state.row -= 1
+        state.col = prevlen
+
+      endif
+
+    elseif k ==# '<C-U>'
+
+      text[state.row] = ''
+      state.col = 0
+
+    elseif k ==# '<S-CR>'
+
+      var line = text[state.row]
+
+      var left =
+        strcharpart(line, 0, state.col)
+
+      var right =
+        strcharpart(line, state.col)
+
+      text[state.row] = left
+      insert(text, right, state.row + 1)
+
+      state.row += 1
+      state.col = 0
+
+    elseif k ==# '<CR>'
+      # Move cursor to end of last line
+      state.row = len(text) - 1
+      state.col = strchars(text[-1])
+
       FillCell(id)
+
+      remove(popup_state, id)
       popup_close(id, -1)
       RestoreCursor()
+
       return true
-    else
-      echo "unknown key"
+
+    elseif k ==# '<Del>'
+
+      var line = text[state.row]
+
+      if state.col < strchars(line)
+        text[state.row] =
+          strcharpart(line, 0, state.col)
+          .. strcharpart(line, state.col + 1)
+      elseif state.row < len(text) - 1
+        text[state.row] ..= text[state.row + 1]
+        remove(text, state.row + 1)
+      endif
     endif
+
   catch
+
+    if has_key(popup_state, id)
+      remove(popup_state, id)
+    endif
+
     popup_clear()
     RestoreCursor()
     throw v:exception
+
   endtry
 
-  popup_text[-1] ..= popup_cursor
-  popup_settext(id, popup_text)
+  popup_settext(
+    id,
+    RenderPopupText(id, text, state.cursor)
+  )
+
   return true
 enddef
 
-
 def FillCell(id: number)
-			var bufnr = winbufnr(id)
-			var cell_text = getbufline(bufnr, 1, '$')
-      cell_text[-1] = strcharpart(cell_text[-1], 0, strchars(cell_text[-1]) - 1)
-      ReplaceCell(cell_text)
+  ReplaceCell(popup_state[id].text)
 enddef
 
 
 def AppendTextToCellPopup()
-  echom "TODO"
+  CreateCellPopup(GetCellText())
 enddef
 
-
 export def CreateCellPopup(starting_text: list<string> = [''])
+
   if !IsTableLine(getline('.'))
     return
   endif
@@ -590,20 +762,38 @@ export def CreateCellPopup(starting_text: list<string> = [''])
   HideCursor()
 
   const cursor_shape = '|'
-  var popup_text = empty(starting_text) ? [cursor_shape] : starting_text
 
-  const cell_info = SearchCellDelimiters()
+  var popup_text = empty(starting_text)
+      ? ['']
+      : copy(starting_text)
 
   var opts = {
     border: [1, 1, 1, 1],
     borderchars: ['─', '│', '─', '│', '╭', '╮', '╯', '╰'],
-    filter: (id, key) => PopupFilter(id, key, popup_text, cursor_shape),
     scrollbar: 0,
-    mapping: 0
+    mapping: 0,
+    filter: PopupFilter,
   }
 
   var prompt_id = popup_atcursor(popup_text, opts)
-  popup_settext(prompt_id, popup_text)
+
+  popup_state[prompt_id] = {
+    row: len(popup_text) - 1,
+    col: strchars(popup_text[-1]),
+    text: popup_text,
+    cursor: '|',
+  }
+
+
+  popup_settext(
+      prompt_id,
+      RenderPopupText(
+          prompt_id,
+          popup_text,
+          cursor_shape
+      )
+  )
+
 enddef
 
 # ==================================
@@ -611,7 +801,7 @@ enddef
 # ==================================
 
 def AppendTextToCellWindow()
-  echo "TODO"
+  setline(1, GetCellText())
 enddef
 
 def FillCellFromSplitWindow()
@@ -629,28 +819,14 @@ export def CreateCellSplitWindow()
   new
 	setlocal buftype=nofile bufhidden=wipe noswapfile
   resize 5
+
+  AppendTextToCellWindow()
+
   startinsert
 
   inoremap <buffer> <CR> <ScriptCmd>FillCellFromSplitWindow()<CR>
   inoremap <buffer> <S-CR> <CR>
 enddef
-
-
-# ------- TEST VALUES ---------
-var foo_short = ['hello hello',
-]
-
-var foo_equal = ['hello hello',
-  'bella signora',
-]
-
-var foo_long = ['hello hello',
-  'bella signora',
-  'mi farei proprio una bella chiavata'
-]
-command! RRR ReplaceCell(foo_long)
-command! QQQ CreateCellPopup()
-command! AAA CreateCellSplitWindow()
 
 # dict use for testing individual functions
 export var funcs_ref_dict = {
