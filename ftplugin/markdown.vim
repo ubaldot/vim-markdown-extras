@@ -266,8 +266,8 @@ endif
 
 if empty(maparg('<Plug>MarkdownTableChange'))
   if exists('g:markdown_extras_config')
-      && has_key(g:markdown_extras_config, 'table_change_with_split_window')
-      && g:markdown_extras_config.table_change_with_split_window
+      && has_key(g:markdown_extras_config, 'table_updates_in_window')
+      && g:markdown_extras_config.table_updates_in_window
     noremap <script> <buffer> <Plug>MarkdownTableChange
           \ <ScriptCmd>tables.CreateCellSplitWindow()<cr>
   else
@@ -278,13 +278,13 @@ endif
 
 if empty(maparg('<Plug>MarkdownTableAppend'))
   if exists('g:markdown_extras_config')
-      && has_key(g:markdown_extras_config, 'table_change_with_split_window')
-      && g:markdown_extras_config.table_change_with_split_window
-    noremap <script> <buffer> <Plug>MarkdownTableAppend
-          \ <ScriptCmd>tables.AppendTextToCellPopup()<cr>
-  else
+      && has_key(g:markdown_extras_config, 'table_updates_in_window')
+      && g:markdown_extras_config.table_updates_in_window
     noremap <script> <buffer> <Plug>MarkdownTableAppend
           \ <ScriptCmd>tables.AppendTextToCellWindow()<cr>
+  else
+    noremap <script> <buffer> <Plug>MarkdownTableAppend
+          \ <ScriptCmd>tables.AppendTextToCellPopup()<cr>
   endif
 endif
 # ------------------------------------------------------------

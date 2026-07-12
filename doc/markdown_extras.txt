@@ -229,6 +229,9 @@ filling it with he various keys.
 			  some markdown renderes may struggle in correctly
 			  render the table.
 
+'table_updates_in_window' If |true|, tables updates happen in a split
+			  windows. Otherwise, tables updates happen in popup.
+
 						*g:markdown_extras_index*
 g:markdown_extras_index   list<string>, list<list<string>> or dict<string>.
 			  If list<string>, contain the path of indices files.
@@ -338,37 +341,52 @@ selection bold.
 
 <Plug>MarkdownToggleCheck         Toggle checkbox in to-do lists.
                                   Default: `<localleader>x`
+
 <Plug>MarkdownAddLink             Create a link. The key-binding shall be
                                   followed by a motion.
                                   Default: `<localleader>l{motion}`
+
 <Plug>MarkdownGotoLinkForward     Jump to the next link in the current buffer.
                                   Default: `<localleader>n`
+
 <Plug>MarkdownGotoLinkBackwards   Jump to the previous link in the current buffer.
                                   Default: `<localleader>N`
+
 <Plug>MarkdownLinkPreview         Preview the link under cursor content in a
                                   popup window.
                                   Default: `K`
+
 <Plug>MarkdownBold                Change text style to bold with ** delimiter.
                                   Default: `<localleader>b{motion}`
+
 <Plug>MarkdownItalic              Change text style to italic with * delimiter.
                                   Default: `<localleader>i{motion}`
+
 <Plug>MarkdownBoldUnderscore      Change text style to bold with __ delimiter.
                                   Default: None
+
 <Plug>MarkdownItalicUnderscore    Change text style to italic with _ delimiter.
                                   Default: None
+
 <Plug>MarkdownStrike              Change text style to strike-trhough.
                                   Default: `<localleader>s{motion}`
+
 <Plug>MarkdownCode                Change text style to code.
                                   Default: `<localleader>c{motion}`
+
 <Plug>MarkdownUnderline           Change text style to underlined.
                                   Default: `<localleader>u{motion}`
+
 <Plug>MarkdownRemove              Remove text-styles, links, highlights, etc.
                                   Default: `<localleader>d`
+
 <Plug>MarkdownAddHighlight        Highlight text. Note highlighting is not
                                   persistent.
                                   Default: `<localleader>h{motion}`
+
 <Plug>MarkdownCodeBlock           Set code-block.
                                   Default: `<localleader>f{motion}`
+
 <Plug>MarkdownQuoteBlock          Set quote-block.
                                   Default: `<localleader>q{motion}`
 
@@ -403,7 +421,7 @@ LICENSE                                         *markdown-extras-license*
 
 BSD 3-Clause License
 
-Copyright (c) 2025, Ubaldo Tiberi.
+Copyright (c) 2026, Ubaldo Tiberi.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without

@@ -749,7 +749,7 @@ def FillCell(id: number)
 enddef
 
 
-def AppendTextToCellPopup()
+export def AppendTextToCellPopup()
   CreateCellPopup(GetCellText())
 enddef
 
@@ -800,8 +800,8 @@ enddef
 #   CELLS UPDATE IN SPLIT WINDOWS
 # ==================================
 
-def AppendTextToCellWindow()
-  setline(1, GetCellText())
+export def AppendTextToCellWindow()
+  CreateCellSplitWindow(GetCellText())
 enddef
 
 def FillCellFromSplitWindow()
@@ -811,7 +811,7 @@ def FillCellFromSplitWindow()
   ReplaceCell(cell_text)
 enddef
 
-export def CreateCellSplitWindow()
+export def CreateCellSplitWindow(text = [''])
   if !IsTableLine(getline('.'))
     return
   endif
@@ -820,12 +820,14 @@ export def CreateCellSplitWindow()
 	setlocal buftype=nofile bufhidden=wipe noswapfile
   resize 5
 
-  AppendTextToCellWindow()
+  setline(1, text)
 
   startinsert
+  norm! $
 
   inoremap <buffer> <CR> <ScriptCmd>FillCellFromSplitWindow()<CR>
   inoremap <buffer> <S-CR> <CR>
+  inoremap <buffer> <esc> <cmd>bdelete<CR><esc>
 enddef
 
 # dict use for testing individual functions
