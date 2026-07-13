@@ -43,6 +43,30 @@ def IsDelimiterRowExtended(row: list<string>): bool
   return IsDelimiterRow(row) || IsBlankRow(row)
 enddef
 
+def GetColumnAlignments(rows: list<list<string>>, ncols: number): list<string>
+  var aligns = repeat(['l'], ncols)
+
+  for row in rows
+    if !IsDelimiterRow(row)
+      continue
+    endif
+
+    for i in range(min([len(row), ncols]))
+      var cell = trim(row[i])
+
+      if cell[0] == ':' && cell[-1] == ':'
+        aligns[i] = 'c'
+      elseif cell[-1] == ':'
+        aligns[i] = 'r'
+      endif
+    endfor
+
+    break
+  endfor
+
+  return aligns
+enddef
+
 # =========================
 #         MAIN
 # =========================
@@ -167,6 +191,8 @@ def FormatPipes(first: number, last: number)
     endfor
   endfor
 
+  var aligns = GetColumnAlignments(rows, ncols)
+
   # Rebuild lines
   var out: list<string> = []
   for r in rows
@@ -183,10 +209,35 @@ def FormatPipes(first: number, last: number)
 
         # Compute number of dashes to pad
         var dash_count = widths[i] + 2 - strcharlen(left_colon) - strcharlen(right_colon)
-        parts->add(left_colon .. repeat('-', dash_count) .. right_colon)
+        parts->add(left_colon .. repeat('-', max([3, dash_count])) .. right_colon)
       else
         # Regular cell: pad spaces
-        parts->add(' ' .. cell .. repeat(' ', widths[i] - strcharlen(cell) + 1))
+        var pad = widths[i] - strcharlen(cell)
+
+        if aligns[i] ==# 'r'
+          parts->add(
+            repeat(' ', pad + 1)
+            .. cell
+            .. ' '
+          )
+
+        elseif aligns[i] ==# 'c'
+          var left = float2nr(floor(pad / 2.0))
+          var right = pad - left
+
+          parts->add(
+            repeat(' ', left + 1)
+            .. cell
+            .. repeat(' ', right + 1)
+          )
+
+        else
+          parts->add(
+            ' '
+            .. cell
+            .. repeat(' ', pad + 1)
+          )
+        endif
       endif
     endfor
 
@@ -260,6 +311,8 @@ def FormatPipesSmart(first: number, last: number)
     endfor
   endfor
 
+  var aligns = GetColumnAlignments(rows, ncols)
+
   # Rebuild.
   var out: list<string> = []
 
@@ -289,16 +342,32 @@ def FormatPipesSmart(first: number, last: number)
       for c in range(ncols)
         var cell = c < len(row) ? row[c] : ''
 
-        parts->add(
-          ' '
-          .. cell
-          .. repeat(
-               ' ',
-               widths[c]
-               - MarkdownDisplayWidth(cell)
-               + 1
-             )
-        )
+        var pad = widths[c] - MarkdownDisplayWidth(cell)
+
+        if aligns[c] ==# 'r'
+          parts->add(
+            repeat(' ', pad + 1)
+            .. cell
+            .. ' '
+          )
+
+        elseif aligns[c] ==# 'c'
+          var left = float2nr(floor(pad / 2.0))
+          var right = pad - left
+
+          parts->add(
+            repeat(' ', left + 1)
+            .. cell
+            .. repeat(' ', right + 1)
+          )
+
+        else
+          parts->add(
+            ' '
+            .. cell
+            .. repeat(' ', pad + 1)
+          )
+        endif
       endfor
     endif
 
