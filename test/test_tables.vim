@@ -245,3 +245,85 @@ END
   :%bw!
   Cleanup_testfile(src_name)
 enddef
+
+def g:Test_table_insert_table()
+  messages clear
+  v:errors = []
+  v:errmsg = ''
+
+  vnew
+  set ft=markdown
+  execute "MDETableInsert"
+
+  var expected_lines =<< END
+
+| a  | a  |
+|----|----|
+| a  | a  |
+|----|----|
+| a  | a  |
+|----|----|
+
+END
+
+  var actual_lines = getline(1, '$')
+
+  assert_equal(expected_lines, actual_lines)
+
+  # clean buffer
+  :%d _
+
+
+  # ----- Test with one argument
+  execute "MDETableInsert 5"
+
+  expected_lines =<< END
+
+| a  | a  |
+|----|----|
+| a  | a  |
+|----|----|
+| a  | a  |
+|----|----|
+| a  | a  |
+|----|----|
+| a  | a  |
+|----|----|
+
+END
+
+  actual_lines = getline(1, '$')
+
+  assert_equal(expected_lines, actual_lines)
+
+  :%d _
+
+  # ----- Test with two arguments
+  execute "MDETableInsert 4 4"
+
+  expected_lines =<< END
+
+| a  | a  | a  | a  |
+|----|----|----|----|
+| a  | a  | a  | a  |
+|----|----|----|----|
+| a  | a  | a  | a  |
+|----|----|----|----|
+| a  | a  | a  | a  |
+|----|----|----|----|
+
+END
+
+  actual_lines = getline(1, '$')
+
+  assert_equal(expected_lines, actual_lines)
+
+  #  ---- teardown tests ----
+  if !empty(v:errors) || !empty(v:errmsg)
+    echom "Test failed!"
+  else
+    echom "Test passed!"
+  endif
+
+  :%bw!
+enddef
