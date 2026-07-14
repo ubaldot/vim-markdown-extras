@@ -161,6 +161,30 @@ export def SumBlock()
   setreg('s', tmp)
 enddef
 
+export def InsertTable(dim: string)
+
+  # Arbitrary default values
+  var nrows = 3
+  var ncols = 2
+
+  if !empty(dim)
+    const tmp = split(dim)
+    nrows = str2nr(tmp[0])
+    ncols = str2nr(tmp[1])
+  endif
+
+  const row = '|' .. repeat(' a  |', ncols)
+  const delim = '|' .. repeat('----|', ncols)
+
+  var table = ['']
+  for ii in range(nrows)
+    extend(table, [row, delim])
+  endfor
+
+  appendbufline('%', line('.') - 1, table)
+  cursor(line('.') - 2 * nrows, 2)
+enddef
+
 # ======================
 #   TABLE FORMATTING
 # ======================

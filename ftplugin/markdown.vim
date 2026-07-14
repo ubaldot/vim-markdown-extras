@@ -30,6 +30,10 @@ command! -buffer -nargs=0 MDEConvertLinks links.ConvertLinks()
 # Jump back to the previous file
 nnoremap <buffer> <backspace> <ScriptCmd>funcs.GoToPrevVisitedBuffer()<cr>
 
+# Insert table
+
+command! -nargs=* MDETableInsert tables.InsertTable(<q-args>)
+
 # -------------- prettier ------------------------
 # TODO: you may want to use the same mechanism used in my personal
 # after/ftplugin/python.vim, where I set the local opfunc to
