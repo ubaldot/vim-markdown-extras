@@ -61,8 +61,9 @@ END
   vnew
   Generate_testfile(lines, src_name)
   exe $"edit {src_name}"
+  cursor(6, 3)
 
-  execute $"norm! \<Plug>MarkdownFormatTable"
+  execute $"norm! \<Plug>MarkdownTableFormat"
 
   var actual_lines = getline(1, '$')
   assert_equal(expected_lines, actual_lines)
@@ -85,7 +86,7 @@ def g:Test_insert_row_delimiter()
 
   const src_name = 'testfile.md'
   var lines =<< END
-# Test table alignment
+# Test InsertRowDelimiter
 
 | ciao  | notte          | quanto ti |
 |-------|----------------|-----------|
@@ -105,7 +106,7 @@ END
   cursor(6, 3)
 
   var expected_lines =<< trim END
-# Test table alignment
+# Test InsertRowDelimiter
 
 | ciao  | notte          | quanto ti |
 |-------|----------------|-----------|
@@ -185,4 +186,62 @@ def g:Test_compute_cell_width()
   endif
 
   :%bw!
+enddef
+
+def g:Test_table_text_alignment()
+  messages clear
+  v:errors = []
+  v:errmsg = ''
+
+  var lines =<< END
+# Test table alignment
+
+| ciao  | notte          | quanto ti |
+|:------:|---------------:|-----------|
+| ciao ciao ciao | super          | quanto ti |
+| sono  |                |           |
+|------:|:---------------|-----------|
+|       | come no mingle |           |
+|       | notte          |           |
+|       | banana         |           |
+| si si | apple          |           |
+|       | mango          |           |
+|-------|----------------|-----------|
+END
+
+  vnew
+  const src_name = 'testfile.md'
+  Generate_testfile(lines, src_name)
+  exe $"edit {src_name}"
+  cursor(6, 3)
+  execute $"norm! \<Plug>MarkdownTableFormat"
+
+  var expected_lines =<< END
+# Test table alignment
+
+|      ciao      |          notte | quanto ti |
+|:--------------:|---------------:|-----------|
+| ciao ciao ciao |          super | quanto ti |
+|      sono      |                |           |
+|---------------:|:---------------|-----------|
+|                | come no mingle |           |
+|                |          notte |           |
+|                |         banana |           |
+|     si si      |          apple |           |
+|                |          mango |           |
+|----------------|----------------|-----------|
+END
+
+
+  var actual_lines = getline(1, '$')
+  assert_equal(expected_lines, actual_lines)
+  #  ---- teardown tests ----
+  if !empty(v:errors) || !empty(v:errmsg)
+    echom "Test failed!"
+  else
+    echom "Test passed!"
+  endif
+
+  :%bw!
+  Cleanup_testfile(src_name)
 enddef

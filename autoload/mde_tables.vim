@@ -170,7 +170,7 @@ export def InsertTable(dim: string)
   if !empty(dim)
     const tmp = split(dim)
     nrows = str2nr(tmp[0])
-    ncols = str2nr(tmp[1])
+    ncols = len(tmp) > 1 ? str2nr(tmp[1]) : 2
   endif
 
   const row = '|' .. repeat(' a  |', ncols)
