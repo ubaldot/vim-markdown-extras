@@ -2,16 +2,27 @@
 
 [![asciicast](https://asciinema.org/a/UbDuIOCSPp1H1F4a7VIcZm5Qj.svg)](https://asciinema.org/a/UbDuIOCSPp1H1F4a7VIcZm5Qj)
 
-This plugin adds some spice to the bundled [vim-markdown][3], such as:
 
-- Easy toggle italic, bold, strike-through, code text-styles,
-- Easy links management,
-- Easy tables management,
-- Format with `gq` and on save with `prettier`,
-- Render with `pandoc`,
-- ... and more.
+vim-markdown-extras adds some spice to the built-in [vim-markdown][3] with:
 
-It is an excellent note taking plugin and markdown files editor.
+**Core editing:**
+- Toggle bold/italic/strikethrough with key mappings
+- Create, follow, autocomplete and preview links
+- Manage tables (align, format, insert/delete rows/columns)
+
+**Block operations:**
+- Toggle quoted and code blocks on/off
+- Format paragraphs with |gq| or automatically on save
+
+**Organization:**
+- Create multiple index files for different subjects or contexts
+- Toggle checkboxes in TODO lists with one keypress
+
+**Additional features:**
+- Render markdown to HTML with `pandoc`
+- Format text with `prettier`
+
+Perfect for note-taking! No special syntax required, just markdown.
 
 # Requirements
 
@@ -24,8 +35,7 @@ file shall include the following lines:
 ```
 
 The following is not mandatory, but you want to enable the rendering feature,
-you need to install [pandoc][1]. To automatically open the rendered files, Vim
-must have the `:Open` command.
+you need to install [pandoc][1].
 
 Along the same line, to enable the formatting feature, you need to install
 [prettier][2] or any other formatting program of your choice.

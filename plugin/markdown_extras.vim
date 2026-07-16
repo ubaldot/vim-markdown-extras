@@ -133,7 +133,8 @@ Links
 
 Tables (no text-object needed)
   S - sum block (only in visual mode)
-  F - table format
+  F - format table (normal mode)
+  | - format table (insert mode)
   _ - insert row delimiter
   C - change text in a cell
   A - append text in a cell

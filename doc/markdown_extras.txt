@@ -19,17 +19,27 @@ CONTENTS                                            *markdown-extras-contents*
 ==============================================================================
 INTRODUCTION                                    *markdown-extras-introduction*
 
-This plugin adds some spice to the bundled |ft-markdown-plugin|, such as:
+vim-markdown-extras adds some spice to the built-in |ft-markdown-plugin| with:
 
-- Easy toggle italic, bold, strike-through, code text-styles,
-- Easy to add/jump/remove/preview links,
-- Toggle quoted and code blocks,
-- Format with |gq| and on save,
-- Render with `pandoc`,
-- ... and more.
+Core editing:
+- Toggle bold/italic/strikethrough with key mappings
+- Create, follow, autocomplete and preview links
+- Manage tables (align, format, insert/delete rows/columns)
 
-TODO: table handling, new mappings ,a and ,s and insert <bar> and
-MDETableDelimiter
+Block operations:
+- Toggle quoted and code blocks on/off
+- Format paragraphs with |gq| or automatically on save
+
+Organization:
+- Create multiple index files for different subjects or contexts
+- Toggle checkboxes in TODO lists with one keypress
+
+Additional features:
+- Render markdown to HTML with `pandoc`
+- Format text with `prettier`
+
+Perfect for note-taking! No special syntax required, just markdown.
+
 ==============================================================================
 REQUIREMENTS                                    *markdown-extras-requirements*
 
@@ -55,7 +65,7 @@ TEXT-STYLES
 Open a markdown file and place the cursor on a word.
 Hit `<localleader>biw` to change the text-style inside-the-word
 to bold (`iw` is a text-objext).
-Then, while letting the cursor on the bold text, hit `<localleader>d`
+Then, while letting the cursor on the bold text, hit `<localleader>r`
 to remove it.
 
 Next, try to do the same with arbitrary motion or with some visual selections.
@@ -78,7 +88,7 @@ window.
 
 Next, create some new links and use `<localleader>n` and `<localleader>N` to
 locate their position in the current buffer. When on a link, hit
-`<localleader>d` to remove it.
+`<localleader>r` to remove it.
 
 Note: Although you can hit `<enter>` to link a word, more generlly you can
 use `<localleader>l` plus some motion to create links, like for example
@@ -88,12 +98,12 @@ You can also dynamically refer to links while typing. Go in insert mode and
 type `[` to see a list of all available links.
 
 Note: the links management only applies to links reported after the line with
-<!-- DO NOT REMOVE vim-markdown-extras references DO NOT REMOVE-->.
+`<!-- DO NOT REMOVE vim-markdown-extras references DO NOT REMOVE-->`.
 
 In case you are working on a markdown file with mixed inline and
 reference-style links, you can convert the former to the latter by using
 |:MDEConvertLinks| command. All the newly created links will be placed after
-the <!-- DO NOT REMOVE vim-markdown-extras references DO NOT REMOVE-->.
+the `<!-- DO NOT REMOVE vim-markdown-extras references DO NOT REMOVE-->`.
 
 LISTS
 
@@ -107,6 +117,7 @@ matter of customizing everything to your workflow, no? :)
 You can create lists as in a normal markdown file. However, note that the
 behavior of the |<enter>| key is hacked to mimic the behavior of Microsoft
 products and respect possible nesting.
+
 Although there are many reasons to stick with the
 bundled |ft-markdown-plugin| behavior when it comes to lists,
 my use-cases and preferences require a different behavior.
@@ -120,7 +131,6 @@ are rendered by setting the keys `empty_checkbox` and `marked_checkbox` of the
 `g:markdown_extras_config` dictionary, for example you can set
 `g:markdown_extras_config[marked_checkbox] = 0x2714`.
 The value shall be a valid Unicode point value.
-
 
 Note: If you have `vim-outline` installed, then you can use `<localleader>o` to
 display the unchecked items of the to-do list in a scratch buffer.
@@ -185,32 +195,46 @@ filling it with he various keys.
                             ['--css="path/to/my_css_style.css"', '--metadata',
                             'key=value']`
 <
-                          Such a value is copied to |b:pandoc_compiler_args|.
-  "use_default_mappings"  Set to |true| to use the default mappings as
+ "use_default_mappings"   Such a value is copied to |b:pandoc_compiler_args|.
+			  Set to |true| to use the default mappings as
                           described in |markdown-extras-mappings|.
                           Default |true|.
+
         "use_prettier"    Set to |true| if you want to use `prettier` formatter.
                           `prettier` needs to be installed separately.
                           Default |true|.
+
         "use_nerd_fonts"  To set eye-candy check-boxes. Require some nerd-font
-                          installed. Default |false|.
+                          installed.
+			  Default |false|.
+
         "smart_textstyle" Whenever possible, text styles are kept
-                          consistent. Default |true|.
+                          consistent.
+			  Default |true|.
+
         "empty_checkbox"  Glyphs to display for empty checkboxes. Requires
                           "use_nerdfonts" set to |true| and 'concealevel'
                           greater than 0.
+			  Default: 0x25A2
+
         "marked_checkbox" Glyphs to display for marked checkboxes. Requires
                           "use_nerdfonts" set to |true| and 'concealevel'
                           greater than 0.
+			  Default: 0x2714
+
         "fuzzy_search"    Fuzzy or exact search in the links popup.
                           Default: |true|.
+
 "path_to_url_register"    Register used when running the |:MDEPathToURL|
 			  command.
                           Default: 'p'.
+
         "hack_CR"         Set to |false| for the standard behavior of <CR>.
                           Default: |true|.
+
 "large_files_threshold"   If you have large files linked to your document,
-			  then you may experience lags or malfunctioning.
+			  then you may experience lags or malfunctioning in
+			  the preview function.
 			  This value sets the minimum value in bytes after
 			  which a file is considered large.
 			  If a file is considered large, then the behavior of
@@ -222,15 +246,18 @@ filling it with he various keys.
 			  is performed on every file.
 			  To disable this feature, set this value to 0.
                           Default: 0.
+
 "smart_table_format"      If |true| the table are formatted taking into
 			  account concealed characters. If on the one hand
 			  this makes the markdown source file more readable
 			  when |conceallevel| is not 0, on the other hand
 			  some markdown renderes may struggle in correctly
 			  render the table.
+			  Default: |true|
 
 'table_updates_in_window' If |true|, tables updates happen in a split
 			  windows. Otherwise, tables updates happen in popup.
+			  Default: |false|
 
 						*g:markdown_extras_index*
 g:markdown_extras_index   list<string>, list<list<string>> or dict<string>.
@@ -324,37 +351,29 @@ COMMANDS                                         *markdown-extras-commands*
                                                         *:MDEDefaultMappings*
 :MDEDefaultMappings Display default_mappings.
 
+                                                          *:MDETableInsert*
+:MDETableInsert [nrows, ncols]
+		    Insert a nrows x ncols table.
+		    Default: nrows = 3, ncols = 2.
                                                         *:MDEReleaseNotes*
 :MDEReleaseNotes    Show release notes.
+
+
 ==============================================================================
 MAPPINGS                                         *markdown-extras-mappings*
 
-Note: all the key-bindings that require a motion can also be used in visual
-mode. For example, you can set the following:
+
+Text styles~
+Text styles are Vim idiomatic. For example, if the following mappings are
+defined:
 >vim
  nnoremap <buffer> B <Plug>MarkdownBold
  xnoremap <buffer> B <Plug>MarkdownBold
 <
-and use e.g. `Bi(` in normal mode to make bold all the text inside the
-parenthesis, or you can visually select some text and the hit `B` to make the
+and e.g. `Bi(` is used in normal mode, then all the text inside the
+parenthesis becomes bold.
+Along the same line, by visually selecting some text and hitting `B` make the
 selection bold.
-
-<Plug>MarkdownToggleCheck         Toggle checkbox in to-do lists.
-                                  Default: `<localleader>x`
-
-<Plug>MarkdownAddLink             Create a link. The key-binding shall be
-                                  followed by a motion.
-                                  Default: `<localleader>l{motion}`
-
-<Plug>MarkdownGotoLinkForward     Jump to the next link in the current buffer.
-                                  Default: `<localleader>n`
-
-<Plug>MarkdownGotoLinkBackwards   Jump to the previous link in the current buffer.
-                                  Default: `<localleader>N`
-
-<Plug>MarkdownLinkPreview         Preview the link under cursor content in a
-                                  popup window.
-                                  Default: `K`
 
 <Plug>MarkdownBold                Change text style to bold with ** delimiter.
                                   Default: `<localleader>b{motion}`
@@ -389,6 +408,50 @@ selection bold.
 
 <Plug>MarkdownQuoteBlock          Set quote-block.
                                   Default: `<localleader>q{motion}`
+
+Links~
+The following can be used for creating mappings related to links.
+
+<Plug>MarkdownAddLink             Create a link. The key-binding shall be
+                                  followed by a motion.
+                                  Default: `<localleader>l{motion}`
+
+<Plug>MarkdownGotoLinkForward     Jump to the next link in the current buffer.
+                                  Default: `<localleader>n`
+
+<Plug>MarkdownGotoLinkBackwards   Jump to the previous link in the current buffer.
+                                  Default: `<localleader>N`
+
+<Plug>MarkdownLinkPreview         Preview the link under cursor content in a
+                                  popup window.
+                                  Default: `K`
+Tables~
+The following mappings can be used for creating mappings related to tables.
+Such mappings only work when the cursor is on a table.
+To better remember table mappings, the default settings use capital letters.
+
+<Plug>MarkdownTableAppend	  Append text to the current cell.
+                                  Default: `<localleader>A`
+
+<Plug>MarkdownTableChange	  Change the text  of the current cell.
+                                  Default: `<localleader>C`
+
+<Plug>MarkdownTableFormat	  Format table.
+                                  Default:
+				   - normal mode: `<localleader>F`
+				   - insert mode: `<bar>`
+
+<Plug>MarkdownTableInsertRowDelimiter
+				  Insert row delimiter.
+                                  Default: `<localleader>_`
+
+<Plug>MarkdownTableSumBlock	  Sum all the numbers in the visual selection
+				  and display the result in the command line.
+                                  Default: `<localleader>S`
+
+Misc~
+<Plug>MarkdownToggleCheck         Toggle checkbox in to-do lists.
+                                  Default: `<localleader>x`
 
 
 ==============================================================================
