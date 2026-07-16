@@ -47,6 +47,7 @@ Vim 9.0 is required.
 You must set a |localleader| key and your |vimrc| shall include the following
 lines:
 >vim
+  set nocompatible
   filetype indent plugin on
   syntax on
 <
@@ -58,109 +59,109 @@ formatting program of your choice.
 ==============================================================================
 USAGE                                            *markdown-extras-usage*
 
-To best way to describe how to operate it, let's go through some examples.
+To best way to explain this plugin is through some examples.
 
 TEXT-STYLES
 
 Open a markdown file and place the cursor on a word.
 Hit `<localleader>biw` to change the text-style inside-the-word
-to bold (`iw` is a text-objext).
+to bold. Note that `iw` is a text-object.
 Then, while letting the cursor on the bold text, hit `<localleader>r`
 to remove it.
 
-Next, try to do the same with arbitrary motion or with some visual selections.
-For example, you can use `<localleader>sa(` for strike-through all the text
-delimited by parenthesis (provided that the cursor is located in a region
-delimited by parenthesis).
+Next, visually select some text and hit `<localleader>s`.
+To remove the strike-trhough, stay on the text and hit `<localleader>r`.
 
 See |markdown-extras-mappings| for all the possible text styles.
 
 LINKS
 
-Now, go on a word and hit |<enter>|. Select `Create new link` from the popup
-menu and point to an existing file or just type a new file name.
+Place the cursor on a word and hit |<enter>|.
+Select `Create new link` from the popup menu and point to an existing file
+or just type a new file name.
 If you created a new file, fill it in with some text and save it.
-Hit |<backspace>| to go back to the previous file and place the cursor to the
-newly created link. Hit |K|. Then, hit |<enter>| again to open the link.
+Hit |<backspace>| to go back to the previous file.
+
+Next, place the cursor on the newly created link. Hit |K|.
+Then, hit |<enter>| again to open the link.
 The link can also be external URL:s, e.g. `https://example.com`.
 If the link is a file, then |<S-CR>| open it in a vertical split
 window.
 
-Next, create some new links and use `<localleader>n` and `<localleader>N` to
+Next, create few links and use `<localleader>n` and `<localleader>N` to
 locate their position in the current buffer. When on a link, hit
 `<localleader>r` to remove it.
 
-Note: Although you can hit `<enter>` to link a word, more generlly you can
-use `<localleader>l` plus some motion to create links, like for example
-`<localleader>lfa` (note that `fa` is a motion).
+You can also dynamically refer to links as you type.
+For example, to trigger links auto-completion when you hit `[`, add the
+following lines to your `~/.vim/after/ftplugin/markdown.vim` file:
 
-You can also dynamically refer to links while typing. Go in insert mode and
-type `[` to see a list of all available links.
+```vim
+    setlocal completeopt=menu,menuone,noselect
+    import autoload "mde_funcs.vim"
+    setlocal omnifunc=mde_funcs.OmniFunc
+    inoremap <buffer> ][ ][<C-x><C-o>
+```
+
+In your current document, type `[foo][` and a popup menu with all the
+available links shall appear.
+
+In case of a markdown file with mixed inline and
+reference-style links, you can convert the former to the latter by using
+|:MDEConvertLinks| command.
 
 Note: the links management only applies to links reported after the line with
 `<!-- DO NOT REMOVE vim-markdown-extras references DO NOT REMOVE-->`.
 
-In case you are working on a markdown file with mixed inline and
-reference-style links, you can convert the former to the latter by using
-|:MDEConvertLinks| command. All the newly created links will be placed after
-the `<!-- DO NOT REMOVE vim-markdown-extras references DO NOT REMOVE-->`.
-
 LISTS
 
-You can create lists or enumerations as usual. However, the behavior of the
-|<enter>| key is hacked to mimic the behavior of Microsoft products and
-respect possible nesting. Although there are many reasons to stick with the
-bundled |ft-markdown-plugin| behavior when it comes to lists,
-my use-cases and preferences require a different behavior. At the end Vim is a
-matter of customizing everything to your workflow, no? :)
-
-You can create lists as in a normal markdown file. However, note that the
-behavior of the |<enter>| key is hacked to mimic the behavior of Microsoft
-products and respect possible nesting.
-
-Although there are many reasons to stick with the
-bundled |ft-markdown-plugin| behavior when it comes to lists,
-my use-cases and preferences require a different behavior.
+You can create lists or enumerations as in any markdown file.
+However, the behavior of the |<enter>| key overrides the behavior of the
+underlying |vim-markdown| builtin plugin.
 If you want the standard |ft-markdown-plugin| behavior, then set
 `g:markdown_extras_config['hack_CR'] = false` in your `.vimrc`.
 
-You can create to-do lists as you would do in normal markdown, by starting
-lines with `- [ ]` . When in normal mode, you can check/uncheck the item in the
-to-do list with `<localleader>x`. You can change how check-boxes
+You can check/uncheck the items in to-do list with `<localleader>x`.
+It is possible to change how check-boxes
 are rendered by setting the keys `empty_checkbox` and `marked_checkbox` of the
-`g:markdown_extras_config` dictionary, for example you can set
-`g:markdown_extras_config[marked_checkbox] = 0x2714`.
+`g:markdown_extras_config` dictionary.
+For example you can set `g:markdown_extras_config[marked_checkbox] = 0x2714`.
 The value shall be a valid Unicode point value.
 
-Note: If you have `vim-outline` installed, then you can use `<localleader>o` to
+If you have `vim-outline` installed, then you can use `<localleader>o` to
 display the unchecked items of the to-do list in a scratch buffer.
+
+TABLES
+
+Run |:MDETableInsert| 2 3 to insert a 2x3 table placeholder.
+Edit any cell. Hit |<localleader>|F to format the table.
+
+Place the cursor on any cell and hit |<localleader>|C. Write some text and
+hit |<enter>|.
+
+Finally, put some numbers in some cells. Visually select the table and hit
+|<localleader>|S. Look at the command line.
+
+See |markdown-extras-mappings| for more functions.
+
+Note: delimiters are not part of standard markdown specifications. However,
+they makes tables management more powerful.
 
 FORMATTING
 
-|gq| will use `prettier`, provided that you have such program installed.
-That is, if you use |gq| plus motion, or if you visually select some text and
-then hit |gq|, then `prettier` will only prettify such a portion of text. You
-can also prettify the whole buffer on save, see |markdown-extras-config|.
+If available, |gq| use `prettier`, but you can use any format program by
+setting the key `formatprg` of the `g:markdown_extras_config` dictionary.
 
-In reality, you can also use other external programs.
-In that case the local value of |formatprg| will be set to the value
-of `g:markdown_extras_config['formatprg']`. See |markdown-extras-config| and
-|formatprg|.
-
-Note: `formatprg` key may be removed from the configuration dictionary in
+However,`formatprg` key may be removed from the configuration dictionary in
 future releases as one could directly set locally |formatprg|.
 
 RENDERING
 
 If you have `pandoc` installed, then |vim-markdown-extras| sets |compiler-pandoc|.
 You can then use |:make| to render your buffer with `pandoc`.
-See |compiler-pandoc| for more info.
 
-However, sometimes you just want to quickly render & open the rendered file
-with some fixed options for `pandoc`. For this reason, you can use |:MDEMake| to
-render and open the rendered file at once. Just type |:MDEMake| and hit |<tab>|
-for possible rendering targets. The rendered file will automatically open
-  provided that you your Vim version has the |:Open| command.
+To render and open the rendered file at once, you can use |:MDEMake| followed
+by |<tab>| to select a target.
 
 You can also pass arguments to `pandoc` via the key
 `pandoc_args` of the |g:markdown_extras_config| dictionary.
@@ -171,11 +172,12 @@ You could for example set the following:
     [$'--css="{$HOME}/dotfiles/my_css_style.css"',
     $'--lua-filter="{$HOME}/dotfiles/emoji-admonitions.lua"']
 <
+
 INDICES
 
-As the plugin can be used for note-taking, it may be desirable to access
-different indices in an ergonomic way. This can be achieved with the |:MDEIndex|
-command.
+In the same spirit of vimwiki, this plugin offer the chance of use different
+indices, selectable by a popup. See |:MDEIndex| for more info.
+
 
 ==============================================================================
 CONFIGURATION       *markdown-extras-configuration* *g:markdown_extras_config*
