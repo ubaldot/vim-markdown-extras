@@ -24,10 +24,21 @@ Perfect for note-taking!
 
 No special syntax required, just markdown.
 
-## Some videos
+## Demo
 
-[![asciicast_1](https://asciinema.org/a/UbDuIOCSPp1H1F4a7VIcZm5Qj.svg)](https://asciinema.org/a/UbDuIOCSPp1H1F4a7VIcZm5Qj)
-[![asciicast_2](https://asciinema.org/a/VTwEYH2aHuAXtEmm.svg)](https://asciinema.org/a/VTwEYH2aHuAXtEmm)
+<!-- First demo -->
+<p align="center">
+  <a href="https://asciinema.org/a/UbDuIOCSPp1H1F4a7VIcZm5Qj">
+    <img src="https://asciinema.org/a/UbDuIOCSPp1H1F4a7VIcZm5Qj.svg?size=large" alt="Demo 1" width="850"/>
+  </a>
+</p>
+
+<!-- Second demo -->
+<p align="center">
+  <a href="https://asciinema.org/a/VTwEYH2aHuAXtEmm">
+    <img src="https://asciinema.org/a/VTwEYH2aHuAXtEmm.svg?size=large" alt="Demo 2" width="850"/>
+  </a>
+</p>
 
 # Requirements
 
