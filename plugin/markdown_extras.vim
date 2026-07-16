@@ -21,42 +21,8 @@ g:loaded_markdown_extras = true
 
 const release_notes =<< END
 
-## Links
-Links must have a valid URL format to keep consistency with
-the markdown requirements. Hence, the following link:
-
-[1]: C:\User\John\My Documents\foo bar.txt
-
-shall be converted into:
-
-[1]: file:///C:/User/John/My%20Documents/foo%20bar.txt
-
-Please, update the links in your markdown files.
-
-💡 **TIP**:
-You can ask any LLM to convert the links for you.
-Typically, they are quite accurate.
-
-
-## g:markdown_extras_indices
-The global variable `g:markdown_extras_indices` has been renamed to
-`g:markdown_extras_index`.
-
-
-## :MDEIndices
-The command `:MDEIndices` has been renamed to `:MDEIndex` and can take
-an optional argument.
-For example you can call `:MDEIndices ['apple', 'banana', 'strawberry']`.
-If `:MDEIndices` is called without arguments, then the value of
-`g:markdown_extras_index` is used.
-Finally, such a command is now global.
-
-
-## :MDEPathToURL
-Convert the passed file name to a valid URL and store the result in a register.
-The default register is 'p' but that can be changed through the
-g:markdown_extras_config dictionary.
-
+## News
+Added tables support.
 
 Press <Esc> or 'q' to close this popup.
 END
@@ -105,29 +71,28 @@ def ShowDefaultMappings()
 const default_mappings =<< END
 
 <BS> - go to previous visited markdown buffer
-<enter> - create link on word under cursor
 K - markdown link preview
+<enter> - create/open link
+<s-enter> - open link in a split window
 
-The following mappings start with <localleader> and are generally followed by
-a text-object, e.g. <localleader>biw reads "bold inside the word under the cursor"
+The following mappings start with <localleader>:
 
 Text styles
-  b - bold
-  i - italic
-  s - strikethrough
-  u - underline
-  h - highlight
+  b{text-object} - bold
+  i{text-object} - italic
+  s{text-object} - strikethrough
+  u{text-object} - underline
+  h{text-object} - highlight
+  c{text-object} - code
+  f{text-object} - fenced code-block
 
 Miscellanea
   q - quote block
   x - Toggle checkbox
-
-Code
-  c - code
-  f - fenced code-block
+  o - Show empty checkbox items in a window (require vim-outline)
 
 Links
-  l - create link
+  l{text-object} - create link
   n - jump to next link
   N - jump to previous link
 
