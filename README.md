@@ -1,6 +1,5 @@
 # vim-Markdown-Extras (MDE)
 
-[![asciicast](https://asciinema.org/a/UbDuIOCSPp1H1F4a7VIcZm5Qj.svg)](https://asciinema.org/a/UbDuIOCSPp1H1F4a7VIcZm5Qj)
 
 This plugin adds some spice to the built-in [vim-markdown][3] with:
 
@@ -18,10 +17,17 @@ This plugin adds some spice to the built-in [vim-markdown][3] with:
 - Toggle check-boxes in TODO lists with one key-press
 
 **Additional features:**
-- Render markdown to HTML with `pandoc`
+- Render markdown to different formats with `pandoc`
 - Format text with `prettier` or with any formatter you want
 
-Perfect for note-taking! No special syntax required, just markdown.
+Perfect for note-taking!
+
+No special syntax required, just markdown.
+
+## Some videos
+
+[![asciicast_1](https://asciinema.org/a/UbDuIOCSPp1H1F4a7VIcZm5Qj.svg)](https://asciinema.org/a/UbDuIOCSPp1H1F4a7VIcZm5Qj)
+[![asciicast_2](https://asciinema.org/a/VTwEYH2aHuAXtEmm.svg)](https://asciinema.org/a/VTwEYH2aHuAXtEmm)
 
 # Requirements
 

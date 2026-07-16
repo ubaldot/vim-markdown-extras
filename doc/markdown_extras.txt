@@ -35,7 +35,7 @@ Organization:
 - Toggle checkboxes in TODO lists with one keypress
 
 Additional features:
-- Render markdown to HTML with `pandoc`
+- Render markdown to different formats with `pandoc`
 - Format text with `prettier`
 
 Perfect for note-taking! No special syntax required, just markdown.
