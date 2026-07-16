@@ -27,14 +27,14 @@ No special syntax required, just markdown.
 ## Demo
 
 <!-- First demo -->
-<p align="center">
+<p align="left">
   <a href="https://asciinema.org/a/UbDuIOCSPp1H1F4a7VIcZm5Qj">
     <img src="https://asciinema.org/a/UbDuIOCSPp1H1F4a7VIcZm5Qj.svg?size=large" alt="Demo" width="600"/>
   </a>
 </p>
 
 <!-- Second demo -->
-<p align="center">
+<p align="left">
   <a href="https://asciinema.org/a/VTwEYH2aHuAXtEmm">
     <img src="https://asciinema.org/a/VTwEYH2aHuAXtEmm.svg?size=large" alt="Table handling" width="600"/>
   </a>
