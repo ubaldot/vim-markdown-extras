@@ -246,7 +246,7 @@ def g:Test_CR_hacked_wrapped_lines()
   ]
 
   execute $"silent norm Go\<cr>-\<space>{long_line}\<cr>hello"
-  echom assert_equal(expected_lines_36_38, getline(36, 38))
+  assert_equal(expected_lines_36_38, getline(36, 38))
 
   :%bw!
   Cleanup_testfile(src_name_1)
@@ -274,7 +274,7 @@ def g:Test_CR_hacked_preserve_indent()
 
   execute $"silent norm Go\<cr>{test_string}\<cr>\<cr>ciao"
 
-  echom assert_equal(expected_lines_35_39, getline(35, 39))
+  assert_equal(expected_lines_35_39, getline(35, 39))
 
   :%bw!
   Cleanup_testfile(src_name_1)

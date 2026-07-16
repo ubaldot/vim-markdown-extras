@@ -117,12 +117,12 @@ def g:Test_textstyle_italic_regex()
   for ii in range(len(curpos))
     cursor(curpos[ii])
     actual_pos = searchpos(ITALIC_OPEN_REGEX, 'bW')
-    echom assert_equal(expected_pos_open[ii], actual_pos)
+    assert_equal(expected_pos_open[ii], actual_pos)
 
     # Close
     cursor(curpos[ii])
     actual_pos = searchpos(ITALIC_CLOSE_REGEX, 'cW')
-    echom assert_equal(expected_pos_close[ii], actual_pos)
+    assert_equal(expected_pos_close[ii], actual_pos)
   endfor
 
   # redraw!
@@ -148,12 +148,12 @@ def g:Test_textstyle_bold_regex()
   for ii in range(len(curpos))
     cursor(curpos[ii])
     actual_pos = searchpos(BOLD_OPEN_REGEX, 'bW')
-    echom assert_equal(expected_pos_open[ii], actual_pos)
+    assert_equal(expected_pos_open[ii], actual_pos)
 
     # Close
     cursor(curpos[ii])
     actual_pos = searchpos(BOLD_CLOSE_REGEX, 'cW')
-    echom assert_equal(expected_pos_close[ii], actual_pos)
+    assert_equal(expected_pos_close[ii], actual_pos)
   endfor
 
   # redraw!
@@ -179,12 +179,12 @@ def g:Test_textstyle_code_regex()
   for ii in range(len(curpos))
     cursor(curpos[ii])
     actual_pos = searchpos(CODE_OPEN_REGEX, 'bW')
-    echom assert_equal(expected_pos_open[ii], actual_pos)
+    assert_equal(expected_pos_open[ii], actual_pos)
 
     # Close
     cursor(curpos[ii])
     actual_pos = searchpos(CODE_CLOSE_REGEX, 'cW')
-    echom assert_equal(expected_pos_close[ii], actual_pos)
+    assert_equal(expected_pos_close[ii], actual_pos)
   endfor
 
   # # redraw!
@@ -211,12 +211,12 @@ def g:Test_textstyle_strikethrough_regex()
   for ii in range(len(curpos))
     cursor(curpos[ii])
     actual_pos = searchpos(STRIKE_OPEN_REGEX, 'bW')
-    echom assert_equal(expected_pos_open[ii], actual_pos)
+    assert_equal(expected_pos_open[ii], actual_pos)
 
     # Close
     cursor(curpos[ii])
     actual_pos = searchpos(STRIKE_CLOSE_REGEX, 'cW')
-    echom assert_equal(expected_pos_close[ii], actual_pos)
+    assert_equal(expected_pos_close[ii], actual_pos)
   endfor
 
   # # redraw!
@@ -243,12 +243,12 @@ def g:Test_textstyle_italic_u_regex()
   for ii in range(len(curpos))
     cursor(curpos[ii])
     actual_pos = searchpos(ITALIC_U_OPEN_REGEX, 'bW')
-    echom assert_equal(expected_pos_open[ii], actual_pos)
+    assert_equal(expected_pos_open[ii], actual_pos)
 
     # Close
     cursor(curpos[ii])
     actual_pos = searchpos(ITALIC_U_CLOSE_REGEX, 'cW')
-    echom assert_equal(expected_pos_close[ii], actual_pos)
+    assert_equal(expected_pos_close[ii], actual_pos)
   endfor
 
   # redraw!
@@ -275,13 +275,12 @@ def g:Test_textstyle_bold_u_regex()
   for ii in range(len(curpos))
     cursor(curpos[ii])
     actual_pos = searchpos(BOLD_U_OPEN_REGEX, 'bW')
-    echom actual_pos
-    echom assert_equal(expected_pos_open[ii], actual_pos)
+    assert_equal(expected_pos_open[ii], actual_pos)
 
     # Close
     cursor(curpos[ii])
     actual_pos = searchpos(BOLD_U_CLOSE_REGEX, 'cW')
-    echom assert_equal(expected_pos_close[ii], actual_pos)
+    assert_equal(expected_pos_close[ii], actual_pos)
   endfor
 
   # # redraw!
@@ -308,16 +307,20 @@ def g:Test_links_regex()
   for ii in range(len(curpos))
     cursor(curpos[ii])
     actual_pos = searchpos(LINK_OPEN_REGEX, 'bW')
-    echom assert_equal(expected_pos_open[ii], actual_pos)
+    assert_equal(expected_pos_open[ii], actual_pos)
 
     # Close
     cursor(curpos[ii])
     actual_pos = searchpos(LINK_CLOSE_REGEX, 'cW')
-    echom LINK_CLOSE_REGEX
-    echom actual_pos
-    echom assert_equal(expected_pos_close[ii], actual_pos)
+    assert_equal(expected_pos_close[ii], actual_pos)
   endfor
 
-  # :%bw!
-  # Cleanup_testfile(src_name_2)
+  # if !empty(v:errors) || !empty(v:errors)
+  #   echoerr "Test failed!"
+  # else
+  #   echom "Test passed!"
+  # endif
+
+  :%bw!
+  Cleanup_testfile(src_name_2)
 enddef

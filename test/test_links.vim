@@ -40,11 +40,11 @@ END
 
 
 def Generate_testfile(lines: list<string>, src_name: string)
-   writefile(lines, src_name)
+  writefile(lines, src_name)
 enddef
 
 def Cleanup_testfile(src_name: string)
-   delete(src_name)
+  delete(src_name)
 enddef
 
 # Tests start here
@@ -90,19 +90,19 @@ def g:Test_ConvertLinks()
 
   const expected_line_6 = 'And here [is][5] an inline link: [bar] [6].'
   const expected_line_9 =  'More text to demonstrate mixed links. '
-  .. 'Here is another inline link: [example][7].'
+    .. 'Here is another inline link: [example][7].'
   const expected_line_17 = '- Visit [this site][8] for details.'
   const expected_lines_24_27 = [
-            '[5]: foo_foo',
-            '[6]: ciao_ciao',
-            '[7]: https://example.com',
-            '[8]: https://somewhere.com'
-          ]
+    '[5]: foo_foo',
+    '[6]: ciao_ciao',
+    '[7]: https://example.com',
+    '[8]: https://somewhere.com'
+  ]
 
- echom  assert_equal(expected_line_6, getline(6))
- echom  assert_equal(expected_line_9, getline(9))
- echom  assert_equal(expected_line_17, getline(17))
- echom  assert_equal(expected_lines_24_27, getline(24, 27))
+  assert_equal(expected_line_6, getline(6))
+  assert_equal(expected_line_9, getline(9))
+  assert_equal(expected_line_17, getline(17))
+  assert_equal(expected_lines_24_27, getline(24, 27))
 
   :%bw!
   Cleanup_testfile(src_name_1)
@@ -155,19 +155,19 @@ enddef
 
 def g:Test_URL_path_conversions()
 
-const tests_win32 = [
-  ['file:///C:/Users/me/file.txt', 'C:\Users\me\file.txt'],
-  ['file:///C:/Users/me/My%20Documents/file%20name.txt', 'C:\Users\me\My Documents\file name.txt'],
-  ['file:///C:/path/with%20special%20chars/%23hash%26and%3Dequals.txt', 'C:\path\with special chars\#hash&and=equals.txt'],
-  ['file:///C:/Users/%E6%B5%8B%E8%AF%95/%E6%96%87%E4%BB%B6.txt', 'C:\Users\测试\文件.txt'],
-  ['file:///C:/file.txt', 'C:\file.txt'],
-  ['file://server/share/folder/file.txt', '\\server\share\folder\file.txt'],
-  ['file:///C:/Program%20Files/', 'C:\Program Files\'],
-  ['file:///C:/temp/file.txt/', 'C:\temp\file.txt\'],
-  ['file:///C:/', 'C:\'],
-  ['file:///C:/a/b/c/d/e/f/g/h/i/j/file.txt', 'C:\a\b\c\d\e\f\g\h\i\j\file.txt'],
-  ['file:///C:/Users/me/My%20Documents/file%20name.txt', 'C:\Users\me\My Documents\file name.txt'],
-]
+  const tests_win32 = [
+    ['file:///C:/Users/me/file.txt', 'C:\Users\me\file.txt'],
+    ['file:///C:/Users/me/My%20Documents/file%20name.txt', 'C:\Users\me\My Documents\file name.txt'],
+    ['file:///C:/path/with%20special%20chars/%23hash%26and%3Dequals.txt', 'C:\path\with special chars\#hash&and=equals.txt'],
+    ['file:///C:/Users/%E6%B5%8B%E8%AF%95/%E6%96%87%E4%BB%B6.txt', 'C:\Users\测试\文件.txt'],
+    ['file:///C:/file.txt', 'C:\file.txt'],
+    ['file://server/share/folder/file.txt', '\\server\share\folder\file.txt'],
+    ['file:///C:/Program%20Files/', 'C:\Program Files\'],
+    ['file:///C:/temp/file.txt/', 'C:\temp\file.txt\'],
+    ['file:///C:/', 'C:\'],
+    ['file:///C:/a/b/c/d/e/f/g/h/i/j/file.txt', 'C:\a\b\c\d\e\f\g\h\i\j\file.txt'],
+    ['file:///C:/Users/me/My%20Documents/file%20name.txt', 'C:\Users\me\My Documents\file name.txt'],
+  ]
   const tests_unix = [
     # Simple path
     ['file:///home/user/file.txt', '/home/user/file.txt'],
@@ -196,14 +196,14 @@ const tests_win32 = [
   # Test URL_to_path
   var path_converted = ''
   for [url, expected_path] in target_tests
-     path_converted = links.URLToPath(url)
-    echom assert_equal(expected_path, path_converted)
+    path_converted = links.URLToPath(url)
+    assert_equal(expected_path, path_converted)
   endfor
 
   # Test path_to_URL
   var url_converted = ''
   for [expected_url, path] in target_tests
-     url_converted = links.PathToURL(path)
+    url_converted = links.PathToURL(path)
     assert_equal(expected_url, url_converted)
   endfor
 enddef

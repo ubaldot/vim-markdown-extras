@@ -21,42 +21,8 @@ g:loaded_markdown_extras = true
 
 const release_notes =<< END
 
-## Links
-Links must have a valid URL format to keep consistency with
-the markdown requirements. Hence, the following link:
-
-[1]: C:\User\John\My Documents\foo bar.txt
-
-shall be converted into:
-
-[1]: file:///C:/User/John/My%20Documents/foo%20bar.txt
-
-Please, update the links in your markdown files.
-
-💡 **TIP**:
-You can ask any LLM to convert the links for you.
-Typically, they are quite accurate.
-
-
-## g:markdown_extras_indices
-The global variable `g:markdown_extras_indices` has been renamed to
-`g:markdown_extras_index`.
-
-
-## :MDEIndices
-The command `:MDEIndices` has been renamed to `:MDEIndex` and can take
-an optional argument.
-For example you can call `:MDEIndices ['apple', 'banana', 'strawberry']`.
-If `:MDEIndices` is called without arguments, then the value of
-`g:markdown_extras_index` is used.
-Finally, such a command is now global.
-
-
-## :MDEPathToURL
-Convert the passed file name to a valid URL and store the result in a register.
-The default register is 'p' but that can be changed through the
-g:markdown_extras_config dictionary.
-
+## News
+Added tables support.
 
 Press <Esc> or 'q' to close this popup.
 END
@@ -100,6 +66,63 @@ def ShowReleaseNotes()
   win_execute(popup_id, 'set conceallevel=2')
 enddef
 
+def ShowDefaultMappings()
+
+const default_mappings =<< END
+
+<BS> - go to previous visited markdown buffer
+K - markdown link preview
+<enter> - create/open link
+<s-enter> - open link in a split window
+
+The following mappings start with <localleader>:
+
+Text styles
+  b{text-object} - bold
+  i{text-object} - italic
+  s{text-object} - strikethrough
+  u{text-object} - underline
+  h{text-object} - highlight
+  c{text-object} - code
+  f{text-object} - fenced code-block
+
+Miscellanea
+  q - quote block
+  x - Toggle checkbox
+  o - Show empty checkbox items in a window (require vim-outline)
+
+Links
+  l{text-object} - create link
+  n - jump to next link
+  N - jump to previous link
+
+Tables (no text-object needed)
+  S - sum block (only in visual mode)
+  F - format table (normal mode)
+  | - format table (insert mode)
+  _ - insert row delimiter
+  C - change text in a cell
+  A - append text in a cell
+
+Remove all
+  r - remove text styles, highlight, links, etc.
+
+Press <Esc> or 'q' to close this popup.
+END
+
+  const title = ' vim-markdown-extras: default mappings'
+  const popup_options = {
+    border: [1, 1, 1, 1],
+    borderchars:  ['─', '│', '─', '│', '╭', '╮', '╯', '╰'],
+    scrollbar: false,
+    title: title,
+    filter: ReleaseNotesFilter
+  }
+
+  const popup_id = popup_create(default_mappings, popup_options)
+  win_execute(popup_id, 'set filetype=text')
+enddef
+
 # Error/Warnings triggered with new releases
 if exists('g:markdown_extras_indices') != 0
   utils.Echowarn("'g:markdown_extras_indices' has been renamed. "
@@ -111,6 +134,8 @@ augroup MARKDOWN_EXTRAS_OBSOLETE_COMMAND
   autocmd CmdUndefined MDEIndices utils.Echowarn("Command `:MDEIndices` "
         \ .. "has been renamed. See `:MDEReleaseNotes`")
 augroup END
+
+
 # --------------------------------
 
 augroup MARKDOWN_EXTRAS_VISITED_BUFFERS
@@ -176,6 +201,7 @@ if use_pandoc && !executable('pandoc')
 endif
 
 # PathToURL
+# TODO: there is a new function in new Vim releases
 def PathToURLReg(path: string)
   var path_to_url_register = 'p'
   if exists('g:markdown_extras_config') != 0
@@ -189,4 +215,5 @@ enddef
 
 command! -nargs=1 -complete=file MDEPathToURL PathToURLReg(<f-args>)
 command! -nargs=0 MDEReleaseNotes ShowReleaseNotes()
+command! -nargs=0 MDEDefaultMappings ShowDefaultMappings()
 command! -nargs=? MDEIndex indices.ShowIndex(<f-args>)
