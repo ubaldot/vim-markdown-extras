@@ -542,7 +542,7 @@ export def SetBlock(type: string = '')
   const open_block = constants.CODEBLOCK_OPEN_DICT
   const close_block = constants.CODEBLOCK_CLOSE_DICT
 
-# We set cA=1 and cB = len(geline(B)) so we pretend that we are working
+  # We set cA=1 and cB = strchars(getline(lB)) so we pretend that we are working
   # always line-wise
   var lA = line("'[")
   var cA = 1

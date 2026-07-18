@@ -28,7 +28,7 @@ Press <Esc> or 'q' to close this popup.
 END
 
 
-def ReleaseNotesFilter(id: number, key: string): bool
+def PopupFilter(id: number, key: string): bool
   # To handle the keys when release notes popup is visible
   # Close
   if key ==# 'q' || key ==# "\<esc>"
@@ -58,7 +58,7 @@ def ShowReleaseNotes()
     borderchars:  ['─', '│', '─', '│', '╭', '╮', '╯', '╰'],
     scrollbar: false,
     title: title,
-    filter: ReleaseNotesFilter
+    filter: PopupFilter
   }
 
   const popup_id = popup_create(release_notes, popup_options)
@@ -116,7 +116,7 @@ END
     borderchars:  ['─', '│', '─', '│', '╭', '╮', '╯', '╰'],
     scrollbar: false,
     title: title,
-    filter: ReleaseNotesFilter
+    filter: PopupFilter
   }
 
   const popup_id = popup_create(default_mappings, popup_options)

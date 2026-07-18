@@ -217,8 +217,6 @@ export def RefreshLinksDict(): dict<string>
           value = trim(getline(l + 1))
         endif
         links_dict[key] = value
-        # echom "key: " .. key
-        # echom "value: " .. value
         endif
       endif
     endfor
