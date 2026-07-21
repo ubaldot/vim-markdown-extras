@@ -11,6 +11,7 @@ const WaitForAssert = common.WaitForAssert
 
 # Test file 1
 const src_name_1 = 'testfile_1.md'
+const src_name_2 = 'testfile_links_sanitize.md'
 const lines_1 =<< trim END
     # Example Markdown with Mixed References
 
@@ -36,6 +37,19 @@ const lines_1 =<< trim END
     [2]: https://example.com/baz
     [3]: https://example.com/test
     [4]: https://example.com/more
+END
+
+const lines_2 =<< trim END
+    # Sanitize links test
+
+    A [foo][4] and [bar][2].
+    One more [foo][4].
+
+    <!-- DO NOT REMOVE vim-markdown-extras references DO NOT REMOVE-->
+    [1]: https://unused.com/one
+    [2]: https://example.com/bar
+    [3]: https://unused.com/three
+    [4]:https://example.com/foo
 END
 
 
@@ -106,6 +120,34 @@ def g:Test_ConvertLinks()
 
   :%bw!
   Cleanup_testfile(src_name_1)
+enddef
+
+def g:Test_SanitizeLinks()
+  vnew
+  Generate_testfile(lines_2, src_name_2)
+  exe $"edit {src_name_2}"
+
+  exe "MDESanitizeLinks"
+
+  assert_equal('A [foo][1] and [bar][2].', getline(3))
+  assert_equal('One more [foo][1].', getline(4))
+
+  const expected_refs = [
+    '[1]: https://example.com/foo',
+    '[2]: https://example.com/bar'
+  ]
+  assert_equal(expected_refs, getline(7, 8))
+  assert_equal('', getline(9))
+  assert_equal(0, search('^\s*\[4\]:', 'nW'))
+
+  const expected_dict = {
+    '1': 'https://example.com/foo',
+    '2': 'https://example.com/bar'
+  }
+  assert_equal(expected_dict, b:markdown_extras_links)
+
+  :%bw!
+  Cleanup_testfile(src_name_2)
 enddef
 
 def g:Test_RefreshLinksDict()

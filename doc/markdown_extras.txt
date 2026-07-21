@@ -292,6 +292,11 @@ COMMANDS                                         *markdown-extras-commands*
                                                         *:MDEConvertLinks*
 :MDEConvertLinks    Convert inline links into reference-style links.
 
+                                                       *:MDESanitizeLinks*
+:MDESanitizeLinks   Remove unreferenced numeric references from the
+		    references section and renumber used references
+		    sequentially from 1, updating in-text references.
+
                                                             *:MDEIndex*
 :MDEIndex [{args}]  Open a popup with what is specified in {args}.
 		    The type of {args} can be list<string>, list<list<string>>

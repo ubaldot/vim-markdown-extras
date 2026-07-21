@@ -183,8 +183,8 @@ def LastReferenceLine(): number
   # Return the last occurrence of reference of the form '[32]: ...'
   const saved_curpos = getcursorcharpos()
   cursor('$', 1)
-  # Search backwards line starting with e.g. '[32]: '
-  const lastline = search('^\s*\[\d\+\]:\s\+', 'bW')
+  # Search backwards line starting with e.g. '[32]: ', allowing no space after :
+  const lastline = search('^\s*\[\d\+\]:\s*', 'bW')
   setpos('.', saved_curpos)
   return lastline
 enddef
@@ -513,6 +513,94 @@ export def ConvertLinks()
     endif
   endwhile
     winrestview(saved_view)
+enddef
+
+export def SanitizeLinks()
+  const references_line = search($'^{references_comment}', 'nw')
+  if references_line == 0
+    utils.Echowarn('References section not found')
+    return
+  endif
+
+  var reference_lines: list<number> = []
+  for lnum in range(references_line + 1, line('$'))
+    if getline(lnum) =~ '^\s*\[\d\+\]:\s*'
+      reference_lines->add(lnum)
+    endif
+  endfor
+
+  if empty(reference_lines)
+    b:markdown_extras_links = {}
+    return
+  endif
+
+  var references_dict: dict<string> = {}
+  for lnum in reference_lines
+    const ref = getline(lnum)
+    const key = ref->matchstr('\[\zs\d\+\ze\]')
+    if !empty(key)
+      var value = ref->matchstr('\[\d\+]:\s*\zs.*')
+      if empty(value) && lnum < line('$')
+        value = trim(getline(lnum + 1))
+      endif
+      references_dict[key] = value
+    endif
+  endfor
+  var used_ids: list<number> = []
+  const usage_pattern = '\v\[[^][]+\]\[\zs\d+\ze\]'
+
+  if references_line > 1
+    for lnum in range(1, references_line - 1)
+      const ltxt = getline(lnum)
+      var start_col = 0
+      while true
+        const used_id = matchstr(ltxt, usage_pattern, start_col)
+        if empty(used_id)
+          break
+        endif
+        if has_key(references_dict, used_id)
+            && index(used_ids, str2nr(used_id)) == -1
+          used_ids->add(str2nr(used_id))
+        endif
+        start_col = matchend(ltxt, usage_pattern, start_col)
+      endwhile
+    endfor
+  endif
+
+  var id_map: dict<string> = {}
+  var new_reference_lines: list<string> = []
+  var next_id = 1
+  for old_id in used_ids
+    const old_id_str = $'{old_id}'
+    id_map[old_id_str] = $'{next_id}'
+    new_reference_lines->add($'[{next_id}]: {references_dict[old_id_str]}')
+    next_id += 1
+  endfor
+
+  const saved_view = winsaveview()
+  if references_line > 1
+    for lnum in range(1, references_line - 1)
+      const old_line = getline(lnum)
+      const new_line = old_line->substitute(
+        '\v(\[[^][]+\]\[)(\d+)(\])',
+        '\=submatch(1) .. get(id_map, submatch(2), submatch(2)) .. submatch(3)',
+        'g'
+      )
+      if new_line != old_line
+        setline(lnum, new_line)
+      endif
+    endfor
+  endif
+
+  for lnum in copy(reference_lines)->reverse()
+    deletebufline('%', lnum)
+  endfor
+  if !empty(new_reference_lines)
+    append(references_line, new_reference_lines)
+  endif
+  winrestview(saved_view)
+
+  b:markdown_extras_links = RefreshLinksDict()
 enddef
 
 
