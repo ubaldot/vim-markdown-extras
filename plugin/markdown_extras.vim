@@ -22,7 +22,7 @@ g:loaded_markdown_extras = true
 const release_notes =<< END
 
 ## News
-Added tables support.
+Added possibility to yank/delete/past links.
 
 Press <Esc> or 'q' to close this popup.
 END
