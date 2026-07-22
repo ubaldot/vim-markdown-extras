@@ -266,7 +266,12 @@ filling it with he various keys.
 			  this makes the markdown source file more readable
 			  when |conceallevel| is not 0, on the other hand
 			  some markdown renderes may struggle in correctly
-			  render the table.
+			  render the table. Also, internal delimiter rows
+			  (visual separators inside a table body) are
+			  preserved as-is.
+			  Note: this is only a visual-preservation feature.
+			  Cell helpers still assume regular markdown table
+			  geometry (no real rowspan/colspan semantics).
 			  Default: |true|
 
 'table_updates_in_window' If |true|, tables updates happen in a split

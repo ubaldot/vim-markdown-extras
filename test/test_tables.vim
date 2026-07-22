@@ -327,3 +327,60 @@ END
 
   :%bw!
 enddef
+
+def g:Test_smart_format_preserve_internal_visual_delimiter()
+  messages clear
+  v:errors = []
+  v:errmsg = ''
+
+  const src_name = 'testfile.md'
+  const lines =<< trim END
+# Test smart table delimiter preservation
+
+| ciao | notte |
+|------|-------|
+| a    | b     |
+|---|--|
+| xx   | yy    |
+|------|-------|
+END
+
+  var old_cfg = {}
+  const had_cfg = exists('g:markdown_extras_config') != 0
+  if had_cfg
+    old_cfg = copy(g:markdown_extras_config)
+  endif
+  if !had_cfg
+    g:markdown_extras_config = {}
+  endif
+  g:markdown_extras_config['smart_table_format'] = true
+
+  vnew
+  Generate_testfile(lines, src_name)
+  exe $"edit {src_name}"
+  cursor(6, 3)
+  execute $"norm! \<Plug>MarkdownTableFormat"
+
+  const expected_lines =<< trim END
+# Test smart table delimiter preservation
+
+| ciao | notte |
+|------|-------|
+| a    | b     |
+|---|--|
+| xx   | yy    |
+|------|-------|
+END
+
+  var actual_lines = getline(1, '$')
+  assert_equal(expected_lines, actual_lines)
+
+  if had_cfg
+    g:markdown_extras_config = old_cfg
+  else
+    unlet g:markdown_extras_config
+  endif
+
+  :%bw!
+  Cleanup_testfile(src_name)
+enddef

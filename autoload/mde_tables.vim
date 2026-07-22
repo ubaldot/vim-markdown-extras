@@ -307,10 +307,19 @@ def MarkdownDisplayWidth(text: string): number
 enddef
 
 def FormatPipesSmart(first: number, last: number)
+  var lines = getline(first, last)
   var rows: list<list<string>> = []
 
-  for line in getline(first, last)
+  for line in lines
     rows->add(SplitRow(line))
+  endfor
+
+  var first_delim_idx = -1
+  for [idx, row] in items(rows)
+    if IsDelimiterRow(row)
+      first_delim_idx = idx
+      break
+    endif
   endfor
 
   var ncols = 0
@@ -340,10 +349,17 @@ def FormatPipesSmart(first: number, last: number)
   # Rebuild.
   var out: list<string> = []
 
-  for row in rows
+  for [row_idx, row] in items(rows)
     var parts: list<string> = []
 
     if IsDelimiterRow(row)
+      # Keep internal visual separators untouched. Only normalize the first
+      # delimiter row, which is the markdown alignment row.
+      if row_idx != first_delim_idx
+        out->add(lines[row_idx])
+        continue
+      endif
+
       for c in range(ncols)
         var cell = c < len(row) ? row[c] : ''
 
