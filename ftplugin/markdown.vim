@@ -172,6 +172,51 @@ if empty(maparg('<Plug>MarkdownLinkPreview'))
         \  <ScriptCmd>links.PreviewPopup()<cr>
 endif
 
+if empty(maparg('<Plug>MarkdownLinkYankFirstRegister'))
+  noremap <script> <buffer> <Plug>MarkdownLinkYankFirstRegister
+        \ <ScriptCmd>links.LinkYank('link_first_register')<cr>
+endif
+
+if empty(maparg('<Plug>MarkdownLinkYankSecondRegister'))
+  noremap <script> <buffer> <Plug>MarkdownLinkYankSecondRegister
+        \ <ScriptCmd>links.LinkYank('link_second_register')<cr>
+endif
+
+if empty(maparg('<Plug>MarkdownLinkYankThirdRegister'))
+  noremap <script> <buffer> <Plug>MarkdownLinkYankThirdRegister
+        \ <ScriptCmd>links.LinkYank('link_third_register')<cr>
+endif
+
+if empty(maparg('<Plug>MarkdownLinkDeleteFirstRegister'))
+  noremap <script> <buffer> <Plug>MarkdownLinkDeleteFirstRegister
+        \ <ScriptCmd>links.LinkDelete('link_first_register')<cr>
+endif
+
+if empty(maparg('<Plug>MarkdownLinkDeleteSecondRegister'))
+  noremap <script> <buffer> <Plug>MarkdownLinkDeleteSecondRegister
+        \ <ScriptCmd>links.LinkDelete('link_second_register')<cr>
+endif
+
+if empty(maparg('<Plug>MarkdownLinkDeleteThirdRegister'))
+  noremap <script> <buffer> <Plug>MarkdownLinkDeleteThirdRegister
+        \ <ScriptCmd>links.LinkDelete('link_third_register')<cr>
+endif
+
+if empty(maparg('<Plug>MarkdownLinkPasteFirstRegister'))
+  noremap <script> <buffer> <Plug>MarkdownLinkPasteFirstRegister
+        \ <ScriptCmd>links.LinkPaste('link_first_register')<cr>
+endif
+
+if empty(maparg('<Plug>MarkdownLinkPasteSecondRegister'))
+  noremap <script> <buffer> <Plug>MarkdownLinkPasteSecondRegister
+        \ <ScriptCmd>links.LinkPaste('link_second_register')<cr>
+endif
+
+if empty(maparg('<Plug>MarkdownLinkPasteThirdRegister'))
+  noremap <script> <buffer> <Plug>MarkdownLinkPasteThirdRegister
+        \ <ScriptCmd>links.LinkPaste('link_third_register')<cr>
+endif
+
 # Text styles
 var Surround = utils.SurroundSmart
 if exists('g:markdown_extras_config')
@@ -400,6 +445,24 @@ if use_default_mappings
   if !hasmapto('<Plug>MarkdownGotoLinkBackwards')
     if empty(mapcheck('<localleader>N', 'n', 1))
       nnoremap <buffer> <silent> <localleader>N <Plug>MarkdownGotoLinkBackwards
+    endif
+  endif
+
+  if !hasmapto('<Plug>MarkdownLinkYankFirstRegister')
+    if empty(mapcheck('<localleader>y', 'n', 1))
+      nnoremap <buffer> <silent> <localleader>y <Plug>MarkdownLinkYankFirstRegister
+    endif
+  endif
+
+  if !hasmapto('<Plug>MarkdownLinkDeleteFirstRegister')
+    if empty(mapcheck('<localleader>d', 'n', 1))
+      nnoremap <buffer> <silent> <localleader>d <Plug>MarkdownLinkDeleteFirstRegister
+    endif
+  endif
+
+  if !hasmapto('<Plug>MarkdownLinkPasteFirstRegister')
+    if empty(mapcheck('<localleader>p', 'n', 1))
+      nnoremap <buffer> <silent> <localleader>p <Plug>MarkdownLinkPasteFirstRegister
     endif
   endif
 

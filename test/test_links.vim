@@ -52,6 +52,34 @@ const lines_2 =<< trim END
     [4]:https://example.com/foo
 END
 
+const src_name_3 = 'testfile_link_target.md'
+const lines_3 =<< trim END
+    # Destination file
+
+    Paste here: 
+
+    <!-- DO NOT REMOVE vim-markdown-extras references DO NOT REMOVE-->
+    [1]: https://example.com/bar
+END
+
+const src_name_4 = 'testfile_link_target_reuse.md'
+const lines_4 =<< trim END
+    # Destination file
+
+    Reuse here: 
+
+    <!-- DO NOT REMOVE vim-markdown-extras references DO NOT REMOVE-->
+    [9]: https://example.com/baz
+END
+
+const src_name_5 = 'testfile_link_multibyte.md'
+const lines_5 =<< trim END
+    [Björn Mårdberg][14]
+
+    <!-- DO NOT REMOVE vim-markdown-extras references DO NOT REMOVE-->
+    [14]: file:///C:/Users/yt75534/OneDrive%20-%20Volvo%20Group/CabClimate/one_to_one/BjornM/BjornM.md
+END
+
 
 def Generate_testfile(lines: list<string>, src_name: string)
   writefile(lines, src_name)
@@ -248,4 +276,107 @@ def g:Test_URL_path_conversions()
     url_converted = links.PathToURL(path)
     assert_equal(expected_url, url_converted)
   endfor
+enddef
+
+def g:Test_LinkYankPaste_default_register()
+  var old_cfg = {}
+  const had_cfg = exists('g:markdown_extras_config') != 0
+  if had_cfg
+    old_cfg = copy(g:markdown_extras_config)
+  endif
+  g:markdown_extras_config = {}
+
+  vnew
+  Generate_testfile(lines_1, src_name_1)
+  exe $"edit {src_name_1}"
+  cursor(5, 36)
+  links.LinkYank('link_first_register')
+  assert_true(!empty(getreg('a')))
+
+  Generate_testfile(lines_3, src_name_3)
+  exe $"edit {src_name_3}"
+  cursor(3, charcol('$'))
+  links.LinkPaste('link_first_register')
+
+  assert_equal('Paste here: [foo][2]', getline(3))
+  assert_equal('[2]: https://example.com/foo', getline(7))
+
+  if had_cfg
+    g:markdown_extras_config = old_cfg
+  else
+    unlet g:markdown_extras_config
+  endif
+
+  :%bw!
+  Cleanup_testfile(src_name_1)
+  Cleanup_testfile(src_name_3)
+enddef
+
+def g:Test_LinkDeleteAndPaste_configured_register()
+  var old_cfg = {}
+  const had_cfg = exists('g:markdown_extras_config') != 0
+  if had_cfg
+    old_cfg = copy(g:markdown_extras_config)
+  endif
+  g:markdown_extras_config = {link_second_register: 'z'}
+
+  vnew
+  Generate_testfile(lines_1, src_name_1)
+  exe $"edit {src_name_1}"
+  cursor(7, 38)
+  links.LinkDelete('link_second_register')
+  assert_equal('Another reference-style link: .', getline(7))
+
+  Generate_testfile(lines_4, src_name_4)
+  exe $"edit! {src_name_4}"
+  cursor(3, charcol('$'))
+  links.LinkPaste('link_second_register')
+
+  assert_equal('Reuse here: [baz][9]', getline(3))
+  assert_equal(6, line('$'))
+
+  if had_cfg
+    g:markdown_extras_config = old_cfg
+  else
+    unlet g:markdown_extras_config
+  endif
+
+  :%bw!
+  Cleanup_testfile(src_name_1)
+  Cleanup_testfile(src_name_4)
+enddef
+
+def g:Test_LinkYank_multibyte_reference()
+  var old_cfg = {}
+  const had_cfg = exists('g:markdown_extras_config') != 0
+  if had_cfg
+    old_cfg = copy(g:markdown_extras_config)
+  endif
+  g:markdown_extras_config = {}
+
+  vnew
+  Generate_testfile(lines_5, src_name_5)
+  exe $"edit {src_name_5}"
+  const pos = searchpos('Björn', 'nW')
+  cursor(pos[0], pos[1] + 2)
+  links.LinkYank('link_first_register')
+  assert_true(!empty(getreg('a')))
+
+  Generate_testfile(lines_3, src_name_3)
+  exe $"edit {src_name_3}"
+  cursor(3, charcol('$'))
+  links.LinkPaste('link_first_register')
+
+  assert_equal('Paste here: [Björn Mårdberg][2]', getline(3))
+  assert_equal('[2]: file:///C:/Users/yt75534/OneDrive%20-%20Volvo%20Group/CabClimate/one_to_one/BjornM/BjornM.md', getline(7))
+
+  if had_cfg
+    g:markdown_extras_config = old_cfg
+  else
+    unlet g:markdown_extras_config
+  endif
+
+  :%bw!
+  Cleanup_testfile(src_name_5)
+  Cleanup_testfile(src_name_3)
 enddef

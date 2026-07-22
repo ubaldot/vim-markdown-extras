@@ -231,6 +231,18 @@ filling it with he various keys.
 			  command.
                           Default: 'p'.
 
+"link_first_register"     Register used by link yank/delete/paste mappings
+			  targeting the first link register.
+			  Default: 'a'.
+
+"link_second_register"    Register used by link yank/delete/paste mappings
+			  targeting the second link register.
+			  Default: 'b'.
+
+"link_third_register"     Register used by link yank/delete/paste mappings
+			  targeting the third link register.
+			  Default: 'c'.
+
         "hack_CR"         Set to |false| for the standard behavior of <CR>.
                           Default: |true|.
 
@@ -404,7 +416,7 @@ selection bold.
                                   Default: `<localleader>u{motion}`
 
 <Plug>MarkdownRemove              Remove text-styles, links, highlights, etc.
-                                  Default: `<localleader>d`
+                                  Default: `<localleader>r`
 
 <Plug>MarkdownAddHighlight        Highlight text. Note highlighting is not
                                   persistent.
@@ -432,6 +444,70 @@ The following can be used for creating mappings related to links.
 <Plug>MarkdownLinkPreview         Preview the link under cursor content in a
                                   popup window.
                                   Default: `K`
+
+<Plug>MarkdownLinkYankFirstRegister
+				  Yank the link under cursor into the register
+				  configured by
+				  |g:markdown_extras_config|['link_first_register'].
+                                  Default: `<localleader>y`
+				  Example:
+				  >vim
+				    g:markdown_extras_config = {}
+				    g:markdown_extras_config['link_first_register'] = 'a'
+				    nnoremap <buffer> <localleader>ay <Plug>MarkdownLinkYankFirstRegister
+<
+				  In this example, typing `<localleader>ay` yanks
+				  the current link into register `a`.
+
+<Plug>MarkdownLinkYankSecondRegister
+				  Yank the link under cursor into the register
+				  configured by
+				  |g:markdown_extras_config|['link_second_register'].
+                                  Default: None
+
+<Plug>MarkdownLinkYankThirdRegister
+				  Yank the link under cursor into the register
+				  configured by
+				  |g:markdown_extras_config|['link_third_register'].
+                                  Default: None
+
+<Plug>MarkdownLinkDeleteFirstRegister
+				  Delete the link under cursor and store it in the
+				  register configured by
+				  |g:markdown_extras_config|['link_first_register'].
+                                  Default: `<localleader>d`
+
+<Plug>MarkdownLinkDeleteSecondRegister
+				  Delete the link under cursor and store it in the
+				  register configured by
+				  |g:markdown_extras_config|['link_second_register'].
+                                  Default: None
+
+<Plug>MarkdownLinkDeleteThirdRegister
+				  Delete the link under cursor and store it in the
+				  register configured by
+				  |g:markdown_extras_config|['link_third_register'].
+                                  Default: None
+
+<Plug>MarkdownLinkPasteFirstRegister
+				  Paste the yanked link from the register
+				  configured by
+				  |g:markdown_extras_config|['link_first_register'].
+				  References are updated in the destination
+				  buffer when needed.
+                                  Default: `<localleader>p`
+
+<Plug>MarkdownLinkPasteSecondRegister
+				  Paste the yanked link from the register
+				  configured by
+				  |g:markdown_extras_config|['link_second_register'].
+                                  Default: None
+
+<Plug>MarkdownLinkPasteThirdRegister
+				  Paste the yanked link from the register
+				  configured by
+				  |g:markdown_extras_config|['link_third_register'].
+                                  Default: None
 Tables~
 The following mappings can be used for creating mappings related to tables.
 Such mappings only work when the cursor is on a table.

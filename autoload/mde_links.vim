@@ -19,6 +19,12 @@ var large_files_threshold: number
 
 const references_comment =
   "<!-- DO NOT REMOVE vim-markdown-extras references DO NOT REMOVE-->"
+const LINK_REGISTER_PAYLOAD_PREFIX = 'mde-link:'
+const LINK_REGISTER_DEFAULTS = {
+  link_first_register: 'a',
+  link_second_register: 'b',
+  link_third_register: 'c',
+}
 
 # To account for multi-byte chars, I had to spend one afternoon with chat GPT
 # to understand how the URLToPath and PathToURL function should look like.
@@ -360,6 +366,200 @@ export def IsLink(): dict<list<list<number>>>
   else
     return {}
   endif
+enddef
+
+def ResolveLinkRegister(register_config_key: string): string
+  var reg = has_key(LINK_REGISTER_DEFAULTS, register_config_key)
+    ? LINK_REGISTER_DEFAULTS[register_config_key]
+    : 'a'
+
+  if exists('g:markdown_extras_config')
+      && has_key(g:markdown_extras_config, register_config_key)
+      && !empty(g:markdown_extras_config[register_config_key])
+    reg = g:markdown_extras_config[register_config_key]
+  endif
+
+  return strcharpart(reg, 0, 1)
+enddef
+
+def SerializeLinkPayload(payload: dict<string>): string
+  return LINK_REGISTER_PAYLOAD_PREFIX .. json_encode(payload)
+enddef
+
+def DeserializeLinkPayload(payload: string): dict<any>
+  if payload !~ $'^{LINK_REGISTER_PAYLOAD_PREFIX}'
+    return {}
+  endif
+
+  try
+    const raw = payload->substitute($'^{LINK_REGISTER_PAYLOAD_PREFIX}', '', '')
+    const parsed = json_decode(raw)
+    if type(parsed) != v:t_dict
+        || !has_key(parsed, 'text')
+        || !has_key(parsed, 'link')
+        || empty(parsed['text'])
+        || empty(parsed['link'])
+      return {}
+    endif
+    return {text: parsed['text'], link: parsed['link']}
+  catch
+    return {}
+  endtry
+enddef
+
+def EnsureReferencesCommentLine()
+  if search($'^{references_comment}', 'nw') == 0
+      append(line('$'), ['', references_comment])
+  endif
+enddef
+
+def ResolveReferenceID(link_target: string): number
+  EnsureReferencesCommentLine()
+  b:markdown_extras_links = RefreshLinksDict()
+
+  const existing_link_ids = utils.KeysFromValue(b:markdown_extras_links, link_target)
+  if !empty(existing_link_ids)
+    return str2nr(existing_link_ids[0])
+  endif
+
+  var link_id = 1
+  if !empty(keys(b:markdown_extras_links))
+    link_id = keys(b:markdown_extras_links)->map((_, val) => str2nr(val))->max() + 1
+  endif
+  b:markdown_extras_links[$'{link_id}'] = link_target
+
+  const last_reference_line = LastReferenceLine()
+  const lastline = last_reference_line == 0 ? line('$') : last_reference_line
+  if lastline != 0
+    append(lastline, $'[{link_id}]: {link_target}')
+  endif
+
+  return link_id
+enddef
+
+def InsertReferenceLinkAtCursor(text: string, link_id: number)
+  const lnum = line('.')
+  const cnum = charcol('.')
+  const line_text = getline(lnum)
+  const link_markup = $'[{text}][{link_id}]'
+  const lhs = strcharpart(line_text, 0, cnum - 1)
+  const rhs = strcharpart(line_text, cnum - 1)
+  setline(lnum, lhs .. link_markup .. rhs)
+  setcursorcharpos(lnum, cnum + strchars(link_markup))
+enddef
+
+def FindLinkUnderCursor(): dict<any>
+  const line_text = getline('.')
+  const cursor_col = col('.')
+  const patterns = [
+    '\v\[[^][]+\]\s*\[\d+\]',
+    '\v\[[^][]+\]\s*\([^)]*\)',
+  ]
+
+  for pattern in patterns
+    var start_col = 0
+    while true
+      const match_info = matchstrpos(line_text, pattern, start_col)
+      const matched = match_info[0]
+      const start_idx = match_info[1]
+      const end_idx = match_info[2]
+      if start_idx < 0
+        break
+      endif
+
+      const in_interval = (start_idx + 1) <= cursor_col && cursor_col <= end_idx
+      if in_interval
+        if matched =~ '\v\]\s*\['
+          const parts = matchlist(matched, '\v^\[([^][]+)\]\s*\[(\d+)\]$')
+          if len(parts) > 2
+            b:markdown_extras_links = RefreshLinksDict()
+            const link_id = parts[2]
+            if has_key(b:markdown_extras_links, link_id)
+              return {
+                text: parts[1],
+                link: b:markdown_extras_links[link_id],
+                start: start_idx,
+                end: end_idx,
+              }
+            endif
+          endif
+        else
+          const parts = matchlist(matched, '\v^\[([^][]+)\]\s*\(([^)]*)\)$')
+          if len(parts) > 2
+            return {
+              text: parts[1],
+              link: parts[2],
+              start: start_idx,
+              end: end_idx,
+            }
+          endif
+        endif
+      endif
+
+      start_col = end_idx
+    endwhile
+  endfor
+
+  return {}
+enddef
+
+def DeleteLinkTokenAtCursor(): bool
+  const link_payload = FindLinkUnderCursor()
+  if empty(link_payload)
+    return false
+  endif
+
+  const line_text = getline('.')
+  const lhs = strpart(line_text, 0, link_payload['start'])
+  const rhs = strpart(line_text, link_payload['end'])
+  setline('.', lhs .. rhs)
+  return true
+enddef
+
+def ExtractLinkPayloadFromCursor(): dict<any>
+  const link_payload = FindLinkUnderCursor()
+  if empty(link_payload)
+    return {}
+  endif
+  return {text: link_payload['text'], link: link_payload['link']}
+enddef
+
+export def LinkYank(register_config_key: string)
+  const payload = ExtractLinkPayloadFromCursor()
+  if empty(payload)
+    utils.Echowarn('Cursor is not on a valid markdown link')
+    return
+  endif
+
+  const register = ResolveLinkRegister(register_config_key)
+  setreg(register, SerializeLinkPayload({text: payload['text'], link: payload['link']}))
+enddef
+
+export def LinkDelete(register_config_key: string)
+  const payload = ExtractLinkPayloadFromCursor()
+  if empty(payload)
+    utils.Echowarn('Cursor is not on a valid markdown link')
+    return
+  endif
+
+  const register = ResolveLinkRegister(register_config_key)
+  setreg(register, SerializeLinkPayload({text: payload['text'], link: payload['link']}))
+  if !DeleteLinkTokenAtCursor()
+    utils.Echowarn('Could not delete current markdown link')
+  endif
+enddef
+
+export def LinkPaste(register_config_key: string)
+  const register = ResolveLinkRegister(register_config_key)
+  const payload = DeserializeLinkPayload(getreg(register))
+  if empty(payload)
+    utils.Echowarn($"Register '{register}' does not contain a yanked markdown link")
+    return
+  endif
+
+  const link_id = ResolveReferenceID(payload['link'])
+  InsertReferenceLinkAtCursor(payload['text'], link_id)
+  b:markdown_extras_links = RefreshLinksDict()
 enddef
 
 def IsBinary(link: string): bool

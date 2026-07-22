@@ -92,6 +92,18 @@ Next, create few links and use `<localleader>n` and `<localleader>N` to
 locate their position in the current buffer. When on a link, hit
 `<localleader>r` to remove it.
 
+You can also move links across markdown files:
+- `<localleader>y` yanks the current link to the first configured register.
+- `<localleader>d` yanks and deletes the current link.
+- `<localleader>p` pastes the yanked link and updates references in the target
+  buffer as needed.
+
+By default these operations use register `a`. You can configure three link
+registers with:
+`g:markdown_extras_config['link_first_register']`,
+`g:markdown_extras_config['link_second_register']`, and
+`g:markdown_extras_config['link_third_register']` (defaults: `a`, `b`, `c`).
+
 You can also dynamically refer to links as you type.
 For example, to trigger links auto-completion when you hit `[`, add the
 following lines to your `~/.vim/after/ftplugin/markdown.vim` file:
