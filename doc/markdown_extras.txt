@@ -517,6 +517,23 @@ Tables~
 The following mappings can be used for creating mappings related to tables.
 Such mappings only work when the cursor is on a table.
 To better remember table mappings, the default settings use capital letters.
+Cell-edit helpers (`<Plug>MarkdownTableChange` and
+`<Plug>MarkdownTableAppend`) only support regular table geometry (single-row,
+single-column cells). They do not support pseudo multirow/multicolumn visual
+layouts.
+
+Example of unsupported cell-edit layout:
+>md
+| a    |    a     |
+|------|------|---|
+|      | a    | a |
+|      |      |   |
+| a    |------|---|
+|      | a    | a |
+|------|------|---|
+<
+In such cases, edit the text manually and use table formatting only for visual
+preservation.
 
 <Plug>MarkdownTableAppend	  Append text to the current cell.
                                   Default: `<localleader>A`
