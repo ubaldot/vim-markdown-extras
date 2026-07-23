@@ -1,0 +1,1200 @@
+vim9script
+
+import autoload './mde_constants.vim' as constants
+import autoload './mde_utils.vim' as utils
+
+var main_id: number
+var prompt_id: number
+
+var prompt_cursor: string
+var prompt_sign: string
+var prompt_text: string
+
+var fuzzy_search: bool
+
+var popup_width: number
+var links_popup_opts: dict<any>
+
+var large_files_threshold: number
+
+const references_comment =
+  "<!-- DO NOT REMOVE vim-markdown-extras references DO NOT REMOVE-->"
+const LINK_REGISTER_PAYLOAD_PREFIX = 'mde-link:'
+const LINK_REGISTER_DEFAULTS = {
+  link_first_register: 'a',
+  link_second_register: 'b',
+  link_third_register: 'c',
+}
+
+# To account for multi-byte chars, I had to spend one afternoon with chat GPT
+# to understand how the URLToPath and PathToURL function should look like.
+
+def PercentDecode(s: string): string
+  var result = ''
+  var i = 0
+  while i < len(s)
+    if s[i] ==# '%'
+      var bytes = []
+      while i + 2 < len(s) && s[i] ==# '%'
+        var hex = strpart(s, i + 1, 2)
+        var n = str2nr(hex, 16)
+        if n < 0 || n > 255
+          break
+        endif
+        bytes->add(n)
+        i += 3
+      endwhile
+
+      if !empty(bytes)
+        # Convert list of bytes to blob, then decode blob to UTF-8 string
+        var decoded_list = list2blob(bytes)->blob2str({'encoding': 'utf-8'})
+        # blob2str returns a list of strings (split by newline bytes), join them safely
+        var decoded_str = join(decoded_list, "\n")
+        result ..= decoded_str
+      endif
+    else
+      result ..= s[i]
+      i += 1
+    endif
+  endwhile
+  return result
+enddef
+
+export def URLToPath(url: string): string
+  var rest = ''
+
+  # Windows:
+  if has('win32') || has('win64')
+    rest = substitute(url, '^file:', '', '')
+    # If it starts with a drive letter, like '///C:/', we remove the leading
+    # '///'. Otherwise it is a UNC (like \\server\foo\bar) but that is already set
+    if rest =~ '^///[A-Za-z]:/'
+      rest = substitute(rest, '^///', '', '')
+    endif
+  else
+    rest = substitute(url, '^file://', '', '')
+  endif
+
+  rest = PercentDecode(rest)
+
+  if has('win32') || has('win64')
+    # Convert forward slashes to backslashes on Windows
+    rest = substitute(rest, '/', '\\', 'g')
+  endif
+
+  return rest
+enddef
+
+export def PathToURL(path: string): string
+  var rest = ''
+  if has('win32') || has('win64')
+    rest = path->substitute('\\', '/', 'g')
+  else
+    rest = path
+  endif
+
+  var utf8 = iconv(rest, &encoding, 'utf-8')
+  var bytes = str2blob([utf8])
+  if len(bytes) > 0 && bytes[len(bytes) - 1] == 0x0A
+    call remove(bytes, len(bytes) - 1)
+  endif
+
+  var allowed = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_.~/:'
+  var encoded = ''
+  for val in bytes
+    if stridx(allowed, nr2char(val)) >= 0
+      encoded ..= nr2char(val)
+    else
+      encoded ..= printf('%%%02X', val)
+    endif
+  endfor
+
+  if has('win32') || has('win64')
+    if rest =~ '^[A-Za-z]:/'
+      return 'file:///' .. encoded
+    else
+      return 'file:' .. encoded
+    endif
+  else
+    return 'file://' .. encoded
+  endif
+enddef
+
+def InitScriptLocalVars()
+  # Set script-local variables
+  main_id = -1
+  prompt_id = -1
+
+  prompt_cursor = '▏'
+  prompt_sign = '> '
+  prompt_text = ''
+
+  if exists('g:markdown_extras_config')
+      && has_key(g:markdown_extras_config, 'fuzzy_search')
+    fuzzy_search = g:markdown_extras_config['fuzzy_search']
+  else
+    fuzzy_search = true
+  endif
+
+  if exists('g:markdown_extras_config')
+      && has_key(g:markdown_extras_config, 'large_files_threshold')
+      && g:markdown_extras_config['large_files_threshold'] > 0
+    large_files_threshold = g:markdown_extras_config['large_files_threshold']
+  else
+    large_files_threshold = 0
+  endif
+
+  if empty(prop_type_get('PopupToolsMatched'))
+    prop_type_add('PopupToolsMatched', {highlight: 'WarningMsg'})
+  endif
+
+  popup_width = (&columns * 2) / 3
+  links_popup_opts = {
+      pos: 'center',
+      border: [1, 1, 1, 1],
+      borderchars:  ['─', '│', '─', '│', '├', '┤', '╯', '╰'],
+      minwidth: popup_width,
+      maxwidth: popup_width,
+      scrollbar: 0,
+      cursorline: 1,
+      mapping: 0,
+      wrap: 0,
+      drag: 0,
+    }
+enddef
+
+def GetFileSize(filename: string): number
+  var filesize = ''
+  # TODO: Using system() slow down significantly the opening and the file preview
+  if filereadable(filename)
+    if has('win32')
+      filesize = system('powershell -NoProfile -ExecutionPolicy Bypass -Command '
+        .. $'"(Get-Item \"{filename}\").length"')
+    elseif has('unix') && system('uname') =~ 'Darwin'
+      filesize = system($'stat -f %z {escape(filename, " ")}')
+    elseif has('unix')
+      filesize = system($'stat --format=%s {escape(filename, "  ")}')
+    else
+      utils.Echowarn($"Cannot determine the size of {filename}")
+      filesize = "-2"
+    endif
+  else
+    utils.Echoerr($"File {filename} is not readable")
+    filesize = "-1"
+  endif
+  return filesize->substitute('\n', '', 'g')->str2nr()
+enddef
+
+def LastReferenceLine(): number
+  # Return the last occurrence of reference of the form '[32]: ...'
+  const saved_curpos = getcursorcharpos()
+  cursor('$', 1)
+  # Search backwards line starting with e.g. '[32]: ', allowing no space after :
+  const lastline = search('^\s*\[\d\+\]:\s*', 'bW')
+  setpos('.', saved_curpos)
+  return lastline
+enddef
+
+export def RefreshLinksDict(): dict<string>
+  # Generate the b:markdown_extras_links by parsing the 'references_comment'
+  # Section.
+  #
+  # b:markdown_extras_links is a dict where the keys are numbers and the
+  # values are valid URLs, e.g. https://, file://, ...
+  #
+  # Note that URLs starting with file:// are converted back and forth from URL
+  # to local paths within the script.
+
+  # Cleanup the current b:markdown_extras_links
+  var links_dict = {}
+  const references_line = search($'^{references_comment}', 'nw')
+  # UBA to check
+  const last_reference_line = LastReferenceLine()
+  const lastline = last_reference_line == 0 ? line('$') : last_reference_line
+
+  if references_line != 0
+    for l in range(references_line + 1, lastline + 1)
+      var ref = getline(l)
+      if !empty(ref)
+        var key = ref->matchstr('\[\zs\d\+\ze\]')
+        if !empty(key)
+        var value = ref->matchstr('\[\d\+]:\s*\zs.*')
+        if empty(value)
+          value = trim(getline(l + 1))
+        endif
+        links_dict[key] = value
+        endif
+      endif
+    endfor
+  endif
+  return links_dict
+enddef
+
+export def SearchLink(backwards: bool = false)
+  const pattern = constants.LINK_OPEN_DICT['[']
+  if !backwards
+    search(pattern)
+  else
+    search(pattern, 'b')
+  endif
+enddef
+
+def GetLinkID(): number
+  # When user add a new link, it either create a new ID and return it or it
+  # just return an existing ID if the link already exists
+
+  b:markdown_extras_links = RefreshLinksDict()
+
+  var current_wildmenu = &wildmenu
+  set nowildmenu
+  var link = input("Create new link (you can use 'tab'): ", '', 'file')
+  if empty(link)
+    &wildmenu = current_wildmenu
+    return 0
+  endif
+  &wildmenu = current_wildmenu
+
+  if !IsURL(link)
+    link = PathToURL(fnamemodify(link, ':p'))
+  endif
+  var reference_line = search($'^{references_comment}', 'nw')
+  if reference_line == 0
+      append(line('$'), ['', references_comment])
+  endif
+  var link_line = search(link, 'nw')
+  var link_id = 0
+  if link_line == 0
+    # Entirely new link
+    link_id = keys(b:markdown_extras_links)->map('str2nr(v:val)')->max() + 1
+    b:markdown_extras_links[$'{link_id}'] = link
+    # If it is the first link ever, leave a blank line
+    if link_id == 1
+      append(line('$'), '')
+    endif
+    const last_reference_line = LastReferenceLine()
+    const lastline = last_reference_line == 0 ? line('$') : last_reference_line
+    if lastline != 0
+      append(lastline, $'[{link_id}]: {link}' )
+    endif
+  else
+    # Reuse existing link
+    var tmp = getline(link_line)->substitute('\v^\[(\d*)\].*', '\1', '')
+    link_id = str2nr(tmp)
+  endif
+  return link_id
+enddef
+
+export def IsURL(link: string): bool
+  for url_prefix in constants.URL_PREFIXES
+    if link =~ $'^{url_prefix}'
+      return true
+    endif
+  endfor
+    return false
+enddef
+
+def LinksPopupCallback(type: string,
+    popup_id: number,
+    idx: number,
+    match_id: number
+  )
+  if idx > 0
+    const selection = getbufline(winbufnr(popup_id), idx)[0]
+    var link_id = -1
+    if selection == "Create new link"
+      link_id = GetLinkID()
+      if link_id == 0
+        matchdelete(match_id)
+        return
+      endif
+    else
+      const keys_from_value =
+        utils.KeysFromValue(b:markdown_extras_links, selection)
+      # For some reason, b:markdown_extras_links may be empty or messed up
+      if empty(keys_from_value)
+        utils.Echoerr('Reference not found')
+        matchdelete(match_id)
+        return
+      endif
+      link_id = str2nr(keys_from_value[0])
+    endif
+
+    utils.SurroundSmart("markdownLinkText", type)
+
+    # add link value
+    search(']')
+    execute $'norm! a[{link_id}]'
+    if selection == "Create new link"
+      norm! F]h
+      if b:markdown_extras_links[link_id] =~ '^file://'
+          && !filereadable(URLToPath(b:markdown_extras_links[link_id]))
+        exe $'edit {b:markdown_extras_links[link_id]}'
+        # write
+      endif
+    endif
+  endif
+  matchdelete(match_id)
+enddef
+
+export def IsLink(): dict<list<list<number>>>
+  # If the word under cursor is a link, then it returns info about
+  # it. Otherwise it won't return anything.
+  const range_info = utils.IsInRange()
+  if !empty(range_info) && keys(range_info)[0] == 'markdownLinkText'
+    return range_info
+  elseif synIDattr(synID(line("."), charcol("."), 1), "name") == 'markdownUrl'
+    # Find beginning of the URL
+    var a = [line('.'), 1]
+    var b = searchpos(' ', 'nbW')
+    var start_pos = [0, 0]
+    if utils.IsLess(a, b) && b != [0, 0]
+      start_pos = [b[0], b[1] + 1]
+    else
+      start_pos = a
+    endif
+
+    # Find end of the URL
+    a = searchpos(' ', 'nW')
+    b = [line('.'), charcol('$') - 1]
+    var end_pos = [0, 0]
+    if utils.IsLess(a, b) && a != [0, 0]
+      end_pos = [a[0], a[1] - 1]
+    else
+      end_pos = b
+    endif
+    return {'markdownUrl': [start_pos, end_pos]}
+  else
+    return {}
+  endif
+enddef
+
+def ResolveLinkRegister(register_config_key: string): string
+  var reg = has_key(LINK_REGISTER_DEFAULTS, register_config_key)
+    ? LINK_REGISTER_DEFAULTS[register_config_key]
+    : 'a'
+
+  if exists('g:markdown_extras_config')
+      && has_key(g:markdown_extras_config, register_config_key)
+      && !empty(g:markdown_extras_config[register_config_key])
+    reg = g:markdown_extras_config[register_config_key]
+  endif
+
+  return strcharpart(reg, 0, 1)
+enddef
+
+def SerializeLinkPayload(payload: dict<string>): string
+  return LINK_REGISTER_PAYLOAD_PREFIX .. json_encode(payload)
+enddef
+
+def DeserializeLinkPayload(payload: string): dict<any>
+  if payload !~ $'^{LINK_REGISTER_PAYLOAD_PREFIX}'
+    return {}
+  endif
+
+  try
+    const raw = payload->substitute($'^{LINK_REGISTER_PAYLOAD_PREFIX}', '', '')
+    const parsed = json_decode(raw)
+    if type(parsed) != v:t_dict
+        || !has_key(parsed, 'text')
+        || !has_key(parsed, 'link')
+        || empty(parsed['text'])
+        || empty(parsed['link'])
+      return {}
+    endif
+    return {text: parsed['text'], link: parsed['link']}
+  catch
+    return {}
+  endtry
+enddef
+
+def EnsureReferencesCommentLine()
+  if search($'^{references_comment}', 'nw') == 0
+      append(line('$'), ['', references_comment])
+  endif
+enddef
+
+def ResolveReferenceID(link_target: string): number
+  EnsureReferencesCommentLine()
+  b:markdown_extras_links = RefreshLinksDict()
+
+  const existing_link_ids = utils.KeysFromValue(b:markdown_extras_links, link_target)
+  if !empty(existing_link_ids)
+    return str2nr(existing_link_ids[0])
+  endif
+
+  var link_id = 1
+  if !empty(keys(b:markdown_extras_links))
+    link_id = keys(b:markdown_extras_links)->map((_, val) => str2nr(val))->max() + 1
+  endif
+  b:markdown_extras_links[$'{link_id}'] = link_target
+
+  const last_reference_line = LastReferenceLine()
+  const lastline = last_reference_line == 0 ? line('$') : last_reference_line
+  if lastline != 0
+    append(lastline, $'[{link_id}]: {link_target}')
+  endif
+
+  return link_id
+enddef
+
+def InsertReferenceLinkAtCursor(text: string, link_id: number)
+  const lnum = line('.')
+  const cnum = charcol('.')
+  const line_text = getline(lnum)
+  const link_markup = $'[{text}][{link_id}]'
+  const lhs = strcharpart(line_text, 0, cnum - 1)
+  const rhs = strcharpart(line_text, cnum - 1)
+  setline(lnum, lhs .. link_markup .. rhs)
+  setcursorcharpos(lnum, cnum + strchars(link_markup))
+enddef
+
+def FindLinkUnderCursor(): dict<any>
+  const line_text = getline('.')
+  const cursor_col = col('.')
+  const patterns = [
+    '\v\[[^][]+\]\s*\[\d+\]',
+    '\v\[[^][]+\]\s*\([^)]*\)',
+  ]
+
+  for pattern in patterns
+    var start_col = 0
+    while true
+      const match_info = matchstrpos(line_text, pattern, start_col)
+      const matched = match_info[0]
+      const start_idx = match_info[1]
+      const end_idx = match_info[2]
+      if start_idx < 0
+        break
+      endif
+
+      const in_interval = (start_idx + 1) <= cursor_col && cursor_col <= end_idx
+      if in_interval
+        if matched =~ '\v\]\s*\['
+          const parts = matchlist(matched, '\v^\[([^][]+)\]\s*\[(\d+)\]$')
+          if len(parts) > 2
+            b:markdown_extras_links = RefreshLinksDict()
+            const link_id = parts[2]
+            if has_key(b:markdown_extras_links, link_id)
+              return {
+                text: parts[1],
+                link: b:markdown_extras_links[link_id],
+                start: start_idx,
+                end: end_idx,
+              }
+            endif
+          endif
+        else
+          const parts = matchlist(matched, '\v^\[([^][]+)\]\s*\(([^)]*)\)$')
+          if len(parts) > 2
+            return {
+              text: parts[1],
+              link: parts[2],
+              start: start_idx,
+              end: end_idx,
+            }
+          endif
+        endif
+      endif
+
+      start_col = end_idx
+    endwhile
+  endfor
+
+  return {}
+enddef
+
+def DeleteLinkTokenAtCursor(): bool
+  const link_payload = FindLinkUnderCursor()
+  if empty(link_payload)
+    return false
+  endif
+
+  const line_text = getline('.')
+  const lhs = strpart(line_text, 0, link_payload['start'])
+  const rhs = strpart(line_text, link_payload['end'])
+  setline('.', lhs .. rhs)
+  return true
+enddef
+
+def ExtractLinkPayloadFromCursor(): dict<any>
+  const link_payload = FindLinkUnderCursor()
+  if empty(link_payload)
+    return {}
+  endif
+  return {text: link_payload['text'], link: link_payload['link']}
+enddef
+
+export def LinkYank(register_config_key: string)
+  const payload = ExtractLinkPayloadFromCursor()
+  if empty(payload)
+    utils.Echowarn('Cursor is not on a valid markdown link')
+    return
+  endif
+
+  const register = ResolveLinkRegister(register_config_key)
+  setreg(register, SerializeLinkPayload({text: payload['text'], link: payload['link']}))
+enddef
+
+export def LinkDelete(register_config_key: string)
+  const payload = ExtractLinkPayloadFromCursor()
+  if empty(payload)
+    utils.Echowarn('Cursor is not on a valid markdown link')
+    return
+  endif
+
+  const register = ResolveLinkRegister(register_config_key)
+  setreg(register, SerializeLinkPayload({text: payload['text'], link: payload['link']}))
+  if !DeleteLinkTokenAtCursor()
+    utils.Echowarn('Could not delete current markdown link')
+  endif
+enddef
+
+export def LinkPaste(register_config_key: string)
+  const register = ResolveLinkRegister(register_config_key)
+  const payload = DeserializeLinkPayload(getreg(register))
+  if empty(payload)
+    utils.Echowarn($"Register '{register}' does not contain a yanked markdown link")
+    return
+  endif
+
+  const link_id = ResolveReferenceID(payload['link'])
+  InsertReferenceLinkAtCursor(payload['text'], link_id)
+  b:markdown_extras_links = RefreshLinksDict()
+enddef
+
+def IsBinary(link: string): bool
+  # Check if a file is binary
+  var is_binary = false
+
+  # Override if binary and not too large
+  if filereadable(link)
+    # Large file: open in a new Vim instance if
+    const file_type = system($'file --brief -mime "{link}"')
+    if executable('file') && file_type !~ '^ASCII text' && file_type !~ '^empty'
+      is_binary = true
+    # In case 'file' is not available, like in Windows, search for the NULL
+    # byte. Guard if the file is too large
+    elseif !empty(readfile(link)->filter('v:val =~# "\\%u0000"'))
+        is_binary = true
+    endif
+  else
+    utils.Echoerr($"File {link} is not readable")
+  endif
+
+  return is_binary
+enddef
+
+def GetRightWindowID(): number
+  var cur_winid = win_getid()
+  var cur_winpos = win_screenpos(win_id2win(cur_winid))
+  var cur_top = cur_winpos[0]
+  var cur_left = cur_winpos[1]
+
+  var winids = getwininfo()
+  for win in winids
+    if win.winid != cur_winid
+      var [top, left] = win_screenpos(win.winid)
+      if top == cur_top && left > cur_left
+        return win.winid
+      endif
+    endif
+  endfor
+  return -1 # No right window found
+enddef
+
+export def OpenLink(is_split: bool = false)
+    InitScriptLocalVars()
+    # Get link name depending of reference-style or inline link or just a
+    # link, like for example when it is in the reference Section
+    const saved_curpos = getcurpos()
+    var link = ''
+
+    if synIDattr(synID(line("."), charcol("."), 1), "name") != 'markdownUrl'
+      # Start the search from the end of the text-link
+      var symbol = ''
+      norm! f]
+      if searchpos('[', 'nW') == [0, 0]
+        symbol = '('
+      elseif searchpos('(', 'nW') == [0, 0]
+        symbol = '['
+      else
+        symbol = utils.IsLess(searchpos('[', 'nW'), searchpos('(', 'nW'))
+          ? '['
+          : '('
+      endif
+
+      exe $"norm! f{symbol}l"
+
+      if symbol == '['
+        b:markdown_extras_links = RefreshLinksDict()
+        const link_id = utils.GetTextObject('i[').text
+        link = b:markdown_extras_links[link_id]
+      else
+        link = utils.GetTextObject('i(').text
+      endif
+    else
+        const link_interval = values(IsLink())[0]
+        const start = link_interval[0][1] - 1
+        const length = link_interval[1][1] - link_interval[0][1] + 1
+        link = strcharpart(getline('.'), start, length)
+    endif
+
+    # COMMON
+    # Assume that a file is always small (=1 byte) is no large_file_support is
+    # enabled
+    const file_size = link =~ '^file://' && large_files_threshold > 0
+      ? GetFileSize(URLToPath(link))
+      : 0
+
+    if link =~ '^file://'
+        && (0 <= file_size && file_size <= large_files_threshold )
+        && !IsBinary(URLToPath(link))
+      if is_split
+        if GetRightWindowID() == -1
+          win_execute(win_getid(), 'vsplit')
+        endif
+        win_execute(GetRightWindowID(), $'edit {URLToPath(link)}')
+      else
+        exe $'edit {URLToPath(link)}'
+      endif
+    else
+      exe $":Open {fnameescape(URLToPath(link))}"
+    endif
+    setcharpos('.', saved_curpos)
+enddef
+
+export def ConvertLinks()
+  const references_line = search($'^{references_comment}', 'nw')
+  if references_line == 0
+      append(line('$'), ['', references_comment])
+  endif
+
+  b:markdown_extras_links = RefreshLinksDict()
+  # TODO this pattern is a bit flaky
+  const pattern = '\[*\]\s\?('
+  const saved_view = winsaveview()
+  cursor(1, 1)
+  var lA = -1
+  var cA = -1
+  var curr_pos = [lA, -cA]
+  while curr_pos != [0, 0]
+    curr_pos = searchpos(pattern, 'W')
+    lA = curr_pos[0]
+    cA = curr_pos[1]
+    if strcharpart(getline(lA), cA, 2) =~ '('
+      norm! f(l
+      var link = utils.GetTextObject('i(').text
+      var link_id = keys(b:markdown_extras_links)
+        ->map((_, val) => str2nr(val))->max() + 1
+      # Fix current line
+      exe $"norm! ca([{link_id}]"
+
+      # Fix dict
+      b:markdown_extras_links[link_id] = link
+      const last_reference_line = LastReferenceLine()
+      const lastline = last_reference_line == 0 ? line('$') : last_reference_line
+      if lastline != 0
+        append(lastline, $'[{link_id}]: {link}' )
+      endif
+      # TODO Find last proper line
+      # var line = search('\s*#\+\s*References', 'n') + 2
+      # var lastline = -1
+      # while getline(line) =~ '^\s*\[*\]: ' && line <= line('$')
+      #   echom line
+      #   if line == line('$')
+      #     lastline = line - 1
+      #   elseif getline(line) !~ '^\[*\]: '
+      #     lastline = line - 1
+      #     break
+      #   endif
+      #   line += 1
+      # endwhile
+      # append(lastline, $'[{link_id}]: {link}')
+    endif
+  endwhile
+    winrestview(saved_view)
+enddef
+
+export def SanitizeLinks()
+  const references_line = search($'^{references_comment}', 'nw')
+  if references_line == 0
+    utils.Echowarn('References section not found')
+    return
+  endif
+
+  var reference_lines: list<number> = []
+  for lnum in range(references_line + 1, line('$'))
+    if getline(lnum) =~ '^\s*\[\d\+\]:\s*'
+      reference_lines->add(lnum)
+    endif
+  endfor
+
+  if empty(reference_lines)
+    b:markdown_extras_links = {}
+    return
+  endif
+
+  var references_dict: dict<string> = {}
+  for lnum in reference_lines
+    const ref = getline(lnum)
+    const key = ref->matchstr('\[\zs\d\+\ze\]')
+    if !empty(key)
+      var value = ref->matchstr('\[\d\+]:\s*\zs.*')
+      if empty(value) && lnum < line('$')
+        value = trim(getline(lnum + 1))
+      endif
+      references_dict[key] = value
+    endif
+  endfor
+  var used_ids: list<number> = []
+  const usage_pattern = '\v\[[^][]+\]\[\zs\d+\ze\]'
+
+  if references_line > 1
+    for lnum in range(1, references_line - 1)
+      const ltxt = getline(lnum)
+      var start_col = 0
+      while true
+        const used_id = matchstr(ltxt, usage_pattern, start_col)
+        if empty(used_id)
+          break
+        endif
+        if has_key(references_dict, used_id)
+            && index(used_ids, str2nr(used_id)) == -1
+          used_ids->add(str2nr(used_id))
+        endif
+        start_col = matchend(ltxt, usage_pattern, start_col)
+      endwhile
+    endfor
+  endif
+
+  var id_map: dict<string> = {}
+  var new_reference_lines: list<string> = []
+  var next_id = 1
+  for old_id in used_ids
+    const old_id_str = $'{old_id}'
+    id_map[old_id_str] = $'{next_id}'
+    new_reference_lines->add($'[{next_id}]: {references_dict[old_id_str]}')
+    next_id += 1
+  endfor
+
+  const saved_view = winsaveview()
+  if references_line > 1
+    for lnum in range(1, references_line - 1)
+      const old_line = getline(lnum)
+      const new_line = old_line->substitute(
+        '\v(\[[^][]+\]\[)(\d+)(\])',
+        '\=submatch(1) .. get(id_map, submatch(2), submatch(2)) .. submatch(3)',
+        'g'
+      )
+      if new_line != old_line
+        setline(lnum, new_line)
+      endif
+    endfor
+  endif
+
+  for lnum in copy(reference_lines)->reverse()
+    deletebufline('%', lnum)
+  endfor
+  if !empty(new_reference_lines)
+    append(references_line, new_reference_lines)
+  endif
+  winrestview(saved_view)
+
+  b:markdown_extras_links = RefreshLinksDict()
+enddef
+
+
+export def RemoveLink(range_info: dict<list<list<number>>> = {})
+  const link_info = empty(range_info) ? IsLink() : range_info
+  # TODO: it may not be the best but it works so far
+  if !empty(link_info) && keys(link_info)[0] != 'markdownUrl'
+      const saved_curpos = getcurpos()
+      # Start the search from the end of the text-link
+      norm! f]
+      # Find the closest between [ and (
+      var symbol = ''
+      if searchpos('[', 'nW') == [0, 0]
+        symbol = '('
+      elseif searchpos('(', 'nW') == [0, 0]
+        symbol = '['
+      else
+        symbol = utils.IsLess(searchpos('[', 'nW'), searchpos('(', 'nW'))
+          ? '['
+          : '('
+      endif
+
+      # Remove actual link
+      search(symbol)
+      exe $'norm! "_da{symbol}'
+
+      # Remove text link - it is always between square brackets
+      search(']', 'bc')
+      norm! "_x
+      search('[', 'bc')
+      norm! "_x
+      setcharpos('.', saved_curpos)
+  endif
+enddef
+
+def ClosePopups()
+  # This function tear down everything
+  # popup_close(main_id, -1)
+  # popup_close(prompt_id, -1)
+  # TODO: this will clear any opened popup
+  popup_clear()
+  # RestoreCursor()
+  prop_type_delete('PopupToolsMatched')
+enddef
+
+export def PopupFilter(id: number,
+    key: string,
+    slave_id: number,
+    results: list<string>,
+    match_id: number = -1,
+    ): bool
+
+  var maxheight = popup_getoptions(slave_id).maxheight
+
+  if key == "\<esc>"
+    if match_id != -1
+      matchdelete(match_id)
+    endif
+    ClosePopups()
+    return true
+  endif
+
+  echo ''
+  # You never know what the user can type... Let's use a try-catch
+  try
+    if key == "\<CR>"
+      popup_close(slave_id, getcurpos(slave_id)[1])
+      ClosePopups()
+    elseif index(["\<Right>", "\<PageDown>"], key) != -1
+      win_execute(slave_id, 'normal! ' .. maxheight .. "\<C-d>")
+    elseif index(["\<Left>", "\<PageUp>"], key) != -1
+      win_execute(slave_id, 'normal! ' .. maxheight .. "\<C-u>")
+    elseif key == "\<Home>"
+      win_execute(slave_id, "normal! gg")
+    elseif key == "\<End>"
+      win_execute(slave_id, "normal! G")
+    elseif index(["\<tab>", "\<C-n>", "\<Down>", "\<ScrollWheelDown>"], key)
+        != -1
+      var ln = getcurpos(slave_id)[1]
+      win_execute(slave_id, "normal! j")
+      if ln == getcurpos(slave_id)[1]
+        win_execute(slave_id, "normal! gg")
+      endif
+    elseif index(["\<S-Tab>", "\<C-p>", "\<Up>", "\<ScrollWheelUp>"], key) !=
+        -1
+      var ln = getcurpos(slave_id)[1]
+      win_execute(slave_id, "normal! k")
+      if ln == getcurpos(slave_id)[1]
+        win_execute(slave_id, "normal! G")
+      endif
+    # The real deal: take a single, printable character
+    elseif key =~ '^\p$' || keytrans(key) ==# "<BS>" || key == "\<c-u>"
+      if key =~ '^\p$'
+        prompt_text ..= key
+      elseif keytrans(key) ==# "<BS>"
+        if strchars(prompt_text) > 0
+          prompt_text = prompt_text[: -2]
+        endif
+      elseif key == "\<c-u>"
+        prompt_text = ""
+      endif
+
+      popup_settext(id, $'{prompt_sign}{prompt_text}{prompt_cursor}')
+
+      # What you pass to popup_settext(slave_id, ...) is a list of strings with
+      # text properties attached, e.g.
+      #
+      # [
+      #   { "text": "filename.txt",
+      #     "props": [ {"col": 2, "length": 1, "type": "PopupToolsMatched"},
+      #     ... ]
+      #   },
+      #   { "text": "another_file.txt",
+      #     "props": [ {"col": 1, "length": 1, "type": "PopupToolsMatched"},
+      #     ... ]
+      #   },
+      #   ...
+      # ]
+      #
+      var filtered_results_full = []
+      var filtered_results: list<dict<any>>
+
+      if !empty(prompt_text)
+        if fuzzy_search
+          filtered_results_full = results->matchfuzzypos(prompt_text)
+          var pos = filtered_results_full[1]
+          filtered_results = filtered_results_full[0]
+            ->map((ii, match) => ({
+              text: match,
+              props: pos[ii]->copy()->map((_, col) => ({
+                col: col + 1,
+                length: 1,
+                type: 'PopupToolsMatched'
+              }))}))
+        else
+          filtered_results_full = copy(results)
+            ->map((_, text) => matchstrpos(text,
+                  \ '\V' .. $"{escape(prompt_text, '\')}"))
+            ->map((idx, match_info) => [results[idx], match_info[1],
+              match_info[2]])
+
+          filtered_results = copy(filtered_results_full)
+            ->map((_, val) => ({
+              text: val[0],
+              props: val[1] >= 0 && val[2] >= 0
+                ? [{
+                  type: 'PopupToolsMatched',
+                  col: val[1] + 1,
+                  end_col: val[2] + 1
+                }]
+                : []
+            }))
+            ->filter("!empty(v:val.props)")
+        endif
+      endif
+
+      var opts = popup_getoptions(id)
+      var num_hits = !empty(filtered_results)
+        ? len(filtered_results)
+        : len(results)
+      popup_setoptions(id, opts)
+
+      if !empty(prompt_text)
+        popup_settext(slave_id, filtered_results)
+      else
+        popup_settext(slave_id, results)
+      endif
+    else
+      utils.Echowarn('Unknown key')
+    endif
+  catch
+    ClosePopups()
+    utils.Echoerr('Internal error')
+  endtry
+
+  return true
+enddef
+
+export def ShowPromptPopup(slave_id: number,
+    links: list<string>,
+    title: string,
+    match_id: number = -1
+  )
+  # This could be called by other scripts and its id may be undefined.
+  InitScriptLocalVars()
+  # This is the UI thing
+  var slave_id_core_line = popup_getpos(slave_id).core_line
+  var slave_id_core_col = popup_getpos(slave_id).core_col
+  var slave_id_core_width = popup_getpos(slave_id).core_width
+
+  # var base_title = $'{search_type}:'
+  var opts = {
+    title: title,
+    minwidth: slave_id_core_width,
+    maxwidth: slave_id_core_width,
+    line: slave_id_core_line - 3,
+    col: slave_id_core_col - 1,
+    borderchars: ['─', '│', '─', '│', '╭', '╮', '╯', '╰'],
+    border: [1, 1, 0, 1],
+    mapping: 0,
+    scrollbar: 0,
+    wrap: 0,
+    drag: 0,
+  }
+
+  # Filter
+  opts.filter = (id, key) => PopupFilter(id, key, slave_id, links, match_id)
+
+  prompt_text = ""
+  prompt_id = popup_create([prompt_sign .. prompt_cursor], opts)
+enddef
+
+export def CreateLink(type: string = '')
+  if !empty(synIDattr(synID(line("."), charcol("."), 1), "name"))
+    return
+  endif
+
+  InitScriptLocalVars()
+  const references_line = search($'^{references_comment}', 'nw')
+  if references_line == 0
+      append(line('$'), ['', references_comment])
+  endif
+
+  if getcharpos("'[") == getcharpos("']")
+    return
+  endif
+
+  b:markdown_extras_links = RefreshLinksDict()
+
+  # line and column of point A
+  var lA = line("'[")
+  var cA = type == 'line' ? 1 : col("'[")
+
+  # line and column of point B
+  var lB = line("']")
+  var cB = type == 'line' ? strchars(getline(lB)) : col("']")
+
+  if getregion(getcharpos("'["), getcharpos("']"))[0] =~ '^\s*$'
+    return
+  endif
+
+  # The regex reads:
+  # Take all characters, including newlines, from (l0,c0) to (l1,c1 + 1)'
+  const match_pattern = $'\%{lA}l\%{cA}c\_.*\%{lB}l\%{cB + 1}c'
+  const match_id = matchadd('Changed', match_pattern)
+  redraw
+
+  links_popup_opts.callback =
+    (popup_id, idx) => LinksPopupCallback(type, popup_id, idx, match_id)
+
+  var links = values(b:markdown_extras_links)->insert("Create new link")
+  var popup_height = min([len(links), (&lines * 2) / 3])
+  links_popup_opts.minheight = popup_height
+  links_popup_opts.maxheight = popup_height
+  main_id = popup_create(links, links_popup_opts)
+
+  # if len(links) > 1
+    ShowPromptPopup(main_id, links, " links: ", match_id)
+  # endif
+enddef
+
+# -------- Preview functions --------------------------------
+def PreviewWinFilterKey(previewWin: number, key: string): bool
+  var keyHandled = false
+
+  if key == "\<C-E>"
+      || key == "\<C-D>"
+      || key == "\<C-F>"
+      || key == "\<PageDown>"
+      || key == "\<C-Y>"
+      || key == "\<C-U>"
+      || key == "\<C-B>"
+      || key == "\<PageUp>"
+      || key == "\<C-Home>"
+      || key == "\<C-End>"
+    # scroll the hover popup window
+    win_execute(previewWin, $'normal! {key}')
+    keyHandled = true
+  endif
+
+  if key == "\<Esc>"
+    previewWin->popup_close()
+    keyHandled = true
+  endif
+
+  return keyHandled
+enddef
+
+def GetFileContent(filename: string): list<string>
+    var file_content = []
+    if bufexists(filename)
+      file_content = getbufline(filename, 1, '$')
+    elseif filereadable($'{filename}')
+      file_content = readfile($'{filename}')
+    else
+      file_content = ["Can't preview the file!", "Does the file exist?"]
+    endif
+    var title = [filename, '']
+    return extend(title, file_content)
+enddef
+
+export def PreviewPopup()
+  InitScriptLocalVars()
+  b:markdown_extras_links = RefreshLinksDict()
+
+  var previewText = []
+  var link_name = ''
+  const saved_curpos = getcurpos()
+  const link_info = IsLink()
+  # CASE 1: on an alias
+  if !empty(link_info) && keys(link_info)[0] != 'markdownUrl'
+    # Search from the current cursor position to the end of line
+    # Start the search from the end of the text-link
+    norm! f]
+    # Find the closest between [ and (
+    var symbol = ''
+    if searchpos('[', 'nW') == [0, 0]
+      symbol = '('
+    elseif searchpos('(', 'nW') == [0, 0]
+      symbol = '['
+    else
+      symbol = utils.IsLess(searchpos('[', 'nW'), searchpos('(', 'nW'))
+        ? '['
+        : '('
+    endif
+
+    exe $"norm! f{symbol}l"
+
+    var link_id = ''
+    if symbol == '['
+      b:markdown_extras_links = RefreshLinksDict()
+      link_id = utils.GetTextObject('i[').text
+      link_name = b:markdown_extras_links[link_id]
+    else
+      link_name = utils.GetTextObject('i(').text
+    endif
+  # CASE 2: on an actual link, like those in the reference Section
+  elseif !empty(link_info) && keys(link_info)[0] == 'markdownUrl'
+    const link_interval = values(link_info)[0]
+    const start = link_interval[0][1] - 1
+    const length = link_interval[1][1] - link_interval[0][1] + 1
+    link_name = strcharpart(getline('.'), start, length)
+  endif
+
+  if !empty(link_name)
+    # TODO At the moment only .md files have syntax highlight.
+    var refFiletype = $'{fnamemodify(link_name, ":e")}' == 'md'
+      ? 'markdown'
+      : 'text'
+    const file_size = !IsURL(link_name) && large_files_threshold > 0
+          ? GetFileSize(link_name)
+          : 0
+    if link_name !~ '^file://'
+        || (filereadable(link_name) && file_size > large_files_threshold)
+      previewText = [link_name]
+      refFiletype = 'text'
+    else
+      previewText = GetFileContent(URLToPath(link_name))
+    endif
+
+    popup_clear()
+    var winid = previewText->popup_atcursor({moved: 'any',
+             close: 'click',
+             fixed: true,
+             maxwidth: 80,
+             maxheight: (&lines * 2) / 3,
+             border: [0, 1, 0, 1],
+             borderchars: [' '],
+             filter: PreviewWinFilterKey})
+
+    # TODO: Set syntax highlight
+    # if !IsURL(link_name)
+    #   var old_synmaxcol = &synmaxcol
+    #   &synmaxcol = 300
+    #   var buf_extension = $'{fnamemodify(link_name, ":e")}'
+    #   var found_filetypedetect_cmd =
+    #     autocmd_get({group: 'filetypedetect'})
+    #     ->filter($'v:val.pattern =~ "*\\.{buf_extension}$"')
+    #   echom found_filetypedetect_cmd
+    #   var set_filetype_cmd = ''
+    #   if empty(found_filetypedetect_cmd)
+    #     if index([$"{$HOME}/.vimrc", $"{$HOME}/.gvimrc"], expand(link_name)) != -1
+    #      set_filetype_cmd = '&filetype = "vim"'
+    #     else
+    #      set_filetype_cmd = '&filetype = ""'
+    #     endif
+    #   else
+    #     set_filetype_cmd = found_filetypedetect_cmd[0].cmd
+    #   endif
+    #   win_execute(winid, set_filetype_cmd)
+    #   &synmaxcol = old_synmaxcol
+    # endif
+
+    win_execute(winid, $"setlocal ft={refFiletype}")
+    setcharpos('.', saved_curpos)
+  endif
+enddef
