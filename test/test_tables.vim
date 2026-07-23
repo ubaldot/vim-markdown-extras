@@ -4,7 +4,7 @@ vim9script
 # Copied and adjusted from Vim distribution
 
 import "../plugin/markdown_extras.vim"
-import "../autoload/mde_tables.vim"
+import "../lib/mde_tables.vim"
 import "./common.vim"
 
 const WaitForAssert = common.WaitForAssert

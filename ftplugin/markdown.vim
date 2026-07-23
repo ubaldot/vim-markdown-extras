@@ -1,12 +1,12 @@
 vim9script
 
-import autoload "../autoload/mde_funcs.vim" as funcs
-import autoload "../autoload/mde_links.vim" as links
-import autoload '../autoload/mde_utils.vim' as utils
-import autoload '../autoload/mde_highlight.vim' as highlights
-import autoload '../autoload/mde_constants.vim' as constants
-import autoload '../autoload/mde_indices.vim' as indices
-import autoload '../autoload/mde_tables.vim' as tables
+import autoload "../lib/mde_funcs.vim" as funcs
+import autoload "../lib/mde_links.vim" as links
+import autoload '../lib/mde_utils.vim' as utils
+import autoload '../lib/mde_highlight.vim' as highlights
+import autoload '../lib/mde_constants.vim' as constants
+import autoload '../lib/mde_indices.vim' as indices
+import autoload '../lib/mde_tables.vim' as tables
 import autoload '../plugin/markdown_extras.vim' as markdown_extras
 
 # b:markdown_extras_links is the dictionary of the form

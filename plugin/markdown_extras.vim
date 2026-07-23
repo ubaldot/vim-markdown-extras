@@ -4,9 +4,9 @@ vim9script
 # Maintainer:	Ubaldo Tiberi
 # License: BSD-3
 
-import autoload './../autoload/mde_utils.vim' as utils
-import autoload './../autoload/mde_funcs.vim' as funcs
-import autoload './../autoload/mde_indices.vim' as indices
+import autoload './../lib/mde_utils.vim' as utils
+import autoload './../lib/mde_funcs.vim' as funcs
+import autoload './../lib/mde_indices.vim' as indices
 
 if has('win32') && !has("patch-9.1.1270")
   # Needs Vim version 9.0 and above

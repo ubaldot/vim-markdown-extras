@@ -4,9 +4,9 @@ vim9script
 # Copied and adjusted from Vim distribution
 
 import "./common.vim"
-import "../autoload/mde_constants.vim" as constants
-import "../autoload/mde_utils.vim" as utils
-import "../autoload/mde_links.vim" as links
+import "../lib/mde_constants.vim" as constants
+import "../lib/mde_utils.vim" as utils
+import "../lib/mde_links.vim" as links
 const WaitForAssert = common.WaitForAssert
 
 # Test file 1
@@ -56,7 +56,7 @@ const src_name_3 = 'testfile_link_target.md'
 const lines_3 =<< trim END
     # Destination file
 
-    Paste here: 
+    Paste here:
 
     <!-- DO NOT REMOVE vim-markdown-extras references DO NOT REMOVE-->
     [1]: https://example.com/bar
@@ -66,7 +66,7 @@ const src_name_4 = 'testfile_link_target_reuse.md'
 const lines_4 =<< trim END
     # Destination file
 
-    Reuse here: 
+    Reuse here:
 
     <!-- DO NOT REMOVE vim-markdown-extras references DO NOT REMOVE-->
     [9]: https://example.com/baz
