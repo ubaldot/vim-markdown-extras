@@ -544,7 +544,7 @@ if use_default_mappings
           \ : "D"
   endif
   if empty(mapcheck('Y', 'n', 1))
-    nnoremap <expr> <buffer> D tables.IsTableLine(getline('.'))
+    nnoremap <expr> <buffer> Y tables.IsTableLine(getline('.'))
           \ ? "T\<bar>yt\<bar>\<Space>"
           \ : "Y"
   endif
