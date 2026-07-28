@@ -150,16 +150,13 @@ def SetLinkOpFunc()
 enddef
 
 def TableCellOp(op: string)
-  if tables.funcs_ref_dict.IsTableLine(getline('.'))
-    if op ==# 'c'
-      execute "normal! T|l"
-      feedkeys('ct|', 'n')
-    else
-      execute $"normal! T|l{op}t|"
-    endif
+  # D, Y, C on cells (works only one-line cells)
+  if tables.IsTableLine(getline('.'))
+      execute $"normal! T|{op}t|"
   else
-    feedkeys(op, 'n')
+      execute $"normal {op}"
   endif
+
 enddef
 
 if empty(maparg('<Plug>MarkdownAddLink'))
@@ -547,7 +544,7 @@ if use_default_mappings
   endif
 
   if empty(mapcheck('C', 'n', 1))
-    nnoremap <buffer> C <ScriptCmd>TableCellOp('c')<cr>
+    nnoremap <buffer> C <ScriptCmd>TableCellOp('c')<cr>a<space>
   endif
   if empty(mapcheck('D', 'n', 1))
     nnoremap <buffer> D <ScriptCmd>TableCellOp('d')<cr>

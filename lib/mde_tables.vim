@@ -2,7 +2,7 @@ vim9script
 
 var gui_cursor: list<dict<any>>
 
-def IsTableLine(line: string): bool
+export def IsTableLine(line: string): bool
   # It is enough that you have one column delimited by | ... | to be a table
   return line =~# '^\s*|\s*.*\s*|\s*$'
 enddef
