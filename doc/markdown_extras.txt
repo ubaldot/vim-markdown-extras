@@ -543,6 +543,11 @@ preservation.
 <Plug>MarkdownTableChange	  Change the text  of the current cell.
                                   Default: `<localleader>C`
 
+Inside the cell-edit popup, you can paste register contents with `CTRL-R`
+followed by a register name (e.g. `CTRL-R "` for the unnamed register,
+`CTRL-R +` for the clipboard, `CTRL-R 0` for the yank register). This mirrors
+Vim's built-in insert-mode `CTRL-R` behaviour.
+
 <Plug>MarkdownTableFormat	  Format table.
                                   Default:
 				   - normal mode: `<localleader>F`

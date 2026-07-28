@@ -685,6 +685,41 @@ def PopupFilter(
 
   try
 
+    # Paste from register: <C-R>{reg} inserts register contents at cursor
+    if state.waiting_for_reg
+      state.waiting_for_reg = false
+      var regname = k ==# '<Space>' ? ' ' : (k =~ '^<' ? '' : k)
+      if !empty(regname)
+        var regtext = getreg(regname)
+        if !empty(regtext)
+          var lines = split(regtext, "\n", true)
+          for i in range(len(lines))
+            if i == 0
+              var line = text[state.row]
+              text[state.row] =
+                strcharpart(line, 0, state.col)
+                .. lines[0]
+                .. strcharpart(line, state.col)
+              state.col += strchars(lines[0])
+            else
+              var remainder = strcharpart(text[state.row], state.col)
+              text[state.row] = strcharpart(text[state.row], 0, state.col)
+              state.row += 1
+              insert(text, lines[i] .. remainder, state.row)
+              state.col = strchars(lines[i])
+            endif
+          endfor
+        endif
+      endif
+      popup_settext(id, RenderPopupText(id, text, state.cursor))
+      return true
+    endif
+
+    if k ==# '<C-R>'
+      state.waiting_for_reg = true
+      return true
+    endif
+
     # Printable characters
     if k !~ '^<'
 
@@ -891,6 +926,7 @@ export def CreateCellPopup(starting_text: list<string> = [''])
     col: strchars(popup_text[-1]),
     text: popup_text,
     cursor: '|',
+    waiting_for_reg: false,
   }
 
 

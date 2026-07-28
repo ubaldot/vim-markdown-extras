@@ -149,6 +149,19 @@ def SetLinkOpFunc()
   &l:opfunc = function(links.CreateLink)
 enddef
 
+def TableCellOp(op: string)
+  if tables.funcs_ref_dict.IsTableLine(getline('.'))
+    if op ==# 'c'
+      execute "normal! T|l"
+      feedkeys('ct|', 'n')
+    else
+      execute $"normal! T|l{op}t|"
+    endif
+  else
+    feedkeys(op, 'n')
+  endif
+enddef
+
 if empty(maparg('<Plug>MarkdownAddLink'))
   noremap <script> <buffer> <Plug>MarkdownAddLink
         \ <ScriptCmd>SetLinkOpFunc()<cr>g@
@@ -337,6 +350,28 @@ if empty(maparg('<Plug>MarkdownTableAppend'))
           \ <ScriptCmd>tables.AppendTextToCellPopup()<cr>
   endif
 endif
+
+if empty(maparg('<Plug>MarkdownTableCellYank'))
+  noremap <script> <buffer> <Plug>MarkdownTableCellYank
+        \ <ScriptCmd>tables.CellYank()<cr>
+endif
+
+if empty(maparg('<Plug>MarkdownTableCellDelete'))
+  noremap <script> <buffer> <Plug>MarkdownTableCellDelete
+        \ <ScriptCmd>tables.CellDelete()<cr>
+endif
+
+if empty(maparg('<Plug>MarkdownTableCellChange'))
+  if exists('g:markdown_extras_config')
+      && has_key(g:markdown_extras_config, 'table_updates_in_window')
+      && g:markdown_extras_config.table_updates_in_window
+    noremap <script> <buffer> <Plug>MarkdownTableCellChange
+          \ <ScriptCmd>tables.CellYank()<cr><ScriptCmd>tables.CreateCellSplitWindow()<cr>
+  else
+    noremap <script> <buffer> <Plug>MarkdownTableCellChange
+          \ <ScriptCmd>tables.CellYank()<cr><ScriptCmd>tables.CreateCellPopup()<cr>
+  endif
+endif
 # ------------------------------------------------------------
 
 # use_default_mappings
@@ -509,6 +544,16 @@ if use_default_mappings
     if empty(mapcheck('<localleader>A', 'n', 1))
       nnoremap <localleader>A <Plug>MarkdownTableAppend
     endif
+  endif
+
+  if empty(mapcheck('C', 'n', 1))
+    nnoremap <buffer> C <ScriptCmd>TableCellOp('c')<cr>
+  endif
+  if empty(mapcheck('D', 'n', 1))
+    nnoremap <buffer> D <ScriptCmd>TableCellOp('d')<cr>
+  endif
+  if empty(mapcheck('Y', 'n', 1))
+    nnoremap <buffer> Y <ScriptCmd>TableCellOp('y')<cr>
   endif
 
   if empty(mapcheck('<bar>', 'i', 1))
