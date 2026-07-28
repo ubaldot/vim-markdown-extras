@@ -149,16 +149,6 @@ def SetLinkOpFunc()
   &l:opfunc = function(links.CreateLink)
 enddef
 
-def TableCellOp(op: string)
-  # D, Y, C on cells (works only one-line cells)
-  if tables.IsTableLine(getline('.'))
-      execute $"normal! T|{op}t|"
-  else
-      execute $"normal {op}"
-  endif
-
-enddef
-
 if empty(maparg('<Plug>MarkdownAddLink'))
   noremap <script> <buffer> <Plug>MarkdownAddLink
         \ <ScriptCmd>SetLinkOpFunc()<cr>g@
@@ -544,13 +534,19 @@ if use_default_mappings
   endif
 
   if empty(mapcheck('C', 'n', 1))
-    nnoremap <buffer> C <ScriptCmd>TableCellOp('c')<cr>a<space>
+    nnoremap <expr> <buffer> C tables.IsTableLine(getline('.'))
+          \ ? "T\<bar>ct\<bar>\<Space>"
+          \ : "C"
   endif
   if empty(mapcheck('D', 'n', 1))
-    nnoremap <buffer> D <ScriptCmd>TableCellOp('d')<cr>
+    nnoremap <expr> <buffer> D tables.IsTableLine(getline('.'))
+          \ ? "T\<bar>dt\<bar>\<Space>"
+          \ : "D"
   endif
   if empty(mapcheck('Y', 'n', 1))
-    nnoremap <buffer> Y <ScriptCmd>TableCellOp('y')<cr>
+    nnoremap <expr> <buffer> D tables.IsTableLine(getline('.'))
+          \ ? "T\<bar>yt\<bar>\<Space>"
+          \ : "Y"
   endif
 
   if empty(mapcheck('<bar>', 'i', 1))
