@@ -55,12 +55,16 @@ _SEP = "-" * 50
 
 
 def _find_vim_exec() -> str:
+    # Needed for CI.
     for var in ("VIMPRG", "VIM_PRG"):
         if v := os.environ.get(var, "").strip():
             return v
+
     if found := shutil.which("vim.exe") or shutil.which("vim"):
         return found
-    sys.exit("ERROR: vim not found in PATH. Set VIMPRG or VIM_PRG to override.")
+    sys.exit(
+        "ERROR: vim not found in PATH. Set VIMPRG or VIM_PRG to override."
+    )
 
 
 def _write_vimrc() -> None:
