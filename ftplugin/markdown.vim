@@ -98,6 +98,7 @@ if !empty(exepath("pandoc"))
     # To see again the echo hit g<
     echo "[vim-markdown-extras]: " .. cmd
 
+    # Open temp windows to display message, similar to quickfix window
     if v:shell_error != 0 || !empty(response)
       belowright new
       setbufline('%', 1, response)
