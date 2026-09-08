@@ -70,33 +70,45 @@ xnoremap <buffer> <silent> gq <ScriptCmd>SetMarkdownOpFunc()<cr>g@
 # --------------End prettier ------------------------
 
 # -------------------- pandoc -----------------------
-if markdown_extras.use_pandoc
+if !empty(exepath("pandoc"))
   # All the coreography happening inside here relies on the compiler
   # pandoc.
 
-  # b:pandoc_compiler_args is used in the bundled compiler-pandoc
-  if exists('g:markdown_extras_config') != 0
-      && has_key(g:markdown_extras_config, 'pandoc_args')
-    b:pandoc_compiler_args = join(g:markdown_extras_config['pandoc_args'])
-  endif
-
-  compiler pandoc
-
   def Make(format: string = 'html')
 
-    var output_file = $'{expand('%:p:r')}.{format}'
-    var cmd = execute($'make {format}')
-    # TIP: use g< to show all the echoed messages since now
-    # TIP2: redraw! is used to avoid the "PRESS ENTER" thing
-    echo cmd->matchstr('.*\ze2>&1') | redraw!
-
-    if !empty(getqflist())
-      copen
+    var extra_args = ''
+    if exists('g:markdown_extras_config') != 0
+        && has_key(g:markdown_extras_config, 'pandoc_args')
+      extra_args = join(g:markdown_extras_config['pandoc_args'])
     endif
 
-    # TODO: pandoc compiler returns v:shell_error = 0 even if there are
-    # errors. Add a condition on v:shell_error once pandoc compiler is fixed.
-    if exists(':Open') != 0
+    var input_file = tempname()
+    writefile(getline(1, '$'), input_file, 'D')
+
+    var output_file = $'{expand('%:p:r')}.{format}'
+    var cmd = $'pandoc --standalone --from markdown {extra_args} '
+      .. $'--output "{output_file}" "{input_file}"'
+    var response = systemlist(cmd)
+      # Get rid of the ^M in Windows
+      ->map((_, val) => substitute(val, '\r', '', 'g'))
+
+    # To see again the echo hit g<
+    echo "[vim-markdown-extras]: " .. cmd
+
+    if v:shell_error != 0 || !empty(response)
+      belowright new
+      setbufline('%', 1, response)
+
+      setlocal buftype=nofile bufhidden=wipe noswapfile nomodifiable
+      &l:statusline = " vim-markdown-extras"
+
+      # Win height resize
+      const target_height = float2nr(&lines / 4)
+      exe $"norm! z{target_height}\<cr>"
+
+      nnoremap <buffer> <esc> <cmd>wincmd c<cr>
+
+    elseif exists(':Open') != 0
       exe $'Open {fnameescape(output_file)}'
     endif
   enddef
@@ -109,11 +121,12 @@ if markdown_extras.use_pandoc
       ->map((_, val) => substitute(val, '\r', '', 'g'))
   enddef
 
-  # Usage :Make, :Make pdf, :Make docx, etc
+  # Usage :MDEMake, :MDEMake pdf, :MDEMake docx, etc
   command! -nargs=? -buffer -complete=customlist,MakeCompleteList
         \ MDEMake Make(<f-args>)
 endif
 # ------------------- End pandoc ------------------------------------
+
 
 # -------- Mappings ------------
 # Redefinition of <cr>. Unmap if user does not want it.

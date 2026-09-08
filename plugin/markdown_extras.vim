@@ -21,8 +21,8 @@ g:loaded_markdown_extras = true
 
 const release_notes =<< END
 
-## News
-Added possibility to yank/delete/past links.
+- Removed rendering based on builtin compiler pandoc
+- Cleaned up documentation
 
 Press <Esc> or 'q' to close this popup.
 END
@@ -178,16 +178,7 @@ if use_prettier && !executable('prettier')
 endif
 
 # Check pandoc executable
-export var use_pandoc = true
-
-if exists('g:markdown_extras_config') != 0
-    && has_key(g:markdown_extras_config, 'use_pandoc')
-  use_pandoc = g:markdown_extras_config['use_pandoc']
-endif
-
-# If user wants to use pandoc but it is not available...
-if use_pandoc && !executable('pandoc')
-  use_pandoc = false
+if empty(exepath('pandoc'))
   if &filetype == 'markdown'
     utils.Echowarn("'pandoc' not installed!'")
   else
