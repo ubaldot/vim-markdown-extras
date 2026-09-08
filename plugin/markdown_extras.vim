@@ -93,6 +93,7 @@ Miscellanea
 
 Links
   l{text-object} - create link
+  y,d,p - yank, delete, paste
   n - jump to next link
   N - jump to previous link
 
