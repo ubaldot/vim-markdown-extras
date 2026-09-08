@@ -97,12 +97,12 @@ For example, to trigger links auto-completion when you hit `[`, add the
 following lines to your `~/.vim/after/ftplugin/markdown.vim` file:
 
 >vim
-    const mde_funcs_path = globpath(&rtp, 'lib/mde_funcs.vim')->fnamemodify(':h')
-    import autoload $"{mde_funcs_path}/mde_funcs.vim" as mde_funcs
+  const mde_funcs_path = globpath(&rtp, 'lib/mde_funcs.vim')->fnamemodify(':h')
+  import autoload $"{mde_funcs_path}/mde_funcs.vim" as mde_funcs
 
-    setlocal completeopt=menu,menuone,noselect
-    setlocal omnifunc=mde_funcs.OmniFunc
-    inoremap <buffer> ][ ][<C-x><C-o>
+  setlocal completeopt=menu,menuone,noselect
+  setlocal omnifunc=mde_funcs.OmniFunc
+  inoremap <buffer> ][ ][<C-x><C-o>
 <
 
 In your current document, type `[foo][` and a popup menu with all the
@@ -204,40 +204,40 @@ filling it with he various keys.
 
         "use_nerd_fonts"  To set eye-candy check-boxes. Require some nerd-font
                           installed.
-			                    Default |false|.
+                          Default |false|.
 
         "smart_textstyle" Whenever possible, text styles are kept
                           consistent.
-			                    Default |true|.
+                          Default |true|.
 
         "empty_checkbox"  Glyphs to display for empty checkboxes. Requires
                           "use_nerdfonts" set to |true| and 'concealevel'
                           greater than 0.
-			                    Default: 0x25A2
+                          Default: 0x25A2
 
         "marked_checkbox" Glyphs to display for marked checkboxes. Requires
                           "use_nerdfonts" set to |true| and 'concealevel'
                           greater than 0.
-			                    Default: 0x2714
+                          Default: 0x2714
 
         "fuzzy_search"    Fuzzy or exact search in the links popup.
                           Default: |true|.
 
 "path_to_url_register"    Register used when running the |:MDEPathToURL|
-			                    command.
+                          command.
                           Default: 'p'.
 
 "link_first_register"     Register used by link yank/delete/paste mappings
-			                    targeting the first link register.
-			                    Default: 'a'.
+                          targeting the first link register.
+                          Default: 'a'.
 
 "link_second_register"    Register used by link yank/delete/paste mappings
-			                    targeting the second link register.
-			                    Default: 'b'.
+                          targeting the second link register.
+                          Default: 'b'.
 
 "link_third_register"     Register used by link yank/delete/paste mappings
-			                    targeting the third link register.
-			                    Default: 'c'.
+                          targeting the third link register.
+                          Default: 'c'.
 
         "hack_CR"         Set to |false| for the standard behavior of <CR>.
                           Default: |true|.
@@ -271,10 +271,10 @@ filling it with he various keys.
                           Default: |true|
 
 'table_updates_in_window' If |true|, tables updates happen in a split
-			                    windows. Otherwise, tables updates happen in popup.
-			                    Default: |false|
+                          windows. Otherwise, tables updates happen in popup.
+                          Default: |false|
 
-					                                  	*g:markdown_extras_index*
+                                                    *g:markdown_extras_index*
 g:markdown_extras_index   list<string>, list<list<string>> or dict<string>.
                           If list<string>, contain the path of indices files.
                           If list<string<string>> the first element of each
@@ -286,7 +286,7 @@ g:markdown_extras_index   list<string>, list<list<string>> or dict<string>.
                           Default: empty
 
 
-						                                  *markdown_extras_omnifunc*
+                                                    *markdown_extras_omnifunc*
 You can autocomplete links in the current buffer by setting the 'omnifunc' to
 `mde_funcs.OmniFunc` in your `~/.vim/after/ftplugin/markdown.vim` file.
 If such a file does not exists, create it.
@@ -307,14 +307,14 @@ COMMANDS                                         *markdown-extras-commands*
 
                                                        *:MDESanitizeLinks*
 :MDESanitizeLinks   Remove unreferenced numeric references from the
-		                references section and renumber used references
-		                sequentially from 1, updating in-text references.
+                    references section and renumber used references
+                    sequentially from 1, updating in-text references.
 
                                                             *:MDEIndex*
 :MDEIndex [{args}]  Open a popup with what is specified in {args}.
-		                The type of {args} can be list<string>, list<list<string>>
-		                or dict<string>. If no argument is passed, then
-		                |g:markdown_extras_index| is considered.
+                    The type of {args} can be list<string>, list<list<string>>
+                    or dict<string>.  If no argument is passed, then
+                    |g:markdown_extras_index| is used.
 
                     Note: This feature is the same as |:PoptoolsIndex| in
                     vim-poptools plugin, although it originated for this plugin.
@@ -338,7 +338,7 @@ COMMANDS                                         *markdown-extras-commands*
                           ['baz', 'function("some_Funcref")']
                         ]
 <
-		              Or it can be used in a script, like for example:
+                    Or it can be used in a script, like for example:
 		    >vim
                         def Foo()
                             const my_index = {
@@ -351,29 +351,29 @@ COMMANDS                                         *markdown-extras-commands*
 
                         command! MyIndex Foo()
 <
-                  The string used in the various cases can be a local path,
-                  a valid URL or a function reference.
-                  In the latter case, the referenced function must be global
-                  and shall take no arguments.
+                    The string used in the various cases can be a local path,
+                    a valid URL or a function reference.
+                    In the latter case, the referenced function must be global
+                    and shall take no arguments.
 
                                                             *:MDEMake*
-:MDEMake          Render the markdown file and |:Open| the rendered file.
-                  It supports |<tab>| completion.  It requires `pandoc`.
-                  Its behavior can be further customized through the
-                  |g:markdown_extras_config| dictionary.
+:MDEMake            Render the markdown file and |:Open| the rendered file.
+                    It supports |<tab>| completion.  It requires `pandoc`.
+                    Its behavior can be further customized through the
+                    |g:markdown_extras_config| dictionary.
 
                                                           *:MDEPathToURL*
-:MDEPathToURL     Convert the passed file name to a valid URL and store the
-                  result in a register. The default register is 'p' but that
-                  can be changed through the |g:markdown_extras_config|
-                  dictionary.
+:MDEPathToURL       Convert the passed file name to a valid URL and store the
+                    result in a register. The default register is 'p' but that
+                    can be changed through the |g:markdown_extras_config|
+                    dictionary.
 
                                                         *:MDEDefaultMappings*
 :MDEDefaultMappings   Display default_mappings.
 
                                                           *:MDETableInsert*
 :MDETableInsert [nrows, ncols]   Insert a nrows x ncols table.
-		                             Default: nrows = 3, ncols = 2.
+                                 Default: nrows = 3, ncols = 2.
 
                                                         *:MDEReleaseNotes*
 :MDEReleaseNotes    Show release notes.
@@ -448,67 +448,69 @@ The following can be used for creating mappings related to links.
 
 <Plug>MarkdownLinkYankFirstRegister
 
-				  Yank the link under cursor into the register
-				  configured by
-				  |g:markdown_extras_config|['link_first_register'].
-          Default: `<localleader>y`
+                      Yank the link under cursor into the register
+                      configured by
+                      |g:markdown_extras_config|['link_first_register'].
+                      Default: `<localleader>y`
 
-				  Example:
-				  >vim
-				    g:markdown_extras_config = {link_first_register = 'a'}
-				    nnoremap <buffer> <localleader>ay <Plug>MarkdownLinkYankFirstRegister
+                      Example:
+                      >vim
+                        g:markdown_extras_config = {link_first_register = 'a'}
+                        nnoremap <buffer> <localleader>ay
+                            \ <Plug>MarkdownLinkYankFirstRegister
 <
-				  In this example, typing `<localleader>ay` yanks
-				  the current link into register `a`.
+                      In this example, typing `<localleader>ay` yanks
+                      the current link into register `a`.
 
 <Plug>MarkdownLinkYankSecondRegister
 
-				  Yank the link under cursor into the register
-				  configured by |g:markdown_extras_config|['link_second_register'].
-          Default: None
+                  Yank the link under cursor into the register
+                  configured by |g:markdown_extras_config|['link_second_register'].
+                  Default: None
 
 <Plug>MarkdownLinkYankThirdRegister
 
-				  Yank the link under cursor into the register
-				  configured by |g:markdown_extras_config|['link_third_register'].
-          Default: None
+                  Yank the link under cursor into the register
+                  configured by |g:markdown_extras_config|['link_third_register'].
+                  Default: None
 
 <Plug>MarkdownLinkDeleteFirstRegister
 
-				  Delete the link under cursor and store it in the register
-          configured by |g:markdown_extras_config|['link_first_register'].
-          Default: `<localleader>d`
+                  Delete the link under cursor and store it in the register
+                  configured by
+                  |g:markdown_extras_config|['link_first_register'].
+                  Default: `<localleader>d`
 
 <Plug>MarkdownLinkDeleteSecondRegister
 
-				  Delete the link under cursor and store it in the register
-          configured by |g:markdown_extras_config|['link_second_register'].
-          Default: None
+                  Delete the link under cursor and store it in the register
+                  configured by |g:markdown_extras_config|['link_second_register'].
+                  Default: None
 
 <Plug>MarkdownLinkDeleteThirdRegister
 
-				  Delete the link under cursor and store it in the register
-          configured by |g:markdown_extras_config|['link_third_register'].
-          Default: None
+                  Delete the link under cursor and store it in the register
+                  configured by |g:markdown_extras_config|['link_third_register'].
+                  Default: None
 
 <Plug>MarkdownLinkPasteFirstRegister
 
-				  Paste the yanked link from the register configured by
-				  |g:markdown_extras_config|['link_first_register'].
-				  References are updated in the destination buffer when needed.
-          Default: `<localleader>p`
+                  Paste the yanked link from the register configured by
+                  |g:markdown_extras_config|['link_first_register'].
+                  References are updated in the destination buffer when needed.
+                  Default: `<localleader>p`
 
 <Plug>MarkdownLinkPasteSecondRegister
 
-				  Paste the yanked link from the register configured by
-				  |g:markdown_extras_config|['link_second_register'].
-          Default: None
+                  Paste the yanked link from the register configured by
+                  |g:markdown_extras_config|['link_second_register'].
+                  Default: None
 
 <Plug>MarkdownLinkPasteThirdRegister
 
-				  Paste the yanked link from the register configured by
-				  |g:markdown_extras_config|['link_third_register'].
-          Default: None
+                  Paste the yanked link from the register configured by
+                  |g:markdown_extras_config|['link_third_register'].
+                  Default: None
 
 Tables~
 The following mappings can be used for creating mappings related to tables.
@@ -534,10 +536,10 @@ Example of unsupported cell-edit layout:
 In such cases, edit the text manually and use table formatting only for visual
 preservation.
 
-<Plug>MarkdownTableAppend	  Append text to the current cell.
+<Plug>MarkdownTableAppend   Append text to the current cell.
                             Default: `<localleader>A`
 
-<Plug>MarkdownTableChange	  Change the text  of the current cell.
+<Plug>MarkdownTableChange   Change the text  of the current cell.
                             Default: `<localleader>C`
 
 Inside the cell-edit popup, you can paste register contents with `CTRL-R`
@@ -545,7 +547,7 @@ followed by a register name (e.g. `CTRL-R "` for the unnamed register,
 `CTRL-R +` for the clipboard, `CTRL-R 0` for the yank register). This mirrors
 Vim's built-in insert-mode `CTRL-R` behaviour.
 
-<Plug>MarkdownTableFormat	  Format table.
+<Plug>MarkdownTableFormat   Format table.
                             Default:
                                - normal mode: `<localleader>F`
                                - insert mode: `<bar>`
@@ -554,8 +556,8 @@ Vim's built-in insert-mode `CTRL-R` behaviour.
                                         Default: `<localleader>_`
 
 <Plug>MarkdownTableSumBlock	  Sum all the numbers in the visual selection
-				                      and display the result in the command line.
-                              Default: `<localleader>S`
+				  and display the result in the command line.
+                                  Default: `<localleader>S`
 
 Misc~
 <Plug>MarkdownToggleCheck     Toggle checkbox in to-do lists.

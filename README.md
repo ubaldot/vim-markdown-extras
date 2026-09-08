@@ -161,30 +161,28 @@ See `:h markdown-extras-mappings` for more functions.
 
 ### Formatting
 
-If available, `gq` use `prettier`, but you can use any format program by
-setting the key `formatprg` of the `g:markdown_extras_config` dictionary.
+If available, `gq` and `gw` use `prettier`, but you can use any format program
+by setting the key `formatprg` of the `g:markdown_extras_config` dictionary.
 
 However,`formatprg` key may be removed from the configuration dictionary in
 future releases as one could directly set `formatprg` option.
 
 ### Rendering
 
-If you have `pandoc` installed, then `vim-markdown-extras`
-sets `compiler-pandoc`.
-You can then use `:make` to render your buffer with `pandoc`.
-
 To render and open the rendered file at once, you can use `:MDEMake` followed
-by `<tab>` to select a target.
+by `<tab>` to select a target. It requires [pandoc][1] to be installed.
 
-You can also pass arguments to `pandoc` via the key
+You can also pass arguments to [pandoc][1] via the key
 `pandoc_args` of the `g:markdown_extras_config` dictionary.
 You could for example set the following:
 
 ```
-  g:markdown_extras_config = {}
-  g:markdown_extras_config['pandoc_args'] =
-  [$'--css="{$HOME}/dotfiles/my_css_style.css"',
-      $'--lua-filter="{$HOME}/dotfiles/emoji-admonitions.lua"']
+  g:markdown_extras_config = {
+      pandoc_args = [
+          $'--css="{$HOME}/dotfiles/my_css_style.css"',
+          $'--lua-filter="{$HOME}/dotfiles/emoji-admonitions.lua"'
+        ]
+  }
 ```
 
 ### Indices
