@@ -33,7 +33,7 @@ nnoremap <buffer> <backspace> <ScriptCmd>funcs.GoToPrevVisitedBuffer()<cr>
 
 # Insert table
 
-command! -nargs=* MDETableInsert tables.InsertTable(<q-args>)
+command! -buffer -nargs=* MDETableInsert tables.InsertTable(<q-args>)
 
 # -------------- prettier ------------------------
 # TODO: you may want to use the same mechanism used in my personal
@@ -66,6 +66,9 @@ enddef
 # Hack on 'gq'
 nnoremap <buffer> <silent> gq <ScriptCmd>SetMarkdownOpFunc()<cr>g@
 xnoremap <buffer> <silent> gq <ScriptCmd>SetMarkdownOpFunc()<cr>g@
+
+nnoremap <buffer> <silent> gw <ScriptCmd>SetMarkdownOpFunc()<cr>g@
+xnoremap <buffer> <silent> gw <ScriptCmd>SetMarkdownOpFunc()<cr>g@
 
 # --------------End prettier ------------------------
 
@@ -103,8 +106,10 @@ if !empty(exepath("pandoc"))
       &l:statusline = " vim-markdown-extras"
 
       # Win height resize
-      const target_height = float2nr(&lines / 4)
-      exe $"norm! z{target_height}\<cr>"
+      if &lines > 12
+        const target_height = float2nr(&lines / 4)
+        exe $"norm! z{target_height}\<cr>"
+      endif
 
       nnoremap <buffer> <esc> <cmd>wincmd c<cr>
 
