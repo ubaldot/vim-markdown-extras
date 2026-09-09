@@ -279,3 +279,63 @@ def g:Test_CR_hacked_preserve_indent()
   :%bw!
   Cleanup_testfile(src_name_1)
 enddef
+
+def g:Test_dynamic_formatprg_respects_extras_config()
+  Generate_testfile(lines_1, src_name_1)
+  exe $"edit {src_name_1}"
+  var ftprg: string = "Don't change"
+  g:markdown_extras_config = {}
+  g:markdown_extras_config['formatprg'] = ftprg
+
+  execute "norm gq<cr>"
+  assert_true(!get(b:, 'markdown_extras_dynamic_formatprg', false))
+  assert_match(ftprg, &formatprg)
+
+  :%bw!
+  Cleanup_testfile(src_name_1)
+  delete('g:markdown_extras_config')
+
+  if !empty(v:errors)
+    throw $"Test_dynamic_formatprg_respects_extras_config: {v:errors}"
+  endif
+enddef
+
+def g:Test_dynamic_formatprg_respects_global_formatprg()
+  Generate_testfile(lines_1, src_name_1)
+  exe $"edit {src_name_1}"
+  var ftprg: string = "Don't change"
+  &formatprg = ftprg
+
+  execute "norm gq<cr>"
+  assert_true(!get(b:, 'markdown_extras_dynamic_formatprg', false))
+  assert_match(ftprg, &formatprg)
+
+  :%bw!
+  Cleanup_testfile(src_name_1)
+  set formatprg=
+
+  if !empty(v:errors)
+    throw $"Test_dynamic_formatprg_respects_global_formatprg: {v:errors}"
+  endif
+enddef
+
+def g:Test_dynamic_formatprg_follows_textwidth()
+  if !executable('prettier')
+    return
+  endif
+
+  Generate_testfile(lines_1, src_name_1)
+  exe $"edit {src_name_1}"
+  setlocal textwidth=120
+
+  execute "norm gq<cr>"
+  assert_true(get(b:, 'markdown_extras_dynamic_formatprg', false))
+  assert_match('--print-width 120', &l:formatprg)
+
+  :%bw!
+  Cleanup_testfile(src_name_1)
+
+  if !empty(v:errors)
+    throw $"Test_dynamic_formatprg_follows_textwidth: {v:errors}"
+  endif
+enddef

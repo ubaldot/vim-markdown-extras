@@ -10,6 +10,13 @@ export def Echowarn(msg: string)
   echohl WarningMsg | echom $'[markdown_extras] {msg}' | echohl None
 enddef
 
+export def UpdateFormatPrg()
+  var width = &l:textwidth > 0 ? &l:textwidth : 0
+  var printWidth = width > 0 ? $"--print-width {width} " : ""
+  &l:formatprg = $"prettier --prose-wrap always {printWidth}"
+    .. $"--stdin-filepath {shellescape(expand('%:p'))}"
+enddef
+
 def UndoFormatting()
   if v:shell_error != 0
     undo
@@ -35,6 +42,10 @@ export def FormatWithoutMoving(type: string = '')
   # anyways
   defer UndoFormatting()
   defer winrestview(view)
+
+  if get(b:, 'markdown_extras_dynamic_formatprg', false)
+    UpdateFormatPrg()
+  endif
 
   var start = 0
   var end = 0

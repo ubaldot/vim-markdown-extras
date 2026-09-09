@@ -151,11 +151,15 @@ they makes tables management more powerful.
 
 FORMATTING
 
-If available, |gq| use `prettier`, but you can use any format program by
-setting the key `formatprg` of the `g:markdown_extras_config` dictionary.
+Formatting a markdown document is carried on in the following precedence:
 
-However,`formatprg` key may be removed from the configuration dictionary in
-future releases as one could directly set locally |formatprg|.
+The |gq| keybind will attempt to use the most appropriate `formatprg` set up
+in order of these priorities:
+
+- The `formatprg` explicitly set by the user for markdown files
+- The `formatprg` key of `g:markdown_extras_config` dictionary
+- Prettier, so long as it is still enabled through `use_prettier` in
+|markdown-extras-configuration| and it can be found on the system PATH.
 
 RENDERING
 
