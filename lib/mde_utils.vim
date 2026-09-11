@@ -17,8 +17,8 @@ def UndoFormatting()
   else
     # Display format command
     redraw
-    if !empty(&l:formatprg)
-      echo $'{&l:formatprg}'
+    if !empty(&formatprg)
+      echo $'{&formatprg}'
     else
       Echowarn("'formatprg' is empty. Using default formatter.")
     endif
