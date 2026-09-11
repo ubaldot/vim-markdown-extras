@@ -288,7 +288,6 @@ def g:Test_dynamic_formatprg_respects_extras_config()
   g:markdown_extras_config['formatprg'] = ftprg
 
   execute "norm gq<cr>"
-  assert_true(!get(b:, 'markdown_extras_dynamic_formatprg', false))
   assert_match(ftprg, &formatprg)
 
   :%bw!
@@ -307,7 +306,6 @@ def g:Test_dynamic_formatprg_respects_global_formatprg()
   &formatprg = ftprg
 
   execute "norm gq<cr>"
-  assert_true(!get(b:, 'markdown_extras_dynamic_formatprg', false))
   assert_match(ftprg, &formatprg)
 
   :%bw!
@@ -329,7 +327,6 @@ def g:Test_dynamic_formatprg_follows_textwidth()
   setlocal textwidth=120
 
   execute "norm gq<cr>"
-  assert_true(get(b:, 'markdown_extras_dynamic_formatprg', false))
   assert_match('--print-width 120', &l:formatprg)
 
   :%bw!

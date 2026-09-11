@@ -32,10 +32,9 @@ command! -buffer -nargs=0 MDESanitizeLinks links.SanitizeLinks()
 nnoremap <buffer> <backspace> <ScriptCmd>funcs.GoToPrevVisitedBuffer()<cr>
 
 # Insert table
-
 command! -buffer -nargs=* MDETableInsert tables.InsertTable(<q-args>)
 
-# Autocmd to format with prettier on save
+# Autocmd to format the buffer on save
 if exists('g:markdown_extras_config') != 0
     && has_key(g:markdown_extras_config, 'format_on_save')
     && g:markdown_extras_config['format_on_save']
@@ -53,11 +52,10 @@ def SetFormatPrg()
       && has_key(g:markdown_extras_config, 'formatprg')
     &l:formatprg = g:markdown_extras_config['formatprg']
   elseif markdown_extras.use_prettier && empty(&formatprg)
-    b:markdown_extras_dynamic_formatprg = true
-  endif
-
-  if get(b:, 'markdown_extras_dynamic_formatprg', false)
-    utils.UpdateFormatPrg()
+    var width = &l:textwidth > 0 ? &l:textwidth : 0
+    var printWidth = width > 0 ? $"--print-width {width} " : ""
+    &l:formatprg = $"prettier --prose-wrap always {printWidth}"
+      .. $"--stdin-filepath {shellescape(expand('%:p'))}"
   endif
 enddef
 
