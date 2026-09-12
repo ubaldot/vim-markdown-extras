@@ -124,6 +124,7 @@ export const UNDERLINE_OPEN_DICT = {[TEXT_STYLES_DICT.markdownUnderline.open_del
   TEXT_STYLES_DICT.markdownUnderline.open_regex}
 export const UNDERLINE_CLOSE_DICT = {[TEXT_STYLES_DICT.markdownUnderline.close_delim]:
   TEXT_STYLES_DICT.markdownUnderline.close_regex}
+export const HAS_PRETTIER: bool = executable('prettier')
 
 # TODO on the delimiter synIDattr(synID(line("."), charcharcol("."), 1), "name")
 # return markdownCodeDelimiter instead of

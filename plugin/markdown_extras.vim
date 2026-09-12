@@ -7,6 +7,7 @@ vim9script
 import autoload './../lib/mde_utils.vim' as utils
 import autoload './../lib/mde_funcs.vim' as funcs
 import autoload './../lib/mde_indices.vim' as indices
+import autoload "./../lib/mde_constants.vim" as constants
 
 if has('win32') && !has("patch-9.1.1270")
   # Needs Vim version 9.0 and above
@@ -152,31 +153,6 @@ augroup MARKDOWN_EXTRAS_VISITED_BUFFERS
       endif
     }
 augroup END
-
-# Check prettier executable
-export var use_prettier = true
-
-if exists('g:markdown_extras_config') != 0
-    && has_key(g:markdown_extras_config, 'use_prettier')
-  use_prettier = g:markdown_extras_config['use_prettier']
-endif
-
-# If user wants to use prettier but it is not available...
-if use_prettier && !executable('prettier')
-  use_prettier = false
-  # If vim is called with args, like vim README.md
-  if &filetype == 'markdown'
-    utils.Echowarn("'prettier' not installed!'")
-  else
-    # As soon as we open a markdown file, the error is displayed
-    augroup MARKDOWN_EXTRAS_PRETTIER_ERROR
-      autocmd!
-      autocmd FileType markdown ++once {
-          utils.Echowarn("'prettier' not installed!'")
-      }
-    augroup END
-  endif
-endif
 
 # Check pandoc executable
 if empty(exepath('pandoc'))

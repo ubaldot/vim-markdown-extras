@@ -32,34 +32,39 @@ command! -buffer -nargs=0 MDESanitizeLinks links.SanitizeLinks()
 nnoremap <buffer> <backspace> <ScriptCmd>funcs.GoToPrevVisitedBuffer()<cr>
 
 # Insert table
-
 command! -buffer -nargs=* MDETableInsert tables.InsertTable(<q-args>)
 
-# -------------- prettier ------------------------
-# TODO: you may want to use the same mechanism used in my personal
-# after/ftplugin/python.vim, where I set the local opfunc to
-# FormatWithoutMoving and where I hack the 'gq' operator
-if markdown_extras.use_prettier
+# Autocmd to format the buffer on save
+if exists('g:markdown_extras_config') != 0
+    && has_key(g:markdown_extras_config, 'format_on_save')
+    && g:markdown_extras_config['format_on_save']
+  augroup MARKDOWN_FORMAT_ON_SAVE
+    autocmd! * <buffer>
+    autocmd BufWritePre <buffer> utils.FormatWithoutMoving()
+  augroup END
+endif
+
+def SetFormatPrg()
   if exists('g:markdown_extras_config') != 0
       && has_key(g:markdown_extras_config, 'formatprg')
     &l:formatprg = g:markdown_extras_config['formatprg']
-  else
-    &l:formatprg = $"prettier --prose-wrap always --print-width {&l:textwidth} "
-      .. $"--stdin-filepath {shellescape(expand('%'))}"
+    return
+  endif
+  if !empty(&formatprg)
+    return
   endif
 
-  # Autocmd to format with prettier on save
-  if exists('g:markdown_extras_config') != 0
-      && has_key(g:markdown_extras_config, 'format_on_save')
-      && g:markdown_extras_config['format_on_save']
-    augroup MARKDOWN_FORMAT_ON_SAVE
-      autocmd! * <buffer>
-      autocmd BufWritePre <buffer> utils.FormatWithoutMoving()
-    augroup END
+  # Prettier is the formatter when no explicit formatter is set
+  if constants.HAS_PRETTIER
+    var width = &l:textwidth > 0 ? &l:textwidth : 0
+    var printWidth = width > 0 ? $"--print-width {width} " : ""
+    &l:formatprg = $"prettier --prose-wrap always {printWidth}"
+      .. $"--stdin-filepath {shellescape(expand('%:p'))}"
   endif
-endif
+enddef
 
 def SetMarkdownOpFunc()
+  SetFormatPrg()
   &l:opfunc = function('utils.FormatWithoutMoving')
 enddef
 
@@ -69,8 +74,6 @@ xnoremap <buffer> <silent> gq <ScriptCmd>SetMarkdownOpFunc()<cr>g@
 
 nnoremap <buffer> <silent> gw <ScriptCmd>SetMarkdownOpFunc()<cr>g@
 xnoremap <buffer> <silent> gw <ScriptCmd>SetMarkdownOpFunc()<cr>g@
-
-# --------------End prettier ------------------------
 
 # -------------------- pandoc -----------------------
 if !empty(exepath("pandoc"))
