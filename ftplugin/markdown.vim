@@ -45,13 +45,17 @@ if exists('g:markdown_extras_config') != 0
 endif
 
 def SetFormatPrg()
-  if !empty(&formatprg)
-    return
-  endif
   if exists('g:markdown_extras_config') != 0
       && has_key(g:markdown_extras_config, 'formatprg')
     &l:formatprg = g:markdown_extras_config['formatprg']
-  elseif markdown_extras.use_prettier && empty(&formatprg)
+    return
+  endif
+  if !empty(&formatprg)
+    return
+  endif
+
+  # Prettier is the formatter when no explicit formatter is set
+  if constants.HAS_PRETTIER
     var width = &l:textwidth > 0 ? &l:textwidth : 0
     var printWidth = width > 0 ? $"--print-width {width} " : ""
     &l:formatprg = $"prettier --prose-wrap always {printWidth}"

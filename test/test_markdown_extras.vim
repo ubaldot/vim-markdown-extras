@@ -280,12 +280,14 @@ def g:Test_CR_hacked_preserve_indent()
   Cleanup_testfile(src_name_1)
 enddef
 
-def g:Test_dynamic_formatprg_respects_extras_config()
+def g:Test_dynamic_formatprg_uses_config_formatprg_first()
   Generate_testfile(lines_1, src_name_1)
   exe $"edit {src_name_1}"
-  var ftprg: string = "Don't change"
+  var ftprg: string = "Wanted formatprg"
   g:markdown_extras_config = {}
   g:markdown_extras_config['formatprg'] = ftprg
+  &formatprg = "Some other formatprg"
+  &l:formatprg = "Some other, more suspicious formatprg"
 
   execute "norm gq<cr>"
   assert_match(ftprg, &formatprg)
@@ -318,7 +320,7 @@ def g:Test_dynamic_formatprg_respects_global_formatprg()
 enddef
 
 def g:Test_dynamic_formatprg_follows_textwidth()
-  if !executable('prettier')
+  if !constants.HAS_PRETTIER
     return
   endif
 

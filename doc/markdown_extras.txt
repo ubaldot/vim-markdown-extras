@@ -156,10 +156,9 @@ Formatting a markdown document is carried on in the following precedence:
 The |gq| keybind will attempt to use the most appropriate `formatprg` set up
 in order of these priorities:
 
-- The `formatprg` explicitly set by the user for markdown files
 - The `formatprg` key of `g:markdown_extras_config` dictionary
-- Prettier, so long as it is still enabled through `use_prettier` in
-|markdown-extras-configuration| and it can be found on the system PATH.
+- The `formatprg` explicitly set by the user for markdown files
+- Prettier, so long as it can be found on the system PATH.
 
 RENDERING
 
@@ -200,10 +199,6 @@ filling it with he various keys.
 <
  "use_default_mappings"   Set to |true| to use the default mappings as
                           described in |markdown-extras-mappings|.
-                          Default |true|.
-
-        "use_prettier"    Set to |true| if you want to use `prettier` formatter.
-                          `prettier` needs to be installed separately.
                           Default |true|.
 
         "use_nerd_fonts"  To set eye-candy check-boxes. Require some nerd-font
