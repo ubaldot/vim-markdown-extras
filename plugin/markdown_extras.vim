@@ -154,23 +154,6 @@ augroup MARKDOWN_EXTRAS_VISITED_BUFFERS
     }
 augroup END
 
-# Check prettier executable
-# If prettier is the fallback solution but missing from the PATH, warn the
-# user
-if !constants.HAS_PRETTIER
-  var prettierWasFallback: bool = exists('g:markdown_extras_config') != 0
-    && !has_key(g:markdown_extras_config, 'formatprg')
-    || empty(&formatprg)
-  if prettierWasFallback
-    augroup MARKDOWN_EXTRAS_PRETTIER_ERROR
-      autocmd!
-      autocmd FileType markdown ++once {
-          utils.Echowarn("'prettier' not installed!'")
-      }
-    augroup END
-  endif
-endif
-
 # Check pandoc executable
 if empty(exepath('pandoc'))
   if &filetype == 'markdown'
