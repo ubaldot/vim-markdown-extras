@@ -44,12 +44,11 @@ def IndexCallback(id: number, idx: number)
   endif
 enddef
 
-export def ShowIndex(passed_index: string='')
+export def ShowIndex(passed_index: any)
   var index_found = false
 
   if !empty(passed_index)
-    # TODO: remove the eval() with something better
-    index = eval(passed_index)
+    index = passed_index
     index_found = true
   elseif exists('g:markdown_extras_index') != 0
       && !empty('g:markdown_extras_index')
