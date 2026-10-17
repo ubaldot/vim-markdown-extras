@@ -184,4 +184,4 @@ enddef
 command! -nargs=1 -complete=file MDEPathToURL PathToURLReg(<f-args>)
 command! -nargs=0 MDEReleaseNotes ShowReleaseNotes()
 command! -nargs=0 MDEDefaultMappings ShowDefaultMappings()
-command! -nargs=? MDEIndex indices.ShowIndex(<f-args>)
+command! -nargs=? MDEIndex indices.ShowIndex(<args>)
